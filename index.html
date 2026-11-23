@@ -1,146 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sistema Guarda BJJ</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap">
 <style>
-/* Layout: sticky header with module tabs; each module is a vertical "spine" of stages with technique chips; detail opens in a side panel (bottom sheet on phones). Belt colors encode level. */
-:root{
-  --bg:#F2F4F7; --surface:#FFFFFF; --ink:#141B2B; --muted:#5A6375; --line:#D8DDE6;
-  --lv-b:#2D6BD3; --lv-b-soft:#E3ECFB; --lv-a:#6A3EA1; --lv-a-soft:#EEE6F7;
-  --accent:#C4262E; --spine:#B9C1CF; --shadow:0 10px 30px rgba(20,27,43,.12);
-  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
-  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
-}
+/* VOICE: calm, instructional, a coach's notebook on the mat.
+   IDEA: a belt-ranked tree you walk down one branch at a time.
+   PICTURE: a vertical spine of numbered nodes; each level is one column of large tappable cards.
+   COLOUR and TYPE: ink + mat grey, blue (beginner) / purple (advanced) belt stripes, red accent; Barlow Condensed + Inter.
+   LAYOUT: sticky bar with Back, Home and a clickable path; content column below, max 760px. */
+:root{color-scheme:light;
+  --bg:#F2F4F7;--surface:#FFFFFF;--ink:#141B2B;--muted:#5A6375;--line:#D8DDE6;--spine:#B9C1CF;
+  --b:#2D6BD3;--b-soft:#E3ECFB;--a:#6A3EA1;--a-soft:#EEE6F7;--accent:#C4262E;
+  --shadow:0 10px 30px rgba(20,27,43,.12);
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0E1320; --surface:#171E2D; --ink:#E7EBF2; --muted:#9AA3B6; --line:#283146;
-  --lv-b:#78A4F2; --lv-b-soft:#1C2A45; --lv-a:#B08AE0; --lv-a-soft:#2A2140;
-  --accent:#EF5A61; --spine:#3A4560; --shadow:0 10px 30px rgba(0,0,0,.45); color-scheme:dark}}
+  --bg:#0E1320;--surface:#171E2D;--ink:#E7EBF2;--muted:#9AA3B6;--line:#283146;--spine:#3A4560;
+  --b:#78A4F2;--b-soft:#1C2A45;--a:#B08AE0;--a-soft:#2A2140;--accent:#EF5A61;--shadow:0 10px 30px rgba(0,0,0,.45);color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0E1320; --surface:#171E2D; --ink:#E7EBF2; --muted:#9AA3B6; --line:#283146;
-  --lv-b:#78A4F2; --lv-b-soft:#1C2A45; --lv-a:#B08AE0; --lv-a-soft:#2A2140;
-  --accent:#EF5A61; --spine:#3A4560; --shadow:0 10px 30px rgba(0,0,0,.45); color-scheme:dark}
-*{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+  --bg:#0E1320;--surface:#171E2D;--ink:#E7EBF2;--muted:#9AA3B6;--line:#283146;--spine:#3A4560;
+  --b:#78A4F2;--b-soft:#1C2A45;--a:#B08AE0;--a-soft:#2A2140;--accent:#EF5A61;--shadow:0 10px 30px rgba(0,0,0,.45);color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);overflow-x:clip}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
-.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
-.bar{display:flex;align-items:center;gap:12px;padding-block:12px 0;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-.belt{width:34px;height:12px;border-radius:2px;background:var(--ink);position:relative;flex:none}
-.belt::after{content:"";position:absolute;right:5px;top:0;bottom:0;width:9px;background:var(--accent)}
-h1{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.02em;margin:0;text-transform:uppercase;line-height:1}
+.bar{display:flex;align-items:center;gap:8px;padding-block:10px}
+.nav-btn{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:600 14px var(--body);cursor:pointer}
+.nav-btn:disabled{opacity:.4;cursor:default}
+.nav-btn svg{width:18px;height:18px}
+.spacer{flex:1}
 .lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex:none}
-.lang button{border:0;background:transparent;color:var(--muted);font:600 13px var(--body);padding:6px 12px;cursor:pointer}
+.lang button{border:0;background:transparent;color:var(--muted);font:600 13px var(--body);padding:0 12px;min-height:36px;cursor:pointer}
 .lang button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
-nav{display:flex;gap:4px;overflow-x:auto;padding-block:8px 0;scrollbar-width:none}
-nav a{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:6px 12px 10px;border-bottom:3px solid transparent;white-space:nowrap}
-nav a[aria-current="page"]{color:var(--ink);border-color:var(--accent)}
-button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-main{padding-block:24px 64px}
-.intro{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:end;justify-content:space-between;margin-bottom:20px}
-.intro h2{font-family:var(--display);font-size:40px;line-height:1;margin:0 0 6px;text-transform:uppercase;text-wrap:balance}
-.intro p{margin:0;color:var(--muted);max-width:60ch}
-.filters{display:flex;gap:6px;flex-wrap:wrap}
-.chipbtn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 13px var(--body);padding:6px 12px;border-radius:999px;cursor:pointer}
-.chipbtn[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--surface)}
-.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:18px}
-.legend span{display:inline-flex;align-items:center;gap:6px}
-.sw{width:22px;height:8px;border-radius:2px}
-.sw.b{background:var(--lv-b)} .sw.a{background:var(--lv-a)}
-/* spine */
-.spine{position:relative;display:grid;gap:18px}
-.stage{position:relative;display:grid;grid-template-columns:44px 1fr;gap:14px}
-.stage::before{content:"";position:absolute;left:21px;top:44px;bottom:-18px;width:2px;background:var(--spine)}
-.stage:last-child::before{display:none}
-.node{width:44px;height:44px;border-radius:50%;background:var(--surface);border:2px solid var(--ink);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:20px;z-index:1}
-.stage-body{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
-.stage-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-bottom:10px}
-.stage-head h3{font-family:var(--display);font-size:24px;margin:0;text-transform:uppercase;letter-spacing:.02em}
-.goal{color:var(--muted);font-size:13.5px}
-.techs{display:flex;flex-wrap:wrap;gap:8px}
-.tech{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:7px 11px 7px 0;font:500 14px var(--body);cursor:pointer;text-align:left;overflow:hidden}
-.tech::before{content:"";align-self:stretch;width:5px;margin:-7px 0}
-.tech.b::before{background:var(--lv-b)} .tech.a::before{background:var(--lv-a)}
-.tech:hover{border-color:var(--ink)}
-.tech[hidden]{display:none!important}
-.mine{font:600 10px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
-.gtag{font:700 10px var(--body);color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 4px}
-.games{margin-top:28px}
-.sect-title{font-family:var(--display);font-size:28px;text-transform:uppercase;margin:0 0 4px}
-.sect-sub{color:var(--muted);margin:0 0 14px;max-width:62ch}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
-.card h4{margin:0 0 6px;font-size:15.5px}
-.card p{margin:0;color:var(--muted);font-size:14px}
-.rule{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin-top:8px;font-size:13.5px}
-.rule b{font-weight:600}
-/* panel */
-.scrim{position:fixed;inset:0;background:rgba(10,14,24,.45);z-index:20}
-.panel{position:fixed;z-index:21;background:var(--surface);box-shadow:var(--shadow);overflow:auto;
-  right:0;top:0;bottom:0;width:min(420px,100%);padding:24px max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 22px;padding-top:calc(24px + env(safe-area-inset-top,0px))}
-@media (max-width:640px){.panel{top:auto;left:0;width:100%;max-height:82vh;border-radius:16px 16px 0 0;padding-left:max(20px,env(safe-area-inset-left,0px));padding-top:20px}}
-.panel .lv{display:inline-block;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:4px}
-.lv.b{background:var(--lv-b-soft);color:var(--lv-b)} .lv.a{background:var(--lv-a-soft);color:var(--lv-a)}
-.panel h3{font-family:var(--display);font-size:32px;line-height:1.05;margin:10px 0 4px;text-transform:uppercase}
-.panel .from{color:var(--muted);font-size:13px;margin-bottom:14px}
-.panel h5{font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:16px 0 4px}
-.panel p{margin:0}
-.steplist{margin:0;padding-left:20px;display:grid;gap:4px}
-.close{position:absolute;right:max(14px,env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;width:34px;height:34px;font-size:18px;cursor:pointer}
-@media (max-width:640px){.close{top:12px}}
-.next{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-/* method */
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px}
-.step{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;border-top:4px solid var(--ink)}
-.step .n{font-family:var(--display);font-size:30px;line-height:1;color:var(--accent)}
-.step h4{margin:4px 0 4px;font-size:16px}
-.step p{margin:0;color:var(--muted);font-size:14px}
-.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:28px;background:var(--surface)}
-.ladder div{padding:12px 14px;border-right:1px solid var(--line);min-width:0}
-.ladder div:last-child{border-right:0}
-.ladder .pct{font-family:var(--display);font-size:28px;font-variant-numeric:tabular-nums}
-.ladder p{margin:0;font-size:13px;color:var(--muted)}
-.lad-bar{height:6px;border-radius:3px;background:var(--line);margin:6px 0 8px;overflow:hidden}
-.lad-bar i{display:block;height:100%;background:var(--accent)}
-@media (max-width:640px){.ladder{grid-template-columns:1fr 1fr}.ladder div:nth-child(2){border-right:0}.ladder div:nth-child(-n+2){border-bottom:1px solid var(--line)}}
-.principles{counter-reset:p;display:grid;gap:8px;padding:0;margin:0 0 28px;list-style:none}
-.principles li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px 12px 52px;position:relative}
-.principles li::before{counter-increment:p;content:counter(p);position:absolute;left:16px;top:10px;font-family:var(--display);font-size:24px;font-weight:700;color:var(--accent)}
-.principles b{display:block}
-.principles span{color:var(--muted);font-size:14px}
-.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:28px}
-table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
-th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-tr:last-child td{border-bottom:0}
-/* builder */
-.builder{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;align-items:start}
-@media (max-width:820px){.builder{grid-template-columns:1fr}}
-.field{margin-bottom:14px}
-.field>label,.field>.lbl{display:block;font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-select{width:100%;font:500 14px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-.picks{display:grid;gap:4px;max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)}
-.picks label{display:flex;gap:8px;align-items:center;padding:5px 6px;border-radius:6px;font-size:14px;cursor:pointer}
-.picks label:hover{background:var(--surface)}
-.picks .grp{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:8px 6px 2px}
-.dot{width:8px;height:8px;border-radius:50%;flex:none}
-.dot.b{background:var(--lv-b)} .dot.a{background:var(--lv-a)}
-.plan{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
-.plan h3{font-family:var(--display);font-size:26px;text-transform:uppercase;margin:0 0 2px}
-.plan .meta{color:var(--muted);font-size:13px;margin-bottom:12px}
-.block{display:grid;grid-template-columns:64px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
-.block .t{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums;color:var(--accent)}
-.block h4{margin:0 0 2px;font-size:15px}
-.block p,.block ul{margin:0;color:var(--muted);font-size:14px}
-.block ul{padding-left:18px}
-.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center}
-.primary{border:0;background:var(--ink);color:var(--surface);font:600 14px var(--body);padding:9px 16px;border-radius:8px;cursor:pointer}
-.status{font-size:13px;color:var(--muted)}
-.note{font-size:13px;color:var(--muted);margin-top:8px}
-@media (max-width:640px){h1{font-size:22px}.intro h2{font-size:32px}.stage{grid-template-columns:36px 1fr;gap:10px}.node{width:36px;height:36px;font-size:17px}.stage::before{left:17px;top:36px}}
-@media (prefers-reduced-motion:no-preference){.panel{animation:slide .18s ease-out}@keyframes slide{from{transform:translateY(12px);opacity:.6}}}
+.signout{border:1px solid var(--line);background:transparent;color:var(--muted);font:600 12px var(--body);padding:0 12px;min-height:36px;border-radius:999px;cursor:pointer;flex:none}
+.signout[hidden]{display:none}
+.crumbs{display:flex;gap:4px;align-items:center;overflow-x:auto;white-space:nowrap;padding-bottom:10px;font-size:13px;scrollbar-width:none}
+.crumbs>*{flex:none}
+.crumbs a{color:var(--muted);text-decoration:none;padding:2px 4px;border-radius:4px}
+.crumbs a:hover{color:var(--ink)}
+.crumbs span.sep{color:var(--spine)}
+.crumbs [aria-current]{color:var(--ink);font-weight:600}
+main{padding-block:22px 64px}
+h1{font-family:var(--display);font-size:clamp(32px,6vw,44px);line-height:1.05;text-transform:uppercase;margin:0 0 6px;text-wrap:balance}
+.lead{color:var(--muted);margin:0 0 18px;max-width:60ch}
+.eyebrow{font:600 13px var(--body);color:var(--muted);margin:0 0 4px}
+/* tree */
+.tree{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.node{position:relative;display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:stretch}
+.node::before{content:"";position:absolute;left:21px;top:44px;bottom:-12px;width:2px;background:var(--spine)}
+.node:last-child::before{display:none}
+.dot{width:44px;height:44px;border-radius:50%;border:2px solid var(--ink);background:var(--surface);display:grid;place-items:center;font:700 19px var(--display);z-index:1}
+.leaf .dot{width:14px;height:14px;margin:15px;border-width:0}
+.leaf .dot.b{background:var(--b)} .leaf .dot.a{background:var(--a)}
+.leaf::before{left:21px;top:30px}
+.go{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;color:var(--ink);font:inherit;cursor:pointer;min-height:56px}
+.go:hover{border-color:var(--ink)}
+.go .txt{flex:1;display:grid;gap:2px}
+.go b{font-size:17px;font-weight:600}
+.go small{color:var(--muted);font-size:14px}
+.go .chev{color:var(--muted);flex:none}
+.tag{display:inline-block;font:700 10px var(--body);letter-spacing:.04em;padding:1px 5px;border-radius:3px;vertical-align:2px;margin-left:4px}
+.tag.star{color:var(--accent)} .tag.g{color:var(--muted);border:1px solid var(--line)}
+.count{font:600 13px var(--body);color:var(--muted);white-space:nowrap}
+/* home */
+.roots{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.root{display:grid;gap:10px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;color:var(--ink);font:inherit}
+.root:hover{border-color:var(--ink)}
+.root h2{font-family:var(--display);font-size:30px;text-transform:uppercase;margin:0;line-height:1}
+.root p{margin:0;color:var(--muted);font-size:15px}
+.root .mini{display:flex;gap:4px;flex-wrap:wrap}
+.root .mini i{height:6px;flex:1 1 18px;border-radius:3px;background:var(--spine)}
+.root .mini i.b{background:var(--b)} .root .mini i.a{background:var(--a)}
+.root .meta{font:600 13px var(--body);color:var(--muted)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin:-6px 0 16px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 14px var(--body);padding:0 14px;min-height:36px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:0 0 16px}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.legend i{width:10px;height:10px;border-radius:50%}
+/* technique */
+.tech-head{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.lv{font:600 12px var(--body);padding:3px 10px;border-radius:999px}
+.lv.b{background:var(--b-soft);color:var(--b)} .lv.a{background:var(--a-soft);color:var(--a)}
+.sect{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.sect h3{font:600 13px var(--body);color:var(--muted);margin:0 0 6px}
+.sect p{margin:0}
+.sect ol{margin:0;padding-left:22px;display:grid;gap:6px}
+.key{border-left:4px solid var(--accent)}
+.pager{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.pager button{min-height:56px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;color:var(--ink);font:inherit;cursor:pointer}
+.pager button:disabled{visibility:hidden}
+.pager .nx{text-align:right}
+.pager small{display:block;color:var(--muted);font-size:12px}
+.pager b{font-weight:600;font-size:15px}
+h2.sub{font-family:var(--display);font-size:24px;text-transform:uppercase;margin:24px 0 10px}
+.note{font-size:13px;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:520px){.nav-btn .lbl{display:none}.nav-btn{padding:0 12px}.node{grid-template-columns:36px 1fr;gap:10px}.dot{width:36px;height:36px;font-size:16px}.node::before{left:17px;top:36px}.leaf .dot{margin:11px}.leaf::before{left:17px;top:26px}}
+@media (prefers-reduced-motion:no-preference){main>*{animation:in .16s ease-out}@keyframes in{from{opacity:.4;transform:translateY(6px)}}}
 
-/* --- per-user version additions (auth overlay, week card, sign-out) --- */
+/* --- carried over from the previous site: auth overlay, week card, games, method, lesson builder --- */
 .auth{position:fixed;inset:0;z-index:30;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
 .auth[hidden]{display:none}
 .auth-card{width:min(420px,100%);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:var(--shadow)}
@@ -155,26 +118,79 @@ select{width:100%;font:500 14px var(--body);padding:8px 10px;border:1px solid va
 .auth-demo{border:0;background:transparent;color:var(--muted);font:500 13px var(--body);cursor:pointer;margin-top:10px;text-decoration:underline}
 .auth-fine{font-size:12.5px;color:var(--muted);margin:14px 0 0}
 .auth-note{font-size:13px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
-.signout{border:1px solid var(--line);background:transparent;color:var(--muted);font:600 12px var(--body);padding:6px 10px;border-radius:999px;cursor:pointer;flex:none}
-.week-card{margin-bottom:18px;border-top:4px solid var(--accent)}
+.week-card{border-top:4px solid var(--accent)}
 .week-card h3{margin:0 0 2px}
 .week-card .meta{color:var(--muted);font-size:13px;margin-bottom:10px}
 .week-card .note{margin:10px 0 0}
+.week-card .tree{margin-top:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.card h4{margin:0 0 6px;font-size:15.5px}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.rule{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin-top:8px;font-size:13.5px}
+.rule b{font-weight:600}
+.sect-title{font-family:var(--display);font-size:28px;text-transform:uppercase;margin:0 0 4px}
+.sect-sub{color:var(--muted);margin:0 0 14px;max-width:62ch}
+/* method */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;border-top:4px solid var(--ink)}
+.step .n{font-family:var(--display);font-size:30px;line-height:1;color:var(--accent)}
+.step h4{margin:4px 0;font-size:16px}
+.step p{margin:0;color:var(--muted);font-size:14px}
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:24px;background:var(--surface)}
+.ladder div{padding:12px 14px;border-right:1px solid var(--line);min-width:0}
+.ladder div:last-child{border-right:0}
+.ladder .pct{font-family:var(--display);font-size:28px;font-variant-numeric:tabular-nums}
+.ladder p{margin:0;font-size:13px;color:var(--muted)}
+.lad-bar{height:6px;border-radius:3px;background:var(--line);margin:6px 0 8px;overflow:hidden}
+.lad-bar i{display:block;height:100%;background:var(--accent)}
+@media (max-width:640px){.ladder{grid-template-columns:1fr 1fr}.ladder div:nth-child(2){border-right:0}.ladder div:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+.principles{counter-reset:p;display:grid;gap:8px;padding:0;margin:0 0 24px;list-style:none}
+.principles li{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px 12px 52px;position:relative}
+.principles li::before{counter-increment:p;content:counter(p);position:absolute;left:16px;top:10px;font-family:var(--display);font-size:24px;font-weight:700;color:var(--accent)}
+.principles b{display:block}
+.principles span{color:var(--muted);font-size:14px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:24px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+/* lesson builder */
+.builder{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
+.field{margin-bottom:14px}
+.field>label,.field>.lbl{display:block;font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+select{width:100%;font:500 14px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.picks{display:grid;gap:4px;max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)}
+.picks label{display:flex;gap:8px;align-items:center;padding:5px 6px;border-radius:6px;font-size:14px;cursor:pointer}
+.picks label:hover{background:var(--surface)}
+.picks .grp{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:8px 6px 2px}
+.dotpick{width:8px;height:8px;border-radius:50%;flex:none}
+.dotpick.b{background:var(--b)} .dotpick.a{background:var(--a)}
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.plan h3{font-family:var(--display);font-size:26px;text-transform:uppercase;margin:0 0 2px}
+.plan .meta{color:var(--muted);font-size:13px;margin-bottom:12px}
+.block{display:grid;grid-template-columns:64px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.block .t{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums;color:var(--accent)}
+.block h4{margin:0 0 2px;font-size:15px}
+.block p,.block ul{margin:0;color:var(--muted);font-size:14px}
+.block ul{padding-left:18px}
+.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center}
+.primary{border:0;background:var(--ink);color:var(--surface);font:600 14px var(--body);padding:9px 16px;border-radius:8px;cursor:pointer}
+.status{font-size:13px;color:var(--muted)}
+.mine-toggle{margin-top:14px}
 </style>
-
-<header>
-  <div class="wrap">
-    <div class="bar">
-      <div class="brand"><span class="belt" aria-hidden="true"></span><h1 id="appTitle">Sistema Guarda</h1></div>
-      <div class="lang" role="group" aria-label="Idioma / Language">
-        <button type="button" id="btnPt" data-lang="pt">PT</button>
-        <button type="button" id="btnEn" data-lang="en">EN</button>
-      </div>
-      <button type="button" class="signout" id="signOut" hidden>Sair</button>
-    </div>
-    <nav id="nav" aria-label="Módulos"></nav>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="bar">
+    <button type="button" class="nav-btn" id="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span class="lbl" id="backL">Voltar</span></button>
+    <button type="button" class="nav-btn" id="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span class="lbl" id="homeL">Início</span></button>
+    <span class="spacer"></span>
+    <div class="lang" role="group" aria-label="Idioma / Language"><button type="button" data-lang="pt" id="lpt">PT</button><button type="button" data-lang="en" id="len">EN</button></div>
+    <button type="button" class="signout" id="signOut" hidden>Sair</button>
   </div>
-</header>
+  <nav class="crumbs" id="crumbs" aria-label="Caminho"></nav>
+</div></header>
 <div class="auth" id="auth">
   <div class="auth-card">
     <h2>Sistema Guarda</h2>
@@ -193,19 +209,33 @@ select{width:100%;font:500 14px var(--body);padding:8px 10px;border:1px solid va
   </div>
 </div>
 <main class="wrap" id="main"></main>
-<div class="scrim" id="scrim" hidden></div>
-<aside class="panel" id="panel" hidden role="dialog" aria-modal="true" aria-labelledby="pTitle"></aside>
-
 <script>
-var lang = 'pt';
-try { var s = localStorage.getItem('sg-lang'); if (s === 'en' || s === 'pt') lang = s; } catch (e) {}
+var lang = 'pt', level = 'all';
+try { var _s = localStorage.getItem('sg-lang'); if (_s === 'en' || _s === 'pt') lang = _s; } catch (e) {}
 function L(o){ return o == null ? '' : (typeof o === 'string' ? o : (o[lang] || o.pt)); }
-function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function $(id){ return document.getElementById(id); }
 
+// ---- tree UI strings (chrome of the tree layout) ----
+var T = {
+  pt:{back:'Voltar', home:'Início', start:'Árvore de técnicas', startLead:'Escolha por onde começar. Toque em cada parte para descer na árvore; use Voltar ou Início para subir.',
+      all:'Todos', b:'Iniciante', a:'Avançado', techs:'técnicas', stages:'etapas', stage:'Etapa', what:'O que é', steps:'Passo a passo', key:'Ponto-chave', drill:'Como treinar',
+      next:'Próxima etapa', same:'Outras técnicas desta etapa', prev:'Anterior', nxt:'Próxima', mine:'Seu sistema', book:'Livro Gracie', none:'Nenhuma técnica neste nível.',
+      path:'Caminho', bLegend:'Iniciante · faixa branca e azul', aLegend:'Avançado · faixa roxa em diante',
+      lessonLead:'Monte um plano de aula com tempos, técnicas e jogo.', methodLead:'Como cada aula funciona: conceito, treino, jogo e registro.',
+      addMine:'☆ Adicionar ao meu sistema', inMine:'★ No meu sistema ✓', week:'Esta semana'},
+  en:{back:'Back', home:'Home', start:'Technique tree', startLead:'Pick where to start. Tap each part to go down the tree; use Back or Home to go up.',
+      all:'All', b:'Beginner', a:'Advanced', techs:'techniques', stages:'stages', stage:'Stage', what:'What it is', steps:'Step by step', key:'Key point', drill:'How to drill',
+      next:'Next stage', same:'Other techniques in this stage', prev:'Previous', nxt:'Next', mine:'Your system', book:'Gracie book', none:'No techniques at this level.',
+      path:'Path', bLegend:'Beginner · white and blue belt', aLegend:'Advanced · purple belt and up',
+      lessonLead:'Build a class plan with timings, techniques and a game.', methodLead:'How each class works: concept, drilling, game and log.',
+      addMine:'☆ Add to my system', inMine:'★ In my system ✓', week:'This week'}
+};
+function t(k){ return T[lang][k]; }
 
-// ---- data is loaded from data/*.json (no inline data anymore) ----
+// ---- data is loaded from data/*.json (no inline data) ----
 var UI = null, DRILL = null, D = null, METHOD = null, WEEK = null, USERS = null;
-var USER = null, USER_EMAIL = null, panelCtx = null;
+var USER = null, USER_EMAIL = null;
 
 function loadJSON(path){ return fetch(path).then(function(r){ if (!r.ok) throw new Error(path + ' failed: ' + r.status); return r.json(); }); }
 function loadData(){
@@ -243,7 +273,7 @@ function signIn(email){
   try { localStorage.setItem('sg-session', email); } catch (e) {}
   document.getElementById('auth').hidden = true;
   document.getElementById('signOut').hidden = false;
-  closePanel(); render();
+  render();
 }
 function signOut(){
   USER = null; USER_EMAIL = null;
@@ -254,7 +284,7 @@ function signOut(){
 function restoreSession(){
   var email = null;
   try { email = localStorage.getItem('sg-session'); } catch (e) {}
-  if (email) signIn(email); else route();
+  if (email) signIn(email); else applyHash();
 }
 function isMine(mod, si, ii){
   var id = mod + '-' + si + '-' + ii;
@@ -268,95 +298,178 @@ function techById(id){
   var it = st.items[+p[2]]; if (!it) return null;
   return {mod: p[0], si: +p[1], ii: +p[2], it: it};
 }
+
+// ---- tree routing: home, m-top, s-top-2, t-top-2-0, lesson, method (legacy #top/#bottom kept) ----
+function parse(h){
+  if (!D) return {v:'home'};
+  var p = (h || '').replace(/^#/, '').split('-');
+  if (p[0] === 'm' && D[p[1]]) return {v:'m', m:p[1]};
+  if (p[0] === 's' && D[p[1]] && D[p[1]].stages[+p[2]]) return {v:'s', m:p[1], s:+p[2]};
+  if (p[0] === 't' && D[p[1]] && D[p[1]].stages[+p[2]] && D[p[1]].stages[+p[2]].items[+p[3]]) return {v:'t', m:p[1], s:+p[2], i:+p[3]};
+  if (p[0] === 'lesson') return {v:'lesson'};
+  if (p[0] === 'method') return {v:'method'};
+  if (p[0] === 'top') return {v:'m', m:'top'};
+  if (p[0] === 'bottom') return {v:'m', m:'bottom'};
+  return {v:'home'};
+}
+function key(r){
+  if (r.v === 'home') return 'home';
+  if (r.v === 'm') return 'm-' + r.m;
+  if (r.v === 's') return 's-' + r.m + '-' + r.s;
+  if (r.v === 't') return 't-' + r.m + '-' + r.s + '-' + r.i;
+  return r.v;
+}
+function parent(r){
+  if (r.v === 't') return {v:'s', m:r.m, s:r.s};
+  if (r.v === 's') return {v:'m', m:r.m};
+  return {v:'home'};
+}
+var route = {v:'home'}, stack = [];
+function go(r, push){
+  if (push !== false && key(r) !== key(route)) stack.push(route);
+  route = r;
+  try { history.replaceState(null, '', '#' + key(r)); } catch (e) { location.hash = key(r); }
+  render(); window.scrollTo(0, 0);
+}
+function back(){ go(stack.length ? stack.pop() : parent(route), false); }
+function applyHash(){
+  if (!D) return;
+  var r = parse(location.hash);
+  if (key(r) !== key(route)) { route = r; stack = []; }
+  render(); window.scrollTo(0, 0);
+}
+
+var chev = '<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+function tags(it, mod, si, ii){
+  var mine = it.mine || (mod != null && isMine(mod, si, ii));
+  return (mine ? '<span class="tag star" title="' + esc(t('mine')) + '">★</span>' : '') + (it.g ? '<span class="tag g" title="' + esc(t('book')) + '">G</span>' : '');
+}
+function show(it){ return level === 'all' || it.lv === level; }
+function filters(){
+  return '<div class="filters" role="group">' + ['all','b','a'].map(function(k){
+    return '<button type="button" class="chip" data-level="' + k + '" aria-pressed="' + (level === k) + '">' + t(k) + '</button>';
+  }).join('') + '</div>';
+}
+function legend(){
+  return '<div class="legend"><span><i style="background:var(--b)"></i>' + esc(t('bLegend')) + '</span><span><i style="background:var(--a)"></i>' + esc(t('aLegend')) + '</span><span><b class="tag star">★</b>' + esc(t('mine')) + '</span><span><b class="tag g">G</b>' + esc(t('book')) + '</span></div>';
+}
+function crumbs(){
+  var list = [{r:{v:'home'}, label:t('home')}];
+  if (route.v === 'm' || route.v === 's' || route.v === 't') list.push({r:{v:'m', m:route.m}, label:L(D[route.m].title)});
+  if (route.v === 's' || route.v === 't') list.push({r:{v:'s', m:route.m, s:route.s}, label:L(D[route.m].stages[route.s].name)});
+  if (route.v === 't') list.push({r:route, label:L(D[route.m].stages[route.s].items[route.i].n)});
+  if (route.v === 'lesson') list.push({r:{v:'lesson'}, label:L(UI.nav.lesson)});
+  if (route.v === 'method') list.push({r:{v:'method'}, label:L(UI.nav.method)});
+  $('crumbs').innerHTML = list.map(function(c, i){
+    return i === list.length - 1
+      ? '<span aria-current="page">' + esc(c.label) + '</span>'
+      : '<a href="#' + key(c.r) + '" data-go="' + key(c.r) + '">' + esc(c.label) + '</a><span class="sep" aria-hidden="true">›</span>';
+  }).join('');
+}
+
 function weekCard(){
   if (!WEEK) return '';
-  var h = '<section class="card week-card"><h3 class="sect-title">' + (lang === 'pt' ? 'Esta semana' : 'This week') + '</h3>';
-  h += '<div class="meta">' + esc(L(WEEK.class_du_jour)) + '</div><div class="techs">';
+  var h = '<section class="sect week-card"><h3 class="sect-title">' + esc(t('week')) + '</h3>';
+  h += '<div class="meta">' + esc(L(WEEK.class_du_jour)) + '</div><ol class="tree">';
   (WEEK.featured || []).forEach(function(id){
-    var t = techById(id);
-    if (t) h += techBtn(t.mod, t.si, t.ii, t.it).replace(' hidden', '');
+    var tt = techById(id);
+    if (!tt) return;
+    h += '<li class="node leaf"><span class="dot ' + tt.it.lv + '" aria-hidden="true"></span><button type="button" class="go" data-go="t-' + tt.mod + '-' + tt.si + '-' + tt.ii + '"><span class="txt"><b>' + esc(L(tt.it.n)) + tags(tt.it, tt.mod, tt.si, tt.ii) + '</b><small>' + esc(L(D[tt.mod].title)) + ' · ' + esc(L(D[tt.mod].stages[tt.si].name)) + '</small></span>' + chev + '</button></li>';
   });
-  h += '</div>';
+  h += '</ol>';
   if (WEEK.note) h += '<p class="note">' + esc(L(WEEK.note)) + '</p>';
   h += '</section>';
   return h;
 }
-document.getElementById('authGo').addEventListener('click', function(){ signIn(document.getElementById('authEmail').value); });
-document.getElementById('authEmail').addEventListener('keydown', function(e){ if (e.key === 'Enter') signIn(e.target.value); });
-document.getElementById('authDemo').addEventListener('click', function(){ signIn('demo@example.com'); });
-document.getElementById('signOut').addEventListener('click', signOut);
-document.querySelectorAll('[data-social]').forEach(function(b){
-  b.addEventListener('click', function(){
-    var n = document.getElementById('socialNote');
-    n.hidden = false;
-    n.textContent = lang === 'pt'
-      ? 'Modo demonstração — o login com ' + b.getAttribute('data-social') + ' precisa de hospedagem real e OAuth. Por enquanto, entre com seu e-mail abaixo.'
-      : 'Demo mode — ' + b.getAttribute('data-social') + ' sign-in needs real hosting and OAuth. For now, sign in with your email below.';
-  });
-});
-
-var view = 'top', level = 'all';
-var pick = {mod:'top', lv:'b', dur:'60', items:[], game:0};
-try { var sp = JSON.parse(localStorage.getItem('sg-pick4') || 'null'); if (sp && sp.mod) pick = Object.assign(pick, sp); } catch (e) {}
-function savePick(){ try { localStorage.setItem('sg-pick4', JSON.stringify(pick)); } catch (e) {} }
-
-function renderChrome(){
-  document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
-  document.getElementById('appTitle').textContent = L(UI.title);
-  document.getElementById('btnPt').setAttribute('aria-pressed', lang === 'pt');
-  document.getElementById('btnEn').setAttribute('aria-pressed', lang === 'en');
-  var nav = document.getElementById('nav'), h = '';
-  ['top','bottom','lesson','method'].forEach(function(k){
-    h += '<a href="#' + k + '"' + (view === k ? ' aria-current="page"' : '') + '>' + esc(L(UI.nav[k])) + '</a>';
-  });
-  nav.innerHTML = h;
-}
-
-function techBtn(mod, si, ii, it){
-  var hide = level !== 'all' && it.lv !== level;
-  var mine = it.mine || isMine(mod, si, ii);
-  return '<button type="button" class="tech ' + it.lv + '" data-m="' + mod + '" data-s="' + si + '" data-i="' + ii + '"' + (hide ? ' hidden' : '') + '>' + esc(L(it.n)) + (mine ? ' <span class="mine">★</span>' : '') + (it.g ? ' <span class="gtag">G</span>' : '') + '</button>';
-}
-
 function gameCard(g){
-  return '<div class="card"><h4>' + esc(L(g.n)) + (g.mine ? ' <span class="mine">★ ' + esc(L(UI.mine)) + '</span>' : '') + '</h4><p>' + esc(L(g.d)) + '</p>' +
+  return '<div class="card"><h4>' + esc(L(g.n)) + (g.mine ? ' <span class="tag star">★ ' + esc(L(UI.mine)) + '</span>' : '') + '</h4><p>' + esc(L(g.d)) + '</p>' +
     '<div class="rule"><b>' + esc(L(UI.top)) + '</b><span>' + esc(L(g.who)) + '</span><b>' + esc(L(UI.win)) + '</b><span>' + esc(L(g.win)) + '</span><b>' + esc(L(UI.time)) + '</b><span>' + esc(L(g.time)) + '</span></div></div>';
 }
 
-function renderModule(mod){
-  var M = D[mod], h = '';
-  h += weekCard();
-  h += '<div class="intro"><div><h2>' + esc(L(M.title)) + '</h2><p>' + esc(L(M.intro)) + ' ' + esc(L(UI.tapHint)) + '</p></div><div class="filters" role="group">';
-  ['all','b','a'].forEach(function(k){ h += '<button type="button" class="chipbtn" data-level="' + k + '" aria-pressed="' + (level === k) + '">' + esc(L(UI[k])) + '</button>'; });
-  h += '</div></div>';
-  h += '<div class="legend"><span><i class="sw b"></i>' + esc(L(UI.bBelt)) + '</span><span><i class="sw a"></i>' + esc(L(UI.aBelt)) + '</span><span><b class="mine">★</b> ' + esc(L(UI.mine)) + '</span><span><b class="gtag">G</b> ' + esc(L(UI.gTag)) + '</span></div>';
-  h += '<div class="spine">';
-  M.stages.forEach(function(st, si){
-    h += '<section class="stage"><div class="node" aria-hidden="true">' + (M.seq ? (si + 1) : '•') + '</div><div class="stage-body"><div class="stage-head"><h3>' + esc(L(st.name)) + '</h3><span class="goal">' + esc(L(st.goal)) + '</span></div><div class="techs">';
-    st.items.forEach(function(it, ii){ h += techBtn(mod, si, ii, it); });
-    h += '</div></div></section>';
+function vHome(){
+  var h = '<p class="eyebrow">' + esc(L(UI.title)) + '</p><h1>' + esc(t('start')) + '</h1><p class="lead">' + esc(t('startLead')) + '</p><div class="roots">';
+  Object.keys(D).forEach(function(m){
+    var items = D[m].stages.reduce(function(a, s){ return a.concat(s.items); }, []);
+    h += '<button type="button" class="root" data-go="m-' + m + '"><h2>' + esc(L(D[m].title)) + '</h2><p>' + esc(L(D[m].intro)) + '</p>' +
+      '<div class="mini" aria-hidden="true">' + D[m].stages.map(function(s){ return '<i class="' + (s.items.some(function(x){ return x.lv === 'b'; }) ? 'b' : 'a') + '"></i>'; }).join('') + '</div>' +
+      '<span class="meta">' + D[m].stages.length + ' ' + t('stages') + ' · ' + items.length + ' ' + t('techs') + '</span></button>';
   });
-  h += '</div><section class="games"><h3 class="sect-title">' + esc(L(UI.games)) + '</h3><p class="sect-sub">' + esc(L(UI.gamesSub)) + '</p><div class="grid">';
-  M.games.forEach(function(g){ h += gameCard(g); });
-  h += '</div></section>';
+  h += '<button type="button" class="root" data-go="lesson"><h2>' + esc(L(UI.nav.lesson)) + '</h2><p>' + esc(t('lessonLead')) + '</p><span class="meta">60 / 90 min</span></button>';
+  h += '<button type="button" class="root" data-go="method"><h2>' + esc(L(UI.nav.method)) + '</h2><p>' + esc(t('methodLead')) + '</p><span class="meta">' + esc(L(METHOD.title)) + '</span></button>';
+  return h + '</div>';
+}
+function vModule(){
+  var mod = D[route.m];
+  var h = weekCard();
+  h += '<h1>' + esc(L(mod.title)) + '</h1><p class="lead">' + esc(L(mod.intro)) + '</p>' + filters() + '<ol class="tree">';
+  mod.stages.forEach(function(st, si){
+    var n = st.items.filter(show).length;
+    h += '<li class="node"><span class="dot" aria-hidden="true">' + (mod.seq ? si + 1 : '•') + '</span><button type="button" class="go" data-go="s-' + route.m + '-' + si + '"><span class="txt"><b>' + esc(L(st.name)) + '</b><small>' + esc(L(st.goal)) + '</small></span><span class="count">' + n + '</span>' + chev + '</button></li>';
+  });
+  h += '</ol>';
+  h += '<h2 class="sub">' + esc(L(UI.games)) + '</h2><p class="lead">' + esc(L(UI.gamesSub)) + '</p><div class="grid">';
+  mod.games.forEach(function(g){ h += gameCard(g); });
+  h += '</div>';
   return h;
 }
-
-function renderMethod(){
-  var M = METHOD, h = '<div class="intro"><div><h2>' + esc(L(M.title)) + '</h2><p>' + esc(L(M.intro)) + '</p></div></div><div class="steps">';
+function vStage(){
+  var mod = D[route.m], st = mod.stages[route.s];
+  var h = '<p class="eyebrow">' + esc(L(mod.title)) + (mod.seq ? ' · ' + t('stage') + ' ' + (route.s + 1) : '') + '</p><h1>' + esc(L(st.name)) + '</h1><p class="lead">' + esc(L(st.goal)) + '</p>' + filters() + legend() + '<ol class="tree">';
+  var vis = st.items.map(function(it, ii){ return [it, ii]; }).filter(function(pair){ return show(pair[0]); });
+  if (!vis.length) h += '<li class="note">' + esc(t('none')) + '</li>';
+  vis.forEach(function(pair){
+    var it = pair[0], ii = pair[1];
+    h += '<li class="node leaf"><span class="dot ' + it.lv + '" aria-hidden="true"></span><button type="button" class="go" data-go="t-' + route.m + '-' + route.s + '-' + ii + '"><span class="txt"><b>' + esc(L(it.n)) + tags(it, route.m, route.s, ii) + '</b><small>' + esc(L(it.t)) + '</small></span>' + chev + '</button></li>';
+  });
+  h += '</ol>' + stagePager();
+  return h;
+}
+function stagePager(){
+  var mod = D[route.m], p = mod.stages[route.s - 1], n = mod.stages[route.s + 1];
+  return '<div class="pager"><button type="button" ' + (p ? 'data-go="s-' + route.m + '-' + (route.s - 1) + '"' : 'disabled') + '><small>← ' + esc(t('prev')) + '</small><b>' + esc(p ? L(p.name) : '') + '</b></button>' +
+    '<button type="button" class="nx" ' + (n ? 'data-go="s-' + route.m + '-' + (route.s + 1) + '"' : 'disabled') + '><small>' + esc(t('nxt')) + ' →</small><b>' + esc(n ? L(n.name) : '') + '</b></button></div>';
+}
+function vTech(){
+  var mod = D[route.m], st = mod.stages[route.s], it = st.items[route.i];
+  var mine = it.mine || isMine(route.m, route.s, route.i);
+  var h = '<p class="eyebrow">' + esc(L(mod.title)) + ' · ' + esc(L(st.name)) + '</p><h1>' + esc(L(it.n)) + '</h1>' +
+    '<div class="tech-head"><span class="lv ' + it.lv + '">' + esc(t(it.lv)) + '</span>' + (mine ? '<span class="tag star">★ ' + esc(t('mine')) + '</span>' : '') + (it.g ? '<span class="tag g">G · ' + esc(t('book')) + '</span>' : '') + '</div>' +
+    '<section class="sect"><h3>' + esc(t('what')) + '</h3><p>' + esc(L(it.d)) + '</p></section>';
+  if (it.s && it.s.length) h += '<section class="sect"><h3>' + esc(t('steps')) + '</h3><ol>' + it.s.map(function(x){ return '<li>' + esc(lang === 'pt' ? x[0] : x[1]) + '</li>'; }).join('') + '</ol></section>';
+  h += '<section class="sect key"><h3>' + esc(t('key')) + '</h3><p>' + esc(L(it.t)) + '</p></section>';
+  if (DRILL && DRILL[it.lv]) h += '<section class="sect"><h3>' + esc(t('drill')) + '</h3><p>' + esc(L(DRILL[it.lv])) + '</p></section>';
+  if (USER) h += '<div class="actions mine-toggle"><button type="button" class="primary" id="toggleMine">' + (isMine(route.m, route.s, route.i) ? esc(t('inMine')) : esc(t('addMine'))) + '</button></div>';
+  if (it.g) h += '<p class="note">' + esc(L(UI.ref)) + '</p>';
+  var p = st.items[route.i - 1], n = st.items[route.i + 1];
+  h += '<div class="pager"><button type="button" ' + (p ? 'data-go="t-' + route.m + '-' + route.s + '-' + (route.i - 1) + '"' : 'disabled') + '><small>← ' + esc(t('prev')) + '</small><b>' + esc(p ? L(p.n) : '') + '</b></button>' +
+    '<button type="button" class="nx" ' + (n ? 'data-go="t-' + route.m + '-' + route.s + '-' + (route.i + 1) + '"' : 'disabled') + '><small>' + esc(t('nxt')) + ' →</small><b>' + esc(n ? L(n.n) : '') + '</b></button></div>';
+  var nextSt = mod.seq ? mod.stages[route.s + 1] : null;
+  if (nextSt) {
+    h += '<h2 class="sub">' + esc(t('next')) + ' · ' + esc(L(nextSt.name)) + '</h2><ol class="tree">' + nextSt.items.map(function(x, xi){
+      return '<li class="node leaf"><span class="dot ' + x.lv + '" aria-hidden="true"></span><button type="button" class="go" data-go="t-' + route.m + '-' + (route.s + 1) + '-' + xi + '"><span class="txt"><b>' + esc(L(x.n)) + tags(x, route.m, route.s + 1, xi) + '</b></span>' + chev + '</button></li>';
+    }).join('') + '</ol>';
+  }
+  return h;
+}
+function vMethod(){
+  var M = METHOD, h = '<p class="eyebrow">' + esc(L(UI.title)) + '</p><h1>' + esc(L(M.title)) + '</h1><p class="lead">' + esc(L(M.intro)) + '</p><div class="steps">';
   M.steps.forEach(function(s, i){ h += '<div class="step"><div class="n">' + (i + 1) + '</div><h4>' + esc(L(s.n)) + ' · ' + s.m + ' min</h4><p>' + esc(L(s.d)) + '</p></div>'; });
-  h += '</div><h3 class="sect-title">' + (lang === 'pt' ? 'Princípios' : 'Principles') + '</h3><ol class="principles">';
+  h += '</div><h2 class="sub">' + (lang === 'pt' ? 'Princípios' : 'Principles') + '</h2><ol class="principles">';
   M.principles.forEach(function(p){ h += '<li><b>' + esc(L(p.b)) + '</b><span>' + esc(L(p.s)) + '</span></li>'; });
-  h += '</ol><h3 class="sect-title">' + (lang === 'pt' ? 'Escada de resistência' : 'Resistance ladder') + '</h3><div class="ladder">';
+  h += '</ol><h2 class="sub">' + (lang === 'pt' ? 'Escada de resistência' : 'Resistance ladder') + '</h2><div class="ladder">';
   M.ladder.forEach(function(l){ h += '<div><div class="pct">' + l.p + '</div><div class="lad-bar"><i style="width:' + l.w + '%"></i></div><p>' + esc(L(l.d)) + '</p></div>'; });
-  h += '</div><h3 class="sect-title">' + esc(L(M.levers.h)) + '</h3><div class="tbl-wrap"><table><thead><tr><th>' + (lang === 'pt' ? 'Alavanca' : 'Lever') + '</th><th>' + esc(L(UI.b)) + '</th><th>' + esc(L(UI.a)) + '</th></tr></thead><tbody>';
+  h += '</div><h2 class="sub">' + esc(L(M.levers.h)) + '</h2><div class="tbl-wrap"><table><thead><tr><th>' + (lang === 'pt' ? 'Alavanca' : 'Lever') + '</th><th>' + esc(L(UI.b)) + '</th><th>' + esc(L(UI.a)) + '</th></tr></thead><tbody>';
   M.levers.rows.forEach(function(r){ h += '<tr><td><b>' + esc(L(r[0])) + '</b></td><td>' + esc(L(r[1])) + '</td><td>' + esc(L(r[2])) + '</td></tr>'; });
-  h += '</tbody></table></div><h3 class="sect-title">' + esc(L(M.gracie.h)) + '</h3><ol class="principles">' + M.gracie.q.map(function(q){ return '<li><span style="color:var(--ink)">' + esc(L(q)) + '</span></li>'; }).join('') + '</ol><div class="grid"><div class="card"><h4>' + esc(L(M.rot.h)) + '</h4><p>' + esc(L(M.rot.d)) + '</p></div><div class="card"><h4>' + esc(L(M.log.h)) + '</h4><p>' + M.log.q.map(function(q, i){ return (i + 1) + '. ' + esc(L(q)); }).join('<br>') + '</p></div></div>';
+  h += '</tbody></table></div><h2 class="sub">' + esc(L(M.gracie.h)) + '</h2><ol class="principles">' + M.gracie.q.map(function(q){ return '<li><span style="color:var(--ink)">' + esc(L(q)) + '</span></li>'; }).join('') + '</ol><div class="grid"><div class="card"><h4>' + esc(L(M.rot.h)) + '</h4><p>' + esc(L(M.rot.d)) + '</p></div><div class="card"><h4>' + esc(L(M.log.h)) + '</h4><p>' + M.log.q.map(function(q, i){ return (i + 1) + '. ' + esc(L(q)); }).join('<br>') + '</p></div></div>';
   return h;
 }
 
-function renderLesson(){
-  var M = D[pick.mod], h = '<div class="intro"><div><h2>' + esc(L(UI.nav.lesson)) + '</h2><p>' + (lang === 'pt' ? 'Escolha o módulo, o nível e 2 ou 3 técnicas. O plano com tempos aparece ao lado e pode ser copiado.' : 'Pick the module, the level and 2 or 3 techniques. The timed plan appears alongside and can be copied.') + '</p></div></div>';
+// ---- lesson builder (same plan logic as before, tree styling) ----
+var pick = {mod:'top', lv:'b', dur:'60', items:[], game:0};
+try { var _sp = JSON.parse(localStorage.getItem('sg-pick4') || 'null'); if (_sp && _sp.mod) pick = Object.assign(pick, _sp); } catch (e) {}
+function savePick(){ try { localStorage.setItem('sg-pick4', JSON.stringify(pick)); } catch (e) {} }
+function vLesson(){
+  var M = D[pick.mod], h = '<p class="eyebrow">' + esc(L(UI.title)) + '</p><h1>' + esc(L(UI.nav.lesson)) + '</h1><p class="lead">' + (lang === 'pt' ? 'Escolha o módulo, o nível e 2 ou 3 técnicas. O plano com tempos aparece ao lado e pode ser copiado.' : 'Pick the module, the level and 2 or 3 techniques. The timed plan appears alongside and can be copied.') + '</p>';
   h += '<div class="builder"><div class="card">';
   h += '<div class="field"><label for="selMod">' + (lang === 'pt' ? 'Módulo' : 'Module') + '</label><select id="selMod"><option value="top"' + (pick.mod === 'top' ? ' selected' : '') + '>' + esc(L(D.top.title)) + '</option><option value="bottom"' + (pick.mod === 'bottom' ? ' selected' : '') + '>' + esc(L(D.bottom.title)) + '</option></select></div>';
   h += '<div class="field"><label for="selLv">' + (lang === 'pt' ? 'Nível da turma' : 'Class level') + '</label><select id="selLv"><option value="b"' + (pick.lv === 'b' ? ' selected' : '') + '>' + esc(L(UI.b)) + '</option><option value="a"' + (pick.lv === 'a' ? ' selected' : '') + '>' + esc(L(UI.a)) + '</option></select></div>';
@@ -366,8 +479,8 @@ function renderLesson(){
     h += '<div class="grp">' + esc(L(st.name)) + '</div>';
     st.items.forEach(function(it, ii){
       if (pick.lv === 'b' && it.lv === 'a') return;
-      var key = si + '-' + ii;
-      h += '<label><input type="checkbox" id="pk-' + pick.mod + '-' + key + '" value="' + key + '"' + (pick.items.indexOf(key) > -1 ? ' checked' : '') + '><i class="dot ' + it.lv + '"></i>' + esc(L(it.n)) + '</label>';
+      var key2 = si + '-' + ii;
+      h += '<label><input type="checkbox" id="pk-' + pick.mod + '-' + key2 + '" value="' + key2 + '"' + (pick.items.indexOf(key2) > -1 ? ' checked' : '') + '><i class="dotpick ' + it.lv + '"></i>' + esc(L(it.n)) + '</label>';
     });
   });
   h += '</div></div><div class="field"><label for="selGame">' + (lang === 'pt' ? 'Jogo' : 'Game') + '</label><select id="selGame">';
@@ -375,24 +488,22 @@ function renderLesson(){
   h += '</select></div></div><div class="plan" id="plan"></div></div>';
   return h;
 }
-
 function planData(){
   var M = D[pick.mod], is90 = pick.dur === '90';
   var items = pick.items.map(function(k){ var p = k.split('-'); var st = M.stages[+p[0]]; return st && st.items[+p[1]] ? {it: st.items[+p[1]], st: st} : null; }).filter(Boolean);
   var g = M.games[+pick.game] || M.games[0];
-  var t = is90 ? [15,5,30,20,15,5] : [10,5,20,15,7,3];
+  var tt = is90 ? [15,5,30,20,15,5] : [10,5,20,15,7,3];
   var lvl = pick.lv === 'b' ? {pt:'30–50%',en:'30–50%'} : {pt:'70–100%',en:'70–100%'};
   var blocks = [
-    {m:t[0], h:{pt:'Aquecimento',en:'Warm-up'}, p:pick.mod === 'top' ? {pt:'Movimentos de quadril, postura na guarda, passadas laterais.',en:'Hip movement, guard posture, side steps.'} : {pt:'Fuga de quadril, ponte, giros de guarda.',en:'Hip escapes, bridges, guard spins.'}},
-    {m:t[1], h:{pt:'Conceito',en:'Concept'}, p:items.length ? items[0].st.goal : {pt:'Escolha técnicas ao lado.',en:'Pick techniques alongside.'}},
-    {m:t[2], h:{pt:'Técnicas',en:'Techniques'}, list:items.length ? items.map(function(x){ return L(x.it.n) + ': ' + L(x.it.t); }) : [lang === 'pt' ? 'Nenhuma técnica escolhida ainda.' : 'No techniques picked yet.'], p:DRILL[pick.lv]},
-    {m:t[3], h:{pt:'Jogo: ',en:'Game: '}, hx:L(g.n), p:{pt:L(g.win) + ' · resistência ' + L(lvl), en:L(g.win) + ' · resistance ' + L(lvl)}},
-    {m:t[4], h:{pt:'Xadrez BJJ ou ao vivo',en:'BJJ chess or live'}, p:pick.lv === 'b' ? {pt:'Xadrez BJJ com 5 movimentos.',en:'BJJ chess with 5 moves.'} : {pt:'Rounds ao vivo começando na posição da aula.',en:'Live rounds starting from the class position.'}},
-    {m:t[5], h:{pt:'Registro',en:'Log'}, p:{pt:METHOD.log.q.map(function(q){ return q.pt; }).join(' '), en:METHOD.log.q.map(function(q){ return q.en; }).join(' ')}}
+    {m:tt[0], h:{pt:'Aquecimento',en:'Warm-up'}, p:pick.mod === 'top' ? {pt:'Movimentos de quadril, postura na guarda, passadas laterais.',en:'Hip movement, guard posture, side steps.'} : {pt:'Fuga de quadril, ponte, giros de guarda.',en:'Hip escapes, bridges, guard spins.'}},
+    {m:tt[1], h:{pt:'Conceito',en:'Concept'}, p:items.length ? items[0].st.goal : {pt:'Escolha técnicas ao lado.',en:'Pick techniques alongside.'}},
+    {m:tt[2], h:{pt:'Técnicas',en:'Techniques'}, list:items.length ? items.map(function(x){ return L(x.it.n) + ': ' + L(x.it.t); }) : [lang === 'pt' ? 'Nenhuma técnica escolhida ainda.' : 'No techniques picked yet.'], p:DRILL[pick.lv]},
+    {m:tt[3], h:{pt:'Jogo: ',en:'Game: '}, hx:L(g.n), p:{pt:L(g.win) + ' · resistência ' + L(lvl), en:L(g.win) + ' · resistance ' + L(lvl)}},
+    {m:tt[4], h:{pt:'Xadrez BJJ ou ao vivo',en:'BJJ chess or live'}, p:pick.lv === 'b' ? {pt:'Xadrez BJJ com 5 movimentos.',en:'BJJ chess with 5 moves.'} : {pt:'Rounds ao vivo começando na posição da aula.',en:'Live rounds starting from the class position.'}},
+    {m:tt[5], h:{pt:'Registro',en:'Log'}, p:{pt:METHOD.log.q.map(function(q){ return q.pt; }).join(' '), en:METHOD.log.q.map(function(q){ return q.en; }).join(' ')}}
   ];
   return {M:M, blocks:blocks};
 }
-
 function renderPlan(){
   var pd = planData(), el = document.getElementById('plan'); if (!el) return;
   var clock = 0, h = '<h3>' + esc(L(pd.M.title)) + '</h3><div class="meta">' + esc(L(UI[pick.lv])) + ' · ' + pick.dur + ' min</div>';
@@ -407,7 +518,6 @@ function renderPlan(){
   h += '<p class="note">' + (lang === 'pt' ? 'Dica: 2 ou 3 técnicas da mesma etapa funcionam melhor do que muitas.' : 'Tip: 2 or 3 techniques from the same stage work better than many.') + '</p>';
   el.innerHTML = h;
 }
-
 function planText(){
   var pd = planData(), clock = 0, out = [L(pd.M.title) + ' · ' + L(UI[pick.lv]) + ' · ' + pick.dur + ' min', ''];
   pd.blocks.forEach(function(b){
@@ -420,52 +530,63 @@ function planText(){
 }
 
 function render(){
-  renderChrome();
-  var main = document.getElementById('main');
-  if (view === 'top' || view === 'bottom') main.innerHTML = renderModule(view);
-  else if (view === 'method') main.innerHTML = renderMethod();
-  else { main.innerHTML = renderLesson(); renderPlan(); }
+  if (!D) return;
+  document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
+  $('backL').textContent = t('back');
+  $('homeL').textContent = t('home');
+  $('back').disabled = route.v === 'home' && !stack.length;
+  $('home').disabled = route.v === 'home';
+  $('lpt').setAttribute('aria-pressed', lang === 'pt');
+  $('len').setAttribute('aria-pressed', lang === 'en');
+  $('crumbs').setAttribute('aria-label', t('path'));
+  crumbs();
+  $('crumbs').scrollLeft = $('crumbs').scrollWidth;
+  var main = $('main');
+  if (route.v === 'home') main.innerHTML = vHome();
+  else if (route.v === 'm') main.innerHTML = vModule();
+  else if (route.v === 's') main.innerHTML = vStage();
+  else if (route.v === 't') main.innerHTML = vTech();
+  else if (route.v === 'lesson') { main.innerHTML = vLesson(); renderPlan(); }
+  else if (route.v === 'method') main.innerHTML = vMethod();
 }
 
-function openPanel(mod, si, ii){
-  panelCtx = {mod: mod, si: si, ii: ii};
-  var M = D[mod], st = M.stages[si], it = st.items[ii];
-  var nextSt = M.seq ? M.stages[si + 1] : null;
-  var h = '<button type="button" class="close" id="closeP" aria-label="' + esc(L(UI.close)) + '">×</button>';
-  h += '<span class="lv ' + it.lv + '">' + esc(L(UI[it.lv])) + '</span>' + (it.mine ? ' <span class="mine">★ ' + esc(L(UI.mine)) + '</span>' : '');
-  h += '<h3 id="pTitle">' + esc(L(it.n)) + '</h3><div class="from">' + esc(L(M.title)) + ' · ' + esc(L(UI.stage)) + ': ' + esc(L(st.name)) + '</div>';
-  h += '<h5>' + esc(L(UI.what)) + '</h5><p>' + esc(L(it.d)) + '</p>';
-  if (it.s) h += '<h5>' + esc(L(UI.steps)) + '</h5><ol class="steplist">' + it.s.map(function(x){ return '<li>' + esc(lang === 'pt' ? x[0] : x[1]) + '</li>'; }).join('') + '</ol>';
-  h += '<h5>' + esc(L(UI.tip)) + '</h5><p>' + esc(L(it.t)) + '</p>';
-  h += '<h5>' + esc(L(UI.drill)) + '</h5><p>' + esc(L(DRILL[it.lv])) + '</p>';
-  h += '<div class="actions"><button type="button" class="primary" id="toggleMine">' + (isMine(mod, si, ii) ? (lang === 'pt' ? '★ No meu sistema ✓' : '★ In my system ✓') : (lang === 'pt' ? '☆ Adicionar ao meu sistema' : '☆ Add to my system')) + '</button></div>';
-  if (it.g) h += '<p class="note">' + esc(L(UI.ref)) + '</p>';
-  if (nextSt) {
-    h += '<h5>' + esc(L(UI.nextTo)) + ' · ' + esc(L(nextSt.name)) + '</h5><div class="next">';
-    nextSt.items.forEach(function(x, xi){ h += techBtn(mod, si + 1, xi, x).replace(' hidden', ''); });
-    h += '</div>';
-  }
-  var p = document.getElementById('panel');
-  p.innerHTML = h; p.hidden = false; document.getElementById('scrim').hidden = false;
-  document.getElementById('closeP').focus();
-}
-function closePanel(){ document.getElementById('panel').hidden = true; document.getElementById('scrim').hidden = true; }
+$('authGo').addEventListener('click', function(){ signIn($('authEmail').value); });
+$('authEmail').addEventListener('keydown', function(e){ if (e.key === 'Enter') signIn(e.target.value); });
+$('authDemo').addEventListener('click', function(){ signIn('demo@example.com'); });
+$('signOut').addEventListener('click', signOut);
+document.querySelectorAll('[data-social]').forEach(function(b){
+  b.addEventListener('click', function(){
+    var n = document.getElementById('socialNote');
+    n.hidden = false;
+    n.textContent = lang === 'pt'
+      ? 'Modo demonstração — o login com ' + b.getAttribute('data-social') + ' precisa de hospedagem real e OAuth. Por enquanto, entre com seu e-mail abaixo.'
+      : 'Demo mode — ' + b.getAttribute('data-social') + ' sign-in needs real hosting and OAuth. For now, sign in with your email below.';
+  });
+});
+$('back').addEventListener('click', back);
+$('home').addEventListener('click', function(){ go({v:'home'}); });
 
 document.addEventListener('click', function(e){
-  var t = e.target.closest('[data-lang]');
-  if (t) { lang = t.getAttribute('data-lang'); try { localStorage.setItem('sg-lang', lang); } catch (er) {} closePanel(); render(); return; }
-  t = e.target.closest('[data-level]');
-  if (t) { level = t.getAttribute('data-level'); render(); return; }
-  t = e.target.closest('.tech');
-  if (t) { openPanel(t.getAttribute('data-m'), +t.getAttribute('data-s'), +t.getAttribute('data-i')); return; }
-  if (e.target.id === 'toggleMine' && panelCtx && USER) {
-    var tid = panelCtx.mod + '-' + panelCtx.si + '-' + panelCtx.ii;
+  var g = e.target.closest('[data-go]');
+  if (g) { e.preventDefault(); go(parse('#' + g.dataset.go)); return; }
+  var lv = e.target.closest('[data-level]');
+  if (lv) { level = lv.dataset.level; render(); return; }
+  var lg = e.target.closest('[data-lang]');
+  if (lg) {
+    lang = lg.dataset.lang;
+    try { localStorage.setItem('sg-lang', lang); } catch (er) {}
+    if (USER) { USER.language = lang; saveUser(); }
+    render();
+    return;
+  }
+  if (e.target.id === 'toggleMine' && USER) {
+    var tid = route.m + '-' + route.s + '-' + route.i;
     USER.myTechs = USER.myTechs || [];
     var ix = USER.myTechs.indexOf(tid);
     if (ix > -1) USER.myTechs.splice(ix, 1); else USER.myTechs.push(tid);
-    saveUser(); openPanel(panelCtx.mod, panelCtx.si, panelCtx.ii); render(); return;
+    saveUser(); render();
+    return;
   }
-  if (e.target.id === 'closeP' || e.target.id === 'scrim') { closePanel(); return; }
   if (e.target.id === 'copyPlan') {
     var txt = planText(), st = document.getElementById('copyStatus');
     var done = function(){ st.textContent = lang === 'pt' ? 'Copiado' : 'Copied'; };
@@ -484,15 +605,14 @@ document.addEventListener('change', function(e){
     savePick(); renderPlan();
   }
 });
-document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closePanel(); });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && route.v !== 'home') back(); });
+window.addEventListener('hashchange', function(){
+  var r = parse(location.hash);
+  if (key(r) !== key(route)) go(r);
+});
 
-function route(){
-  if (!D) return;
-  var h = (location.hash || '').replace('#', '');
-  view = ['top','bottom','lesson','method'].indexOf(h) > -1 ? h : 'top';
-  closePanel(); render(); window.scrollTo(0, 0);
-}
-window.addEventListener('hashchange', route);
 if (!pick.items.length) { pick.items = ['0-0','0-1','1-0']; }
 loadData();
 </script>
+</body>
+</html>
