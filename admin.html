@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Sistema Guarda BJJ</title>
+<style>
+  :root{--bg:#F2F4F7;--surface:#FFF;--ink:#141B2B;--muted:#5A6375;--line:#D8DDE6;--accent:#C4262E}
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;margin:0}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 16px 64px}
+  h1{font-size:26px;margin:0 0 4px;text-transform:uppercase}
+  p{color:var(--muted)}
+  .banner{background:#FFF4D6;border:1px solid #E8C86A;border-radius:10px;padding:12px 14px;color:#5A4310}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:16px 0}
+  label{display:block;font:600 11px system-ui;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+  input[type=text],input[type=date],textarea{width:100%;font:500 14px system-ui;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+  textarea{min-height:64px;resize:vertical}
+  .grp{font:600 11px system-ui;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
+  .pick{display:flex;gap:8px;align-items:center;padding:4px 0;font-size:14px;cursor:pointer}
+  .primary{border:0;background:var(--ink);color:#fff;font:600 14px system-ui;padding:11px 18px;border-radius:8px;cursor:pointer}
+  .status{font-size:13px;color:var(--muted);margin-left:10px}
+  pre{background:#141B2B;color:#E7EBF2;border-radius:10px;padding:14px;overflow:auto;font-size:13px}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Admin — Sistema Guarda</h1>
+  <p>Set the current week's content. This is the <b>interim</b> admin: there is no backend yet, so saving downloads an updated <code>data/week.json</code> — commit that file to the repo and GitHub Pages rebuilds in about a minute.</p>
+  <div class="banner"><b>How to publish:</b> download <code>week.json</code> below, then in the repo go to <code>data/</code> → <i>Add file → Upload files</i> → replace <code>week.json</code> → Commit. Or <code>git add data/week.json &amp;&amp; git commit -m "Update week" &amp;&amp; git push</code>.</div>
+
+  <div class="card">
+    <label for="weekOf">Week of</label>
+    <input type="date" id="weekOf">
+    <label for="classPt">Class of the day (PT)</label>
+    <input type="text" id="classPt">
+    <label for="classEn">Class of the day (EN)</label>
+    <input type="text" id="classEn">
+    <label for="notePt">Note (PT)</label>
+    <textarea id="notePt"></textarea>
+    <label for="noteEn">Note (EN)</label>
+    <textarea id="noteEn"></textarea>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 4px;font-size:18px">Featured techniques</h2>
+    <p style="margin:0">These are bubbled up in the “This week” card on the site. Pick 2–4.</p>
+    <div id="featured"></div>
+  </div>
+
+  <button type="button" class="primary" id="download">Download week.json</button>
+  <span class="status" id="status"></span>
+
+  <div class="card">
+    <h2 style="margin:0 0 4px;font-size:18px">Preview</h2>
+    <pre id="preview">{}</pre>
+  </div>
+  <p><a href="index.html">← Back to the site</a></p>
+</main>
+<script>
+var CONTENT = null, WEEK = null;
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function collect(){
+  var featured = Array.prototype.map.call(document.querySelectorAll('#featured input:checked'), function(x){ return x.value; });
+  return {
+    week_of: document.getElementById('weekOf').value || '',
+    class_du_jour: {pt: document.getElementById('classPt').value, en: document.getElementById('classEn').value},
+    featured: featured,
+    note: {pt: document.getElementById('notePt').value, en: document.getElementById('noteEn').value}
+  };
+}
+function refresh(){
+  document.getElementById('preview').textContent = JSON.stringify(collect(), null, 2);
+}
+function renderFeatured(){
+  var box = document.getElementById('featured'), h = '';
+  ['top','bottom'].forEach(function(mod){
+    var M = CONTENT.modules[mod];
+    h += '<div class="grp">' + esc(M.title.pt) + ' / ' + esc(M.title.en) + '</div>';
+    M.stages.forEach(function(st, si){
+      h += '<div class="grp" style="text-transform:none;letter-spacing:0;font-size:13px">' + esc(st.name.pt) + '</div>';
+      st.items.forEach(function(it, ii){
+        var id = mod + '-' + si + '-' + ii;
+        var checked = (WEEK.featured || []).indexOf(id) > -1 ? ' checked' : '';
+        h += '<label class="pick"><input type="checkbox" value="' + id + '"' + checked + '> ' + esc(it.n.pt) + ' <span style="color:var(--muted)">(' + esc(it.n.en) + ')</span></label>';
+      });
+    });
+  });
+  box.innerHTML = h;
+}
+Promise.all([
+  fetch('data/content.json').then(function(r){ return r.json(); }),
+  fetch('data/week.json').then(function(r){ return r.json(); })
+]).then(function(res){
+  CONTENT = res[0]; WEEK = res[1];
+  document.getElementById('weekOf').value = WEEK.week_of || '';
+  document.getElementById('classPt').value = (WEEK.class_du_jour && WEEK.class_du_jour.pt) || '';
+  document.getElementById('classEn').value = (WEEK.class_du_jour && WEEK.class_du_jour.en) || '';
+  document.getElementById('notePt').value = (WEEK.note && WEEK.note.pt) || '';
+  document.getElementById('noteEn').value = (WEEK.note && WEEK.note.en) || '';
+  renderFeatured();
+  refresh();
+}).catch(function(){
+  document.getElementById('preview').textContent = 'Could not load data/content.json and data/week.json. Serve this folder with a static server, e.g. python3 -m http.server.';
+});
+document.querySelector('main').addEventListener('input', refresh);
+document.querySelector('main').addEventListener('change', refresh);
+document.getElementById('download').addEventListener('click', function(){
+  var blob = new Blob([JSON.stringify(collect(), null, 2) + '\n'], {type: 'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'week.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  document.getElementById('status').textContent = 'Downloaded. Commit data/week.json to publish it.';
+});
+</script>
+</body>
+</html>
