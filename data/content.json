@@ -1459,6 +1459,22 @@
                 "en": "Break posture with your hands before climbing your legs."
               },
               "id": "bottom-0-5"
+            },
+            {
+              "lv": "b",
+              "mine": 1,
+              "n": {
+                "pt": "Braços dele acima da cabeça",
+                "en": "His arms above your head"
+              },
+              "d": {
+                "pt": "Da guarda fechada, controle as mangas e traga os braços do oponente para cima da sua cabeça. Com a postura dele quebrada e os braços longe do corpo, abrem-se o armlock reto, o armlock normal e a raspagem windmill.",
+                "en": "From closed guard, control the sleeves and bring his arms up above your head. With his posture broken and his arms away from his body, the straight armbar, the regular armbar and the windmill sweep open up."
+              },
+              "t": {
+                "pt": "Puxe as mangas para cima e para perto, não para os lados.",
+                "en": "Pull the sleeves up and close, not out to the sides."
+              }
             }
           ]
         },
@@ -2520,8 +2536,8 @@
             "en": "Other guards"
           },
           "goal": {
-            "pt": "Complemento moderno, depois da guarda fechada.",
-            "en": "Modern complement, after the closed guard."
+            "pt": "Manter a distância com as pernas e controlar as mangas.",
+            "en": "Keep distance with your legs and control the sleeves."
           },
           "items": [
             {
@@ -2634,7 +2650,8 @@
                 "pt": "Abre triângulo e omoplata.",
                 "en": "Opens triangle and omoplata."
               },
-              "id": "bottom-8-6"
+              "id": "bottom-8-6",
+              "mine": 1
             },
             {
               "lv": "a",
@@ -2746,7 +2763,40 @@
                 "pt": "Só com kimono.",
                 "en": "Gi only."
               },
-              "id": "bottom-8-13"
+              "id": "bottom-8-13",
+              "mine": 1
+            },
+            {
+              "lv": "b",
+              "mine": 1,
+              "n": {
+                "pt": "Amplitude das pernas",
+                "en": "Leg reach"
+              },
+              "d": {
+                "pt": "Use as pernas com alcance, um pouco afastadas do quadril, para dar amplitude à guarda. Os pés ficam sempre do lado de fora do corpo dele, numa destas linhas: cintura, joelho ou pé. Assim ele não passa por cima dos seus pés e você continua pronto para atacar.",
+                "en": "Use your legs with reach, a little away from your hips, to give your guard range. Your feet always stay outside his body, on one of these lines: waist, knee or foot. That way he can't step over your feet and you stay ready to attack."
+              },
+              "t": {
+                "pt": "Pé dentro da linha do corpo dele = guarda passada.",
+                "en": "A foot inside his body line = a passed guard."
+              }
+            },
+            {
+              "lv": "b",
+              "mine": 1,
+              "n": {
+                "pt": "Push and pull",
+                "en": "Push and pull guard"
+              },
+              "d": {
+                "pt": "Com as duas mangas controladas, um pé empurra (quadril ou bíceps) e a outra perna puxa, mantendo ele desequilibrado e na sua mira.",
+                "en": "With both sleeves controlled, one foot pushes (hip or biceps) and the other leg pulls, keeping him off balance and in your sights."
+              },
+              "t": {
+                "pt": "Para descansar, puxe ele de volta para a guarda fechada.",
+                "en": "To rest, pull him back into closed guard."
+              }
             }
           ]
         }
@@ -2876,6 +2926,49 @@
             "en": "3 moves each"
           },
           "id": "bottom-g5"
+        },
+        {
+          "n": {
+            "pt": "Passagem progressiva",
+            "en": "Progressive passing"
+          },
+          "mine": 1,
+          "d": {
+            "pt": "Aquecimento de 3 minutos. Quem está por cima começa de joelhos e pode ficar em pé, mudar de direção, se afastar ou se aproximar. Minuto 1: lento. Minuto 2: velocidade média, tentando passar para os lados. Minuto 3: rápido, faz o possível para passar. Quem está por baixo usa o sistema da mira o tempo todo. Descanso de 1min30 e troca.",
+            "en": "3-minute warm-up. The top player starts on the knees and may stand, change direction, back off or close in. Minute 1: slow. Minute 2: medium pace, trying to pass to the sides. Minute 3: fast, does whatever it takes to pass. The bottom player uses the sights system throughout. Rest 1:30 and switch."
+          },
+          "who": {
+            "pt": "Cima tenta passar; baixo mantém na mira",
+            "en": "Top tries to pass; bottom keeps him in the sights"
+          },
+          "win": {
+            "pt": "Baixo: não deixar passar. Cima: side control por 3 s",
+            "en": "Bottom: no pass. Top: side control for 3 s"
+          },
+          "time": {
+            "pt": "3 min + 1min30 de descanso, × 2",
+            "en": "3 min + 1:30 rest, × 2"
+          }
+        },
+        {
+          "n": {
+            "pt": "Xadrez cronometrado",
+            "en": "Timed BJJ chess"
+          },
+          "mine": 1,
+          "d": {
+            "pt": "Um jogador faz 3 movimentos em 20 segundos, o outro responde com 3 movimentos em 20 segundos, e assim por diante.",
+            "en": "One player makes 3 moves in 20 seconds, the other answers with 3 moves in 20 seconds, and so on."
+          },
+          "who": {
+            "pt": "Os dois, alternando",
+            "en": "Both, taking turns"
+          },
+          "win": {
+            "pt": "Finalizar ou terminar na melhor posição",
+            "en": "Submit or finish in the better position"
+          },
+          "time": "5 min"
         }
       ]
     }
