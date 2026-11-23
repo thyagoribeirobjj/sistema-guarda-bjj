@@ -2,11 +2,11 @@
 
 Interactive guard-system site for Gracie Sports Fairfield. If a student misses class, they open the site, sign in, and catch up on the week's techniques.
 
-Live site: <https://thyagoribeirobjj.github.io/sistema-guarda-bjj/>
+Live site: <https://sistemaguarda.com>
 
 ## Architecture
 
-Everything is static files (GitHub Pages, no build step, no server).
+Everything is static files (Firebase Hosting, no build step, no server).
 
 ```
 index.html          App shell: fetches the JSON below, renders the UI
@@ -26,7 +26,7 @@ Flow:
 2. **Sign-in** comes first: social buttons (Google, GitHub, Apple) are **demo mode** — real OAuth needs hosting. For now, entering an email (or the demo account `demo@example.com`) loads that user's config from `data/users.json`, or creates a default one. No passwords anywhere; in demo mode the config is saved in the browser only.
 3. **User -> config** is the mapping `email -> configuration` in `data/users.json`. The signed-in user's language, level filter and "my system" technique ids personalize the render: their language is applied, their level becomes the default filter, and their techniques get a ★.
 4. **This week** comes from `data/week.json` and is bubbled up in a card at the top of the module views: the class of the day plus the featured techniques (click one to open its detail panel).
-5. **Admin** (`admin.html`) picks the week's featured module/stage/techniques and note. With no backend yet it downloads an updated `data/week.json`; commit that file to the repo and Pages rebuilds in about a minute.
+5. **Admin** (`admin.html`) picks the week's featured module/stage/techniques and note. With no backend yet it downloads an updated `data/week.json`; commit that file to the repo and the site updates in about a minute (see Publishing).
 
 ## Run locally
 
@@ -36,6 +36,15 @@ Any static server works (opening the file directly does **not** — `fetch` need
 python3 -m http.server 8000
 # open http://localhost:8000
 ```
+
+## Publishing
+
+Every push to `main` runs the checks in `.github/workflows/deploy.yml`. If they pass, the site is published to Firebase Hosting and is live at <https://sistemaguarda.com> about a minute later. Pull requests run the same checks without publishing.
+
+- **What gets published:** everything except `README.md`, `firebase.json`, dotfiles, `docs/` and `tests/` (see `firebase.json`).
+- **Undo a bad publish:** revert the commit, or Firebase console → Hosting → Release history → Roll back.
+- **No keys in this repo:** GitHub signs in to Google with a short-lived token that only works for `main` of this repository.
+- **Cost:** the Google Cloud project `sistema-guarda-515619` is on the free Spark plan with no billing account, so it cannot be charged. Past the free limits (10 GB stored, 360 MB/day served) the site pauses until the next day.
 
 ## Database: now and later
 
@@ -54,7 +63,7 @@ DATABASE_URL=spanner://projects/my-project/instances/main/databases/sistema_guar
 
 The tables mirror the JSON: `users(email PK, config JSON)` and `weeks(week_of PK, class_du_jour, featured, note)`.
 
-## Still needs real hosting
+## Still to do
 
 - **Real OAuth** for the Google / GitHub / Apple buttons (currently demo-only labels).
 - **A real database** behind `DATABASE_URL`, plus a small write API so sign-in, "my system" toggles and admin edits persist for everyone instead of in one browser.
