@@ -43,7 +43,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 |---|---|
 | `index.html`, `admin.html` | Markup only, plus the icon and share-preview tags. The header is the logo, title, search, PT/EN and the account button; the tab strip sits below it. On phones only the tab strip stays at the top. |
 | `img/` | `logo.svg` (the logo and browser icon), `icon-180.png` (phone home screen), `share.png` (the 1200×630 picture shown when a link is shared). |
-| `css/theme.css` | Every color and font: dark (the default) and light. **The only file with color values**, apart from the logo and the `theme-color` tag's first-paint default (`applyTheme()` sets it from `--surface`). |
+| `css/theme.css` | Every color and font: dark (the default), light, and four more themes people pick in the account menu. A new theme is one block here plus its name in `themes` (`js/settings.js`), its label in `js/strings.js` and its name in `firestore.rules`. **The only file with color values**, apart from the logo and the `theme-color` tag's first-paint default (`applyTheme()` sets it from `--surface`). |
 | `css/app.css` | Layout and components. Uses the theme's variables (`var(--ink)`) only. On touch screens (`pointer: coarse`) everything people tap is at least 44px tall, and inputs are 16px so phones don't zoom in. |
 | `js/app.js` | Starts the site: header, search box, tabs, links (`#top`, `#t-top-base`), clicks, sign-in. |
 | `js/account.js` | The header's account button (`#account`, the person's Google photo) and its menu (`#accountMenu`): sign in or out, Admin for admins, light/dark (`#theme`). Without Firebase (a local preview) there is no account button and `#theme` sits in the header. |

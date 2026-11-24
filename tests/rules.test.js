@@ -121,6 +121,7 @@ test('settings must have the expected shape', async () => {
   assert.equal(await save(settings('someone-else@example.com')), 'denied');
   assert.equal(await save({ ...settings('student@example.com'), language: 'fr' }), 'denied');
   assert.equal(await save({ ...settings('student@example.com'), theme: 'purple' }), 'denied');
+  assert.equal(await save({ ...settings('student@example.com'), theme: 'gold' }), 'allowed');
   assert.equal(await save({ ...settings('student@example.com'), favorites: 'top-base' }), 'denied');
   assert.equal(await save({ ...settings('student@example.com'), progress: { 'top-base': 'done' } }), 'allowed');
   assert.equal(await save({ ...settings('student@example.com'), progress: 'done' }), 'denied');

@@ -1,16 +1,49 @@
 /* Colors, fonts and shadows: the only file with color values.
-   Dark (black mat, white text, red for the path and actions) is the default; light is the alternative. */
+   Dark (black mat, white text, red for the path and actions) is the default. Each other theme changes only
+   these variables. The selectors are not tied to the page so a small sample (the theme picker's swatches)
+   can show a theme by carrying data-theme itself. To add a theme: one block here, its name in `themes`
+   (js/settings.js), its label in js/strings.js, and its name in firestore.rules. */
 :root {
+  --display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+:root, [data-theme="dark"] {
   color-scheme: dark;
   --bg: #0C0C0D; --surface: #161618; --surface-2: #1E1E21; --ink: #F3F0EA; --muted: #A9A49C; --line: #2C2C30;
   --spine: #3D3D42; --accent: #E2373D; --accent-ink: #FFFFFF; --accent-soft: #2B1315;
   --scrim: rgba(0, 0, 0, .6); --shadow: 0 14px 40px rgba(0, 0, 0, .6);
-  --display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
-  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
-:root[data-theme="light"] {
+[data-theme="light"] {
   color-scheme: light;
   --bg: #F4F2EE; --surface: #FFFFFF; --surface-2: #EFECE6; --ink: #151515; --muted: #5F5A53; --line: #DCD6CC;
   --spine: #C8C1B6; --accent: #C81E26; --accent-ink: #FFFFFF; --accent-soft: #FBE4E5;
   --scrim: rgba(20, 20, 20, .45); --shadow: 0 14px 40px rgba(20, 20, 20, .18);
+}
+/* Orange gi over a navy undershirt. */
+[data-theme="orange"] {
+  color-scheme: dark;
+  --bg: #0D1322; --surface: #151D33; --surface-2: #1D2743; --ink: #F6F1E7; --muted: #A9B1C6; --line: #2A3555;
+  --spine: #3B4872; --accent: #F5821F; --accent-ink: #1A0E00; --accent-soft: #35210D;
+  --scrim: rgba(3, 6, 14, .65); --shadow: 0 14px 40px rgba(3, 6, 14, .65);
+}
+/* Golden aura on black. */
+[data-theme="gold"] {
+  color-scheme: dark;
+  --bg: #0D0C07; --surface: #17150C; --surface-2: #221F12; --ink: #FBF6DF; --muted: #B7AF8E; --line: #342F1B;
+  --spine: #4C4527; --accent: #FFD21F; --accent-ink: #1A1500; --accent-soft: #332A05;
+  --scrim: rgba(0, 0, 0, .65); --shadow: 0 14px 40px rgba(0, 0, 0, .65);
+}
+/* Royal blue on white armor. */
+[data-theme="royal"] {
+  color-scheme: light;
+  --bg: #EEF1F8; --surface: #FFFFFF; --surface-2: #E3E8F3; --ink: #101A3A; --muted: #56607F; --line: #CDD5E6;
+  --spine: #B4BFD8; --accent: #1F3FBF; --accent-ink: #FFFFFF; --accent-soft: #E0E6FB;
+  --scrim: rgba(16, 26, 58, .45); --shadow: 0 14px 40px rgba(16, 26, 58, .2);
+}
+/* Green on deep purple. */
+[data-theme="emerald"] {
+  color-scheme: dark;
+  --bg: #140F21; --surface: #1D1630; --surface-2: #281E41; --ink: #F1ECF8; --muted: #AEA4C3; --line: #382C56;
+  --spine: #4D3E72; --accent: #5CCB5F; --accent-ink: #06200A; --accent-soft: #17321B;
+  --scrim: rgba(8, 5, 16, .65); --shadow: 0 14px 40px rgba(8, 5, 16, .65);
 }

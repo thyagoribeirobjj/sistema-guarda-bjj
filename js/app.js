@@ -1,6 +1,6 @@
 import { content, loadContent, findTechnique, isModule } from './content.js';
 import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadPastWeeks, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram } from './firebase.js';
-import { settings, applyTheme, currentTheme, useAccount, changeSettings, toggleFavorite, markProgress } from './settings.js';
+import { settings, themes, applyTheme, currentTheme, useAccount, changeSettings, toggleFavorite, markProgress } from './settings.js';
 import { state, readHash } from './state.js';
 import { t, text } from './strings.js';
 import { navigation, moduleView, weekView, treeView, methodView, searchView } from './views.js';
@@ -20,7 +20,7 @@ function renderHeader() {
   document.documentElement.lang = settings.language === 'pt' ? 'pt-BR' : 'en';
   $('appTitle').textContent = t('title');
   document.querySelectorAll('[data-lang]').forEach((button) => button.setAttribute('aria-pressed', button.dataset.lang === settings.language));
-  $('headerTheme').innerHTML = state.online ? '' : themeButton(false);
+  $('headerTheme').innerHTML = state.online ? '' : themeButton();
   $('headerTheme').hidden = state.online;
   $('account').parentElement.hidden = !state.online;
   $('account').hidden = !state.online;
@@ -191,11 +191,15 @@ const clickActions = [
   ['#panelBack', panelBack],
   ['#panelClose, #scrim', () => closePanel()],
   ['#theme', () => {
-    const fromMenu = !$('accountMenu').hidden;
-    closeAccountMenu();
-    changeSettings({ theme: currentTheme() === 'dark' ? 'light' : 'dark' });
+    changeSettings({ theme: themes[(themes.indexOf(currentTheme()) + 1) % themes.length] });
     renderHeader();
-    if (fromMenu) $('account').focus();
+    $('theme').focus();
+  }],
+  // The menu stays open so several themes can be tried.
+  ['[data-theme-choice]', (el) => {
+    changeSettings({ theme: el.dataset.themeChoice });
+    renderHeader();
+    $('accountMenu').querySelector(`[data-theme-choice="${el.dataset.themeChoice}"]`)?.focus();
   }],
   ['#account', () => ($('accountMenu').hidden ? openAccountMenu() : closeAccountMenu())],
   ['#signIn', () => { closeAccountMenu(); signIn().catch(() => alert(t('signInFailed'))); }],

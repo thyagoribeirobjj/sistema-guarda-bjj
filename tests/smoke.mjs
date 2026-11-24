@@ -142,11 +142,21 @@ if (published) {
   });
 }
 
-await step('the light/dark switch is reachable and changes the theme', async () => {
-  const before = await page.getAttribute('html', 'data-theme');
-  if (await page.locator('#account').isVisible()) await page.locator('#account').click();
-  await page.locator('#theme').click();
-  assert.notEqual(await page.getAttribute('html', 'data-theme'), before);
+await step('a theme can be chosen and survives a reload', async () => {
+  if (await page.locator('#account').isVisible()) {
+    await page.locator('#account').click();
+    await page.locator('[data-theme-choice="gold"]').click();
+    assert.equal(await page.getAttribute('html', 'data-theme'), 'gold');
+    await page.keyboard.press('Escape');
+  } else {
+    const before = await page.getAttribute('html', 'data-theme');
+    await page.locator('#theme').click();
+    assert.notEqual(await page.getAttribute('html', 'data-theme'), before);
+  }
+  const chosen = await page.getAttribute('html', 'data-theme');
+  await page.reload();
+  await firstTab.waitFor();
+  assert.equal(await page.getAttribute('html', 'data-theme'), chosen);
 });
 
 await step('the back button closes a technique and stays on the site', async () => {
@@ -164,7 +174,7 @@ await step('a Portuguese browser gets Portuguese', async () => {
   await portuguese.locator('nav a').first().waitFor();
   assert.equal(await portuguese.getAttribute('html', 'lang'), 'pt-BR');
   assert.equal(await portuguese.locator('#search').getAttribute('placeholder'), 'Buscar técnica');
-  assert.equal(await portuguese.locator('#theme').getAttribute('title'), 'Modo claro');
+  assert.equal(await portuguese.locator('#appTitle').textContent(), 'Sistema Guarda');
 });
 
 await step('the admin page loads', async () => {

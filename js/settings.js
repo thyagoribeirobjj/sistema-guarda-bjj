@@ -3,6 +3,8 @@ import { loadUserSettings, saveUserSettings } from './firebase.js';
 // Each visitor's language, theme, favorites, progress and lesson plan. Kept in this browser, and in the
 // database (users/{uid}) once they sign in, so they follow them to other devices.
 const storageKey = 'sg-settings';
+// Each one is a block of colors in css/theme.css.
+export const themes = ['dark', 'light', 'orange', 'gold', 'royal', 'emerald'];
 const accountKey = 'sg-account';
 
 // First visit: Portuguese for a browser set to Portuguese, English for everyone else.
@@ -25,7 +27,7 @@ function readLocal() {
 // Takes saved settings in. With keep, the favorites and progress already here are added to, not replaced.
 function merge(from, keep = false) {
   if (from.language === 'pt' || from.language === 'en') settings.language = from.language;
-  if (typeof from.theme === 'string') settings.theme = from.theme;
+  if (from.theme === '' || themes.includes(from.theme)) settings.theme = from.theme;
   if (Array.isArray(from.favorites)) settings.favorites = keep ? [...new Set([...from.favorites, ...settings.favorites])] : from.favorites;
   if (from.progress && typeof from.progress === 'object') settings.progress = keep ? { ...from.progress, ...settings.progress } : from.progress;
   if (isLesson(from.lesson)) settings.lesson = from.lesson;
@@ -70,7 +72,7 @@ export function applyTheme() {
 }
 
 export function currentTheme() {
-  return settings.theme || 'dark';
+  return themes.includes(settings.theme) ? settings.theme : 'dark';
 }
 
 function forgetPersonalMarks() {

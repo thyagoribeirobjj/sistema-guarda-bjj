@@ -250,3 +250,11 @@ a.primary{text-decoration:none;display:inline-block}
   main>p.note>a{display:inline-flex;align-items:center;min-height:44px}
   select,.search,.form input[type=text],.form input[type=date],.media-admin input[type=url]{min-height:44px;font-size:16px}
 }
+/* theme picker in the account menu */
+.menu-themes{padding:8px 10px 10px;margin:4px 0;border-block:1px solid var(--line)}
+.menu-label{display:block;font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.swatch{width:34px;height:34px;padding:0;border-radius:50%;border:2px solid var(--line);background:var(--bg);display:grid;place-items:center;cursor:pointer}
+.swatch i{width:14px;height:14px;border-radius:50%;background:var(--accent)}
+.swatch[aria-checked="true"]{outline:2px solid var(--ink);outline-offset:2px}
+@media (pointer:coarse){.swatch{width:44px;height:44px}}
