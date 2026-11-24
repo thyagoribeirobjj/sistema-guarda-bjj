@@ -51,7 +51,7 @@ Other people and agents push to this repo too, and every push to `main` goes liv
 | `data/curriculum.json` | The other parts of the fight, the tab order (`moduleOrder`) and the "where to go" links (`nx`). |
 | `firestore.rules` | Who can read and change what in the database. |
 | `tests/` | `content.test.js` checks the curriculum; `rules.test.js` checks the database rules. |
-| `docs/translator.gs` | A copy of the translator that runs in John's Google account (see Translation). |
+| `docs/translator.gs` | A copy of the translator that runs in the site's Google account (see Translation). |
 
 ## Text
 
@@ -97,8 +97,8 @@ Other people and agents push to this repo too, and every push to `main` goes liv
   `diagrams/<id>`. Don't add big images to the repo either.
 - **Translation.** On the admin page, the admin picks the language they write in; the other is translated
   automatically when they save (`translate()` in `js/firebase.js`) and they can correct it. The translator is
-  `docs/translator.gs`, running free in John's Google account; its address is in `site/config`. Changing it
-  means redeploying it there, which is John's.
+  `docs/translator.gs`, running free in the site's own Google account (sistemaguarda@gmail.com); its address is
+  in `site/config`. Changing it means redeploying it there, which is John's.
 
 ## Checking and publishing
 

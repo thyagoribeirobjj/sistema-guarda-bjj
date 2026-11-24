@@ -1,6 +1,6 @@
 // Translates text for Sistema Guarda admins, for free, with Google Translate (LanguageApp).
-// Lives in John's Google account as an Apps Script web app (Execute as: me, Who has access: Anyone).
-// The site finds it through the database: site/config.translatorUrl.
+// Lives in the site's own Google account (sistemaguarda@gmail.com) as an Apps Script web app
+// (Execute as: me, Who has access: Anyone). The site finds it through the database: site/config.translatorUrl.
 // Only admins can use it: their Firebase sign-in token must be able to read their own admins/<email> entry,
 // which firestore.rules allows only for that person, and only if they are an admin.
 const PROJECT = 'sistema-guarda-515619';
