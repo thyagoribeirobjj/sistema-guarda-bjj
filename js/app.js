@@ -1,10 +1,11 @@
 import { content, loadContent, findTechnique, isModule } from './content.js';
-import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek } from './firebase.js';
+import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadMedia, saveVideo, saveDiagram, removeDiagram } from './firebase.js';
 import { settings, applyTheme, currentTheme, useAccount, changeSettings, toggleFavorite } from './settings.js';
 import { state, readHash } from './state.js';
 import { t } from './strings.js';
 import { navigation, moduleView, weekView, treeView, methodView } from './views.js';
-import { openPanel, redrawPanel, panelBack, closePanel, panelOpen } from './panel.js';
+import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram } from './panel.js';
+import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
 
 const $ = (id) => document.getElementById(id);
@@ -61,6 +62,24 @@ function route() {
   render();
 }
 
+// Admin: attach or remove a move's video or diagram, then redraw so everyone's view matches.
+async function changeMedia(id, field, save) {
+  const status = $('mediaStatus');
+  status.textContent = t('saving');
+  try {
+    const value = await save();
+    state.media[id] = { ...state.media[id], [field]: value };
+    if (!value) delete state.media[id][field];
+    forgetDiagram(id);
+    render();
+    redrawPanel();
+    $('mediaStatus').textContent = t('saved');
+  } catch (error) {
+    console.error(error);
+    status.textContent = error.message === 'bad link' ? t('badVideoLink') : t('saveFailed');
+  }
+}
+
 function moveFavorite(index, step) {
   const favorites = [...settings.favorites];
   const other = index + step;
@@ -81,6 +100,15 @@ const clickActions = [
     render();
   }],
   ['[data-technique]', (el) => openPanel(el.dataset.technique)],
+  ['[data-play]', (el) => { el.outerHTML = videoPlayer(el.dataset.play); }],
+  ['[data-save-video]', (el) => changeMedia(el.dataset.saveVideo, 'video', async () => {
+    const videoId = youtubeId($('videoLink').value);
+    if (!videoId) throw new Error('bad link');
+    await saveVideo(el.dataset.saveVideo, videoId);
+    return videoId;
+  })],
+  ['[data-remove-video]', (el) => changeMedia(el.dataset.removeVideo, 'video', async () => { await saveVideo(el.dataset.removeVideo, null); return null; })],
+  ['[data-remove-diagram]', (el) => changeMedia(el.dataset.removeDiagram, 'diagram', async () => { await removeDiagram(el.dataset.removeDiagram); return null; })],
   ['#panelBack', panelBack],
   ['#panelClose, #scrim', closePanel],
   ['#theme', () => { changeSettings({ theme: currentTheme() === 'dark' ? 'light' : 'dark' }); renderHeader(); }],
@@ -99,6 +127,11 @@ document.addEventListener('click', (event) => {
 });
 
 document.addEventListener('change', (event) => {
+  const id = event.target.dataset?.diagramFile;
+  if (id && event.target.files[0]) {
+    changeMedia(id, 'diagram', async () => { await saveDiagram(id, await shrinkImage(event.target.files[0])); return true; });
+    return;
+  }
   const redraw = changeLesson(event.target);
   if (redraw === true) render();
   else if (redraw === false) redrawPlan();
@@ -132,7 +165,7 @@ async function start() {
   if (!state.online) return;
   renderHeader();
   onAccountChange(accountChanged);
-  state.week = await loadWeek().catch(() => null);
+  [state.week, state.media] = await Promise.all([loadWeek().catch(() => null), loadMedia()]);
   if (state.week && (!location.hash || location.hash === '#semana')) state.view = 'semana';
   render();
 }

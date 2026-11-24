@@ -13,9 +13,18 @@ Live site: <https://sistemaguarda.com>
 | See this week's class ("Esta semana") | ✓ | ✓ | ✓ |
 | Switch language (PT / EN) and dark / light mode | ✓ in this browser | ✓ on every device | ✓ |
 | Build "Minha árvore" (♥ favorite techniques, in their own order) | ✓ in this browser | ✓ on every device | ✓ |
+| Watch a move's video and see its diagram | ✓ | ✓ | ✓ |
 | Change this week's class (`admin.html`) | | | ✓ |
+| Attach a video or diagram to a move (from the move's panel) | | | ✓ |
 
 When someone signs in for the first time, the settings and favorites from their browser are saved to their account.
+
+**Admins write in one language.** On the admin page, pick PT or EN and fill each field once; the other language is
+translated automatically when you save, and you can correct it.
+
+**Adding a video to a move:** upload it to YouTube as *Unlisted*, copy the link, open the move on the site and paste
+it under "Admin · Vídeo". Videos never use this site's free storage. Diagrams are added the same way ("Adicionar
+imagem"); the image is shrunk before it's saved.
 
 **Adding an admin:** Firebase console → Firestore → `admins` → Add document. The document ID is their Google email
 in lowercase; add a text field `name`. Delete the document to remove them.

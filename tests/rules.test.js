@@ -29,6 +29,7 @@ function token(person) {
 function toValue(value) {
   if (typeof value === 'string') return { stringValue: value };
   if (typeof value === 'number') return { integerValue: String(value) };
+  if (typeof value === 'boolean') return { booleanValue: value };
   if (Array.isArray(value)) return { arrayValue: { values: value.map(toValue) } };
   return { mapValue: { fields: toFields(value) } };
 }
@@ -113,4 +114,26 @@ test('settings must have the expected shape', async () => {
   assert.equal(await save({ ...settings('student@example.com'), language: 'fr' }), 'denied');
   assert.equal(await save({ ...settings('student@example.com'), theme: 'purple' }), 'denied');
   assert.equal(await save({ ...settings('student@example.com'), favorites: 'top-base' }), 'denied');
+});
+
+const image = (size) => `data:image/webp;base64,${'A'.repeat(size)}`;
+
+test('anyone can see videos and diagrams; only an admin can attach them', async () => {
+  await write('diagrams/top-base', { image: image(100) }, 'setup');
+  assert.equal(await read('site/media'), 'allowed');
+  assert.equal(await read('diagrams/top-base'), 'allowed');
+  const media = { techniques: { 'top-base': { video: 'dQw4w9WgXcQ', diagram: true } } };
+  assert.equal(await write('site/media', media, 'student'), 'denied');
+  assert.equal(await write('site/media', media, 'admin'), 'allowed');
+  assert.equal(await write('diagrams/top-base', { image: image(100) }), 'denied');
+  assert.equal(await write('diagrams/top-base', { image: image(100) }, 'student'), 'denied');
+  assert.equal(await write('diagrams/top-base', { image: image(600000) }, 'admin'), 'allowed');
+});
+
+test('a diagram must be a small image', async () => {
+  const save = (data) => write('diagrams/top-base', data, 'admin');
+  assert.equal(await save({ image: image(950000) }), 'denied');
+  assert.equal(await save({ image: 'https://example.com/picture.png' }), 'denied');
+  assert.equal(await save({ image: 'data:text/html;base64,PHNjcmlwdD4=' }), 'denied');
+  assert.equal(await save({ image: image(100), note: 'extra field' }), 'denied');
 });

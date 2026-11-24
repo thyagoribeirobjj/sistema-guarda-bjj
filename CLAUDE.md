@@ -39,7 +39,8 @@ Other people and agents push to this repo too, and every push to `main` goes liv
 | `css/app.css` | Layout and components. Uses the theme's variables (`var(--ink)`) only. |
 | `js/app.js` | Starts the site: header, tabs, links (`#top`, `#t-top-base`), clicks, sign-in. |
 | `js/views.js` | The tabs: this week, each module, my tree (favorites), method. |
-| `js/panel.js` | The technique panel: details, "where to go" links, next stage. |
+| `js/panel.js` | The technique panel: details, video, diagram, "where to go" links, next stage; admins attach media here. |
+| `js/media.js` | YouTube links and player, and shrinking a diagram before it's saved. |
 | `js/lesson.js` | The lesson builder. |
 | `js/admin.js` | The admin page (set this week's class). |
 | `js/strings.js` | Every button and label, in PT and EN. |
@@ -50,11 +51,13 @@ Other people and agents push to this repo too, and every push to `main` goes liv
 | `data/curriculum.json` | The other parts of the fight, the tab order (`moduleOrder`) and the "where to go" links (`nx`). |
 | `firestore.rules` | Who can read and change what in the database. |
 | `tests/` | `content.test.js` checks the curriculum; `rules.test.js` checks the database rules. |
+| `docs/translator.gs` | A copy of the translator that runs in John's Google account (see Translation). |
 
 ## Text
 
 - Curriculum wording goes in the `data/` files. Button and label wording goes in `js/strings.js`.
 - Every text has both languages: `{ "pt": "…", "en": "…" }`. Show it with `text(value)`; show a label with `t('key')`.
+- Thyago may give you text in one language only. Write it in that language and fill in the other yourself.
 
 ## Content (`data/content.json`, `data/curriculum.json`)
 
@@ -73,6 +76,9 @@ Other people and agents push to this repo too, and every push to `main` goes liv
 |---|---|---|---|
 | `site/week` | This week's class (the "Esta semana" tab): `weekOf`, `title`, `note`, `techniques` (ids) | everyone | admins |
 | `admins/{email}` | One document per admin, named by their lowercase email | that person | nobody from the site; add in the Firebase console |
+| `site/media` | Each move's video (a YouTube id) and whether it has a diagram: `techniques.<id>.video`, `.diagram` | everyone | admins |
+| `diagrams/{id}` | A move's diagram, as a small image (`data:image/webp;base64,…`, under 900 KB) | everyone | admins |
+| `site/config` | `translatorUrl`: where the translator lives | everyone | admins |
 | `users/{uid}` | A person's `language`, `theme`, `favorites` (their "Minha árvore", in their order) | that person | that person |
 
 - `firestore.rules` is the only thing that protects data. The page hiding a button protects nothing.
@@ -81,6 +87,18 @@ Other people and agents push to this repo too, and every push to `main` goes liv
 - **To add an admin:** Firebase console → Firestore → `admins` → Add document. Document ID: their Google
   email in lowercase. Field `name` (text). Remove the document to remove the admin.
 - Students' settings and favorites are private. Never add a rule that lets one person read another's.
+
+## Videos, diagrams and translation
+
+- **Videos are YouTube links, never files.** Upload to YouTube as *Unlisted*, then paste the link on the move's
+  panel (admins see the controls). Never put video files in this repo or in Firebase: the free hosting allows
+  360 MB a day, and file storage needs billing.
+- **Diagrams** are uploaded from the move's panel too. The browser shrinks them and stores them in
+  `diagrams/<id>`. Don't add big images to the repo either.
+- **Translation.** On the admin page, the admin picks the language they write in; the other is translated
+  automatically when they save (`translate()` in `js/firebase.js`) and they can correct it. The translator is
+  `docs/translator.gs`, running free in John's Google account; its address is in `site/config`. Changing it
+  means redeploying it there, which is John's.
 
 ## Checking and publishing
 
