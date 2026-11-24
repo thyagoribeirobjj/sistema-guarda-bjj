@@ -6,12 +6,19 @@ This file is for every coding agent: `AGENTS.md` is a link to it, so edit `CLAUD
 
 ## Stay in sync with `main`
 
-Other people and agents push to this repo too, and every push to `main` goes live.
+Other people and agents work in this repo too, and everything merged into `main` goes live. GitHub enforces this
+(`docs/main-ruleset.json`): changes reach `main` only through a pull request, and only after the tests pass on a
+branch that's up to date with `main`. Nobody can push to `main` directly or force-push it.
 
-- **Before you start:** `git pull --rebase origin main`. Read the files you're about to change *after* pulling.
-- **Right before you push:** pull again (`git pull --rebase origin main`), run `npm test`, then push.
-- If the pull brings changes to files you edited, keep both: merge the other work in, never overwrite it.
-- Never force-push `main`, and never "fix" a conflict by replacing a whole file with your copy.
+1. **Start from the latest `main`:** `git switch main && git pull --rebase origin main`, then
+   `git switch -c <short-name>`. Read the files you're about to change *after* pulling.
+2. **Open a pull request:** run `npm test`, push the branch, `gh pr create --fill`. The tests run on it.
+3. **If GitHub says the branch is out of date** (someone merged first): `gh pr update-branch --rebase`, or
+   `git pull --rebase origin main` and push. Then the tests run again on top of their work.
+4. **Merge** once the tests pass: `gh pr merge --squash --delete-branch`. The site publishes about a minute later.
+
+If an update brings changes to files you edited, keep both: merge the other work in, never overwrite it, and
+never "fix" a conflict by replacing a whole file with your copy.
 
 ## How the code should read
 
@@ -104,10 +111,10 @@ Other people and agents push to this repo too, and every push to `main` goes liv
 
 - `npm test` runs every test (it needs Node 22 and Java 21). `npm start` serves the site at http://localhost:8000.
   Locally there is no sign-in or database: every tab works except "Esta semana" and the admin page.
-- Every push to `main` runs the tests. If they pass, it publishes the site **and** `firestore.rules`
-  about a minute later. Pull requests run the tests without publishing.
-- Before you push: pull, run `npm test`, open the changed pages locally in both languages and both themes,
-  and check a phone-width window.
+- Every pull request runs the tests. Once one is merged, `main` publishes the site **and** `firestore.rules`
+  about a minute later.
+- Before you open or update a pull request: run `npm test`, open the changed pages locally in both languages and
+  both themes, and check a phone-width window.
 
 ## Never
 
