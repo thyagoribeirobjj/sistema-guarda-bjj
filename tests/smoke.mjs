@@ -1,6 +1,7 @@
 // Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
-// previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter,
+// previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and
+// "Clear this browser", a prepared next week taking over on its date,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm install --no-save playwright-core)
 import assert from 'node:assert/strict';
@@ -155,6 +156,8 @@ if (published) {
     await page.locator('#account').waitFor({ state: 'visible', timeout: 20000 });
     await page.locator('#account').click();
     await page.locator('#accountMenu #signIn').waitFor();
+    assert.match(await page.locator('#accountMenu .menu-hint').textContent(), /coaches see your progress/);
+    await page.locator('#accountMenu a[href="#privacy"]').waitFor();
     await page.keyboard.press('Escape');
     assert.equal(await page.locator('#account').getAttribute('aria-expanded'), 'false');
   });
@@ -355,6 +358,76 @@ await step('picking a belt filters a part to that belt and below; Everything sho
   assert.equal(await visit.locator('main .tech').count(), all);
   await visit.reload();
   await visit.locator('main [data-belt-filter="mine"][aria-pressed="true"]').waitFor();
+});
+
+await step('the privacy page opens from the sidebar and the account menu, and says coaches see progress, not notes', async () => {
+  const visit = await open('/#curriculum', 'en-US');
+  await visit.locator('#sidebar a[href="#privacy"]').click();
+  await visit.locator('main h2', { hasText: 'Privacy and your data' }).waitFor();
+  assert.equal(await visit.locator('#sidebar a[href="#privacy"]').getAttribute('aria-current'), 'page');
+  const words = await visit.locator('main').textContent();
+  assert.match(words, /coaches and the site's administrators can see/i);
+  assert.match(words, /except your notes/);
+  assert.match(words, /no tracking/i);
+  await visit.locator('#sidebar a[href="#curriculum"]').click();
+  await visit.locator('main .part-card').first().waitFor();
+  await visit.locator('#account').click();
+  await visit.locator('#accountMenu a[href="#privacy"]').click();
+  await visit.locator('main h2', { hasText: 'Privacy and your data' }).waitFor();
+  assert.equal(await visit.locator('#accountMenu').isVisible(), false);
+});
+
+await step('signed out, "Clear this browser" asks first, then clears the tree, progress, belt and notes', async () => {
+  const visit = await open('/#top', 'en-US');
+  await visit.locator('main .tech').first().click();
+  const marked = await visit.locator('#panel [data-favorite]').getAttribute('data-favorite');
+  await visit.locator('#panel [data-favorite]').click();
+  await visit.locator(`[data-progress="${marked}:done"]`).click();
+  await visit.fill('#noteBox', 'Keep the elbows in');
+  await visit.locator('#panelClose').click();
+  await visit.goto(`${address}/#privacy`);
+  await visit.locator('[data-delete-data="ask"]').click();
+  await visit.locator('[data-delete-data="no"]').click();
+  assert.equal((await visit.locator('#sidebar .navcount').textContent()).trim(), '1', 'cancel keeps everything');
+  await visit.locator('[data-delete-data="ask"]').click();
+  await visit.locator('[data-delete-data="yes"]').click();
+  await visit.locator('#deleteStatus', { hasText: 'no longer keeps' }).waitFor();
+  assert.equal((await visit.locator('#sidebar .navcount').textContent()).trim(), '');
+  await visit.reload();
+  await visit.goto(`${address}/#t-${marked}`);
+  await visit.locator('#panel #noteBox').waitFor();
+  assert.equal(await visit.locator('#noteBox').inputValue(), '');
+  assert.notEqual(await visit.locator(`[data-progress="${marked}:done"]`).getAttribute('aria-pressed'), 'true');
+});
+
+await step('a prepared next week takes over on its start date, not before', async () => {
+  const visit = await open('/#curriculum', 'en-US');
+  await visit.locator('main .part-card').first().waitFor();
+  const keepWeek = (startsOn) => visit.evaluate(([date]) => localStorage.setItem('sg-site-week', JSON.stringify({ at: Date.now(), value: {
+    weekOf: '2026-11-23', title: { pt: 'Postura', en: 'Posture' }, note: {}, techniques: ['top-base'],
+    next: { weekOf: date, title: { pt: 'Raspagens', en: 'Sweeps' }, note: {}, techniques: ['top-base'] },
+  } })), [startsOn]);
+  await keepWeek('2999-12-27');
+  await visit.goto(`${address}/#semana`);
+  await visit.reload();
+  await visit.locator('main .week-title').waitFor();
+  assert.equal((await visit.locator('main .week-title').textContent()).trim(), 'Posture', 'before the date: this week');
+  await keepWeek('2000-01-03');
+  await visit.reload();
+  await visit.locator('main .week-title').waitFor();
+  assert.equal((await visit.locator('main .week-title').textContent()).trim(), 'Sweeps', 'on or after the date: the prepared week');
+  const today = await visit.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; });
+  await keepWeek(today);
+  await visit.reload();
+  await visit.locator('main .week-title').waitFor();
+  assert.equal((await visit.locator('main .week-title').textContent()).trim(), 'Sweeps', 'on the start date itself');
+});
+
+await step('a Portuguese browser gets Portuguese, the privacy page too', async () => {
+  const visit = await open('/#privacy', 'pt-BR');
+  await visit.locator('main h2', { hasText: 'Privacidade e seus dados' }).waitFor();
+  assert.match(await visit.locator('main').textContent(), /menos as anotações/);
+  assert.equal(await visit.locator('[data-delete-data="ask"]').textContent(), 'Apagar deste navegador');
 });
 
 await step('a Portuguese browser gets Portuguese', async () => {

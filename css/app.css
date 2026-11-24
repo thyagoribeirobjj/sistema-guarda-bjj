@@ -297,3 +297,32 @@ a.primary{text-decoration:none;display:inline-block}
   .step{width:44px;height:44px}
   .notebox{font-size:16px}
 }
+/* the privacy page */
+.privacy{display:grid;gap:12px;max-width:72ch}
+.privacy-part h3{margin:0 0 6px;font-size:17px}
+.privacy-part p{margin:0;color:var(--muted);line-height:1.55}
+.privacy-part .actions{margin-top:12px}
+.menu-hint{margin:0 0 4px;padding:2px 10px 6px;font-size:12.5px;color:var(--muted)}
+/* admin: this week or next week, and the students */
+.admin-forms{margin:0 0 12px}
+.next-ready{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px;font-size:14px}
+.next-ready .confirm{margin-top:0}
+.students-section{margin-top:28px;padding-bottom:48px}
+.student-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.student-tools .search{flex:1 1 220px;max-width:none}
+.students{display:grid;gap:6px;margin-top:6px}
+.student{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.student summary{display:grid;gap:4px;padding:10px 14px;cursor:pointer;list-style-position:inside}
+.student-who{display:inline-flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;min-width:0;overflow-wrap:anywhere}
+.student-who span{font-size:13px;color:var(--muted)}
+.student-facts{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:13px;color:var(--muted)}
+.student-facts b{color:var(--ink)}
+.student-facts .belt{vertical-align:-1px}
+.student-body{padding:0 14px 12px;border-top:1px solid var(--line)}
+.student-body h5{margin:12px 0 4px;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.student-marks{margin:0;padding-left:18px;font-size:14px;columns:16em}
+@media (pointer:coarse){
+  .student summary{min-height:44px}
+  .side-foot,.privacy-part .chipbtn{min-height:44px}
+  .student-tools .search{min-height:44px;font-size:16px}
+}

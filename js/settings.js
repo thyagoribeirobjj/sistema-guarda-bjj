@@ -1,6 +1,6 @@
 import { loadUserSettings, saveUserSettings } from './firebase.js';
 import { belts } from './content.js';
-import { useNotesAccount } from './notes.js';
+import { useNotesAccount, leaveNotesAccount, forgetNotes } from './notes.js';
 
 // Each visitor's language, theme, belt, favorites, progress and lesson plan. Kept in this browser, and in the
 // database (users/{uid}) once they sign in, so they follow them to other devices.
@@ -84,6 +84,19 @@ function forgetPersonalMarks() {
   settings.favorites = [];
   settings.progress = {};
   settings.lesson = null;
+}
+
+// "Delete my data" (the privacy page): nothing more is written to the account while it is deleted.
+export function leaveAccount() {
+  accountId = null;
+  leaveNotesAccount();
+}
+
+// Signed out, "delete my data" clears what this browser keeps.
+export function clearThisBrowser() {
+  forgetPersonalMarks();
+  store();
+  forgetNotes();
 }
 
 export async function useAccount(user) {

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { translationPlan, answerPlan, handFixedAfter } from '../js/translation.js';
+import { translationPlan, answerPlan, handFixedAfter, writtenIn, writtenAfter, translationLabel } from '../js/translation.js';
 
 const saved = {
   from: 'pt',
@@ -98,4 +98,55 @@ test('hand fixes are added by an edit, kept by keep, dropped by clear and transl
   assert.deepEqual(handFixedAfter({ title: 'keep', note: 'keep' }, ['title', 'note']), ['title', 'note']);
   assert.deepEqual(handFixedAfter({ title: 'translate', note: 'clear' }, ['title', 'note']), []);
   assert.deepEqual(handFixedAfter({ title: 'keep', note: 'keep' }), []);
+});
+
+// ---- the label beside a translation must be true ----
+
+test('a week saved from Portuguese: its English is labelled translated automatically', () => {
+  assert.equal(translationLabel(saved, 'title', 'Standing pass', 'en'), 'translatedAutomatically');
+  assert.equal(translationLabel({ ...saved, handFixed: ['title'] }, 'title', 'Standing pass', 'en'), 'yourCorrection');
+  assert.equal(translationLabel(saved, 'title', 'Standing guard pass', 'en'), 'yourCorrection', 'typed just now');
+});
+
+test('writing in the other language, the original shows with no label', () => {
+  assert.equal(translationLabel(saved, 'title', 'Passagem em pé', 'pt'), '');
+});
+
+test('saved from a language whose field was empty: the other language is the original, not a translation', () => {
+  // Written in Portuguese first; later saved from English with the note left empty in English.
+  const mixed = { from: 'en', title: { pt: 'Raspagem', en: 'Sweep' }, note: { pt: 'Tragam água', en: '' } };
+  assert.equal(writtenIn(mixed, 'note'), 'pt');
+  assert.equal(translationLabel(mixed, 'note', 'Tragam água', 'pt'), '');
+  assert.equal(writtenIn(mixed, 'title'), 'en');
+  assert.equal(translationLabel(mixed, 'title', 'Raspagem', 'pt'), 'translatedAutomatically');
+});
+
+test('each field remembers the language it was typed in, across saves from either language', () => {
+  // Saved from English: the English title was typed, the Portuguese one translated.
+  const first = { from: 'en', title: { pt: 'Passagem', en: 'Pass' }, note: { pt: '', en: '' }, written: { title: 'en' } };
+  // Saved again from Portuguese without changing anything: the English is still the original.
+  const again = writtenAfter({ saved: first, draft: copy(first), from: 'pt', to: 'en' });
+  assert.deepEqual(again, { title: 'en' });
+  const second = { ...first, from: 'pt', written: again };
+  assert.equal(translationLabel(second, 'title', 'Pass', 'en'), '');
+  assert.equal(translationLabel(second, 'title', 'Passagem', 'pt'), 'translatedAutomatically');
+});
+
+test('an original changed now was written in the language the admin writes in', () => {
+  const draft = copy(saved);
+  draft.title.pt = 'Passagem de guarda';
+  assert.deepEqual(writtenAfter({ saved, draft, from: 'pt', to: 'en' }), { title: 'pt', note: 'pt' });
+  draft.note = { pt: '', en: 'Bring water' };
+  assert.equal(writtenAfter({ saved, draft, from: 'pt', to: 'en' }).note, 'en');
+  draft.note = { pt: '', en: '' };
+  assert.equal(writtenAfter({ saved, draft, from: 'pt', to: 'en' }).note, undefined);
+  const missing = copy(saved);
+  missing.title.en = '';
+  assert.equal(writtenAfter({ saved: { ...saved, written: { title: 'en' } }, draft: missing, from: 'pt', to: 'en' }).title, 'pt', 'translated again from Portuguese');
+});
+
+test('nothing is claimed for text whose history is unknown (an old past week reused)', () => {
+  const past = { title: { pt: 'Raspagem', en: 'Sweep' }, note: {} };
+  assert.equal(translationLabel(past, 'title', 'Sweep', 'en'), '');
+  assert.equal(translationLabel(past, 'title', 'Sweeps', 'en'), 'yourCorrection');
 });

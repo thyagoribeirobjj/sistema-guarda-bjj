@@ -10,9 +10,11 @@ import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram
 import { changeNote } from './notes.js';
 import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
+import { privacyView, privacyActions } from './privacy.js';
+import { weekOn, localDate } from './week.js';
 
 const $ = (id) => document.getElementById(id);
-const pages = { curriculum: curriculumView, semana: weekView, meu: treeView, lesson: lessonView, method: methodView };
+const pages = { curriculum: curriculumView, semana: weekView, meu: treeView, lesson: lessonView, method: methodView, privacy: privacyView };
 
 function isPage(view) {
   return isModule(view) || (view in pages && (view !== 'semana' || state.week));
@@ -209,6 +211,7 @@ const clickActions = [
   ['[aria-haspopup="menu"]', (el) => (el.getAttribute('aria-expanded') === 'true' ? closeMenus() : openMenu(el))],
   ['#signIn', () => { closeMenus(); signIn().catch(() => alert(t('signInFailed'))); }],
   ['#signOut', () => { closeMenus(true); signOut(); }],
+  ...privacyActions(() => render()),
   ['#copyPlan', () => navigator.clipboard.writeText(planText()).then(
     () => { $('copyStatus').textContent = t('copied'); },
     () => { $('copyStatus').textContent = t('copyFailed'); },
@@ -300,6 +303,11 @@ async function accountChanged(user) {
   redrawPanel();
 }
 
+// site/week as stored: a prepared next week becomes this week on its start date, by this browser's own date.
+function useWeek(stored) {
+  ({ week: state.week, previous: state.weekBefore } = weekOn(stored, localDate()));
+}
+
 async function start() {
   applyTheme();
   try {
@@ -309,7 +317,7 @@ async function start() {
     throw error;
   }
   // The last copy this browser saw shows at once; a newer one replaces it below.
-  state.week = lastSeen('week');
+  useWeek(lastSeen('week'));
   state.media = lastSeen('media')?.techniques || {};
   route();
 
@@ -317,7 +325,9 @@ async function start() {
   if (!state.online) return;
   renderHeader();
   onAccountChange(accountChanged);
-  [state.week, state.media] = await Promise.all([loadWeek().catch(() => null), loadMedia()]);
+  const [week, media] = await Promise.all([loadWeek().catch(() => null), loadMedia()]);
+  useWeek(week);
+  state.media = media;
   if (state.week && (!location.hash || location.hash === '#semana')) state.view = 'semana';
   if (!isPage(state.view)) state.view = 'curriculum';
   render();

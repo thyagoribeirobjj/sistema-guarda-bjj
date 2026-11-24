@@ -54,7 +54,10 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/notes.js` | Each person's private notes on techniques: in this browser, and in `users/{uid}/private/notes` once signed in (read the first time a technique opens, saved one note at a time). |
 | `js/media.js` | YouTube links and player, and shrinking a diagram before it's saved. |
 | `js/lesson.js` | The lesson builder. Its choices are saved in `settings.lesson`. |
-| `js/admin.js` | The admin page (set this week's class; a new week moves the last one into past weeks). |
+| `js/admin.js` | The admin page: set this week's class, or prepare next week's with a start date; start from a past week. A new week moves the last one into past weeks. |
+| `js/week.js` | Decides which class is "this week" on a given day (a prepared week takes over on its start date) and what the admin page writes when it does. Tested in `tests/week.test.js`. |
+| `js/students.js`, `js/roster.js` | The admin page's Students section (read only when the coach taps "Show students"); `roster.js` counts, sorts, finds and groups (tested in `tests/roster.test.js`). Never shows notes. |
+| `js/privacy.js` | The privacy page (`#privacy`) and "Delete my data". Its words must stay true to the code and `firestore.rules`. |
 | `js/strings.js` | Every button and label, in PT and EN. |
 | `js/settings.js` | Each person's language, theme, belt, favorites, progress ("Drilling" / "Got it" per move) and lesson builder choices. |
 | `js/firebase.js` | Sign-in and **every** database call. Nothing else talks to Firebase. |
@@ -63,7 +66,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `data/curriculum.json` | The other parts of the fight, their order (`moduleOrder`) and the "where to go" links (`nx`). |
 | `firestore.rules` | Who can read and change what in the database. |
 | `js/translation.js` | Decides, on the admin page, which fields to translate, keep or ask about (see Translation). |
-| `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `rules.test.js` checks the database rules; `smoke.mjs` uses the site in a real browser; `nightly.mjs` checks the published site every night. |
+| `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `week.test.js` and `roster.test.js` check next week and the students list; `rules.test.js` checks the database rules; `smoke.mjs` uses the site in a real browser; `nightly.mjs` checks the published site every night. |
 | `docs/translator.gs` | A copy of the translator that runs in the site's Google account (see Translation). |
 
 ## Navigation
@@ -83,6 +86,8 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 - **A new coach tool:** one entry in `coach` (`js/nav.js`), its page function in `pages` (`js/app.js`), its label in
   `js/strings.js`, and `intro(title, lead, '', t('coach'))` so the page shows the "Coach" line above its title.
 - Every page has its own link (`#<view>`); old links keep working, so never rename a view.
+- **Privacy** (`#privacy`) is linked from the foot of the sidebar and the account menu (with "Signing in lets your coaches
+  see your progress" under the sign-in button). Change its words whenever what is kept, or who can read it, changes.
 
 ## Text
 
@@ -106,8 +111,8 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 
 | Document | Holds | Who can read | Who can change |
 |---|---|---|---|
-| `site/week` | This week's class (the "Esta semana" page): `weekOf`, `title`, `note`, `techniques` (ids), `from` (the language the admin wrote in) and `handFixed` (`'title'` and/or `'note'`: translations the admin corrected by hand; missing means none) | everyone | admins |
-| `site/weeks` | Past weeks, newest first, at most 52: `weeks: [{ weekOf, title, note, techniques }]`. Saving a new week on the admin page adds the previous one. Read only when someone taps "Past weeks". | everyone | admins |
+| `site/week` | This week's class (the "Esta semana" page): `weekOf`, `title`, `note`, `techniques` (ids), `from` (the language the admin last wrote in), `written` (`{ title: 'pt', note: 'en' }`: the language each field's original was typed in) and `handFixed` (`'title'` and/or `'note'`: translations the admin corrected by hand; missing means none). Optionally `next`: a prepared class with the same fields, whose `weekOf` is the day it takes over (see below) | everyone | admins |
+| `site/weeks` | Past weeks, newest first, at most 52: `weeks: [{ weekOf, title, note, techniques, from, written, handFixed }]` (older entries have only the first four). Saving a new week on the admin page adds the previous one. Read only when someone taps "Past weeks" or "Start from a past week". | everyone | admins |
 | `admins/{email}` | One document per admin, named by their lowercase email | that person | nobody from the site; add in the Firebase console |
 | `site/media` | Each move's video (a YouTube id), whether it has a diagram and, where an admin changed it, its belt level: `techniques.<id>.video`, `.diagram`, `.level` | everyone | admins |
 | `diagrams/{id}` | A move's diagram, as a small image (`data:image/webp;base64,…`, under 900 KB) | everyone | admins |
@@ -125,6 +130,12 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 - **Belt levels.** Every technique is basic (`"lv": "b"`, white belt) or advanced (`"a"`, blue belt) in the `data/`
   files; an admin can set another belt on the technique's panel, saved in `site/media` (no extra read). `levelOf()` in
   `js/content.js` decides.
+- **Next week.** A prepared week lives inside `site/week` as `next`, so it costs no extra read. Each browser shows it as
+  this week from its start date on (by that browser's own date), with the old class as the newest past week. The
+  database itself is switched (the old class filed in `site/weeks`, `next` becomes the week) the next time an admin
+  opens or saves the admin page. `js/week.js` decides all of this.
+- **Students.** The admin page lists every `users/{uid}` only when the coach taps "Show students": one read per
+  student, so it is never loaded by itself.
 - **Keep database reads low.** The free plan allows 50,000 reads a day. `site/week`, `site/media` and `site/weeks` are kept
   in each browser for 15 minutes (`site()` in `js/firebase.js`), so a change can take that long to reach a student
   who just visited; admin pages always read fresh. Don't add a database read that runs on every visit.
@@ -138,7 +149,9 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   `diagrams/<id>`. Don't add big images to the repo either.
 - **Translation.** On the admin page, the admin picks the language they write in and sees only that language's
   fields; the other is translated automatically when they save (`translate()` in `js/firebase.js`). The
-  translation shows as a quiet line under each field, with "Edit translation" to correct it by hand. A corrected
+  translation shows as a quiet line under each field, with "Edit translation" to correct it by hand, and a word saying
+whether it was translated automatically or corrected by hand (nothing when that line is the original someone typed:
+`translationLabel()`, using `written`). A corrected
   field is listed in `handFixed` and is never translated over silently: if its original text changes, the page
   asks first. What happens to each field on save is decided in `js/translation.js` (tested in
   `tests/translation.test.js`); `js/admin.js` carries it out. The translator is
@@ -151,7 +164,8 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   Locally there is no sign-in or database: every page works except "Esta semana" and the admin page.
 - Every pull request runs the tests, then opens the site in Chrome and uses it (`tests/smoke.mjs`: the sidebar,
   Curriculum home, a technique, search, progress, the tree, sharing, the coach's tools from the account menu, the
-  phone's bottom bar and part switcher, previous / next in a technique, notes, the "new" dot on This week, the belt filter, both languages, the admin page). Once a pull request is merged, `main`
+  phone's bottom bar and part switcher, previous / next in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and "Clear this
+  browser", a prepared next week taking over on its date, both languages, the admin page). Once a pull request is merged, `main`
   publishes the site **and** `firestore.rules` about a minute later, then runs the same browser check on the
   published site. When you add a feature people click, add a step for it to `tests/smoke.mjs`.
 - Every night `.github/workflows/nightly.yml` checks the published site (`tests/nightly.mjs`): up, safe, still

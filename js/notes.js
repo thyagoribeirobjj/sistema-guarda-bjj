@@ -31,7 +31,7 @@ function joinedAccount() {
   try { return localStorage.getItem(joinedKey); } catch { return null; }
 }
 
-function forgetNotes() {
+export function forgetNotes() {
   notes = {};
   storeLocal();
   try { localStorage.removeItem(joinedKey); } catch {}
@@ -111,6 +111,14 @@ async function send(id) {
     console.error(error);
     document.dispatchEvent(new CustomEvent('note-not-saved', { detail: id }));
   }
+}
+
+// The account is being deleted: drop what is waiting and write nothing more to it.
+export function leaveNotesAccount() {
+  for (const timer of waiting.values()) clearTimeout(timer);
+  waiting.clear();
+  user = null;
+  accountId = null;
 }
 
 // Sends any note still waiting, for example when the page is closing.

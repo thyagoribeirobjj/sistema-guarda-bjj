@@ -1,5 +1,6 @@
 import { html } from './html.js';
 import { content, findTechnique, searchTechniques, levelOf, upToBelt } from './content.js';
+import { pastWeeksShown } from './week.js';
 import { settings, isFavorite, progressOf } from './settings.js';
 import { state } from './state.js';
 import { t, text } from './strings.js';
@@ -19,7 +20,7 @@ export function levelOfId(id) {
   return levelOf(findTechnique(id).technique, state.media[id]?.level);
 }
 
-const beltMark = (belt, label = false) => (label
+export const beltMark = (belt, label = false) => (label
   ? html`<i class="belt" data-belt="${belt}" role="img" aria-label="${beltName(belt)}" title="${beltName(belt)}"></i>`
   : html`<i class="belt" data-belt="${belt}" aria-hidden="true"></i>`);
 
@@ -140,7 +141,7 @@ function pastWeeks() {
     return html`<div class="actions"><button type="button" class="chipbtn" data-past-weeks>${t('pastWeeks')}</button>${
       state.pastWeeksStatus === 'failed' ? html`<span class="status" role="status">${t('pastWeeksFailed')}</span>` : ''}</div>`;
   }
-  const weeks = state.pastWeeks.filter((week) => week.weekOf !== state.week.weekOf);
+  const weeks = pastWeeksShown(state.pastWeeks, state.week, state.weekBefore);
   return html`<h3 class="sect-title">${t('pastWeeks')}</h3>${
     weeks.length ? html`<div class="results">${weeks.map((week) => weekCard(week, true))}</div>` : html`<p class="note">${t('noPastWeeks')}</p>`}`;
 }

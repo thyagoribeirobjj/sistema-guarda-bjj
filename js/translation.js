@@ -39,3 +39,41 @@ export function answerPlan(plan, answer) {
 export function handFixedAfter(plan, handFixed = []) {
   return translatedFields.filter((name) => plan[name] === 'keepEdited' || (plan[name] === 'keep' && handFixed.includes(name)));
 }
+
+// ---- which language each field was written in ----
+// written: { title: 'pt', note: 'en' } in site/week. Each field remembers the language its original text was typed
+// in, since the admin can write one week in two languages over several saves.
+
+// Weeks saved before `written` existed: the language they were saved from, unless that field was empty there
+// (then its text was kept from the other language, where someone typed it).
+export function writtenIn(saved = {}, name) {
+  if (saved.written?.[name]) return saved.written[name];
+  const from = saved.from || 'pt';
+  const other = from === 'pt' ? 'en' : 'pt';
+  return saved[name]?.[from] || !saved[name]?.[other] ? from : other;
+}
+
+// After a save: an original typed or changed now was written in `from`; one left as it was keeps its language;
+// a field with text in the other language only was written in that one.
+export function writtenAfter({ saved = {}, draft, from, to }) {
+  const written = {};
+  for (const name of translatedFields) {
+    const source = draft[name]?.[from] || '';
+    const translation = draft[name]?.[to] || '';
+    if (!source) {
+      if (translation) written[name] = to;
+    } else {
+      written[name] = source === (saved[name]?.[from] || '') && translation ? writtenIn(saved, name) : from;
+    }
+  }
+  return written;
+}
+
+// The quiet word beside a translation on the admin page: '' when that text is an original someone typed,
+// 'translatedAutomatically', or 'yourCorrection'. Nothing is claimed for text whose history isn't known.
+export function translationLabel(saved = {}, name, translation, other) {
+  const unchanged = translation === (saved[name]?.[other] || '');
+  if (!unchanged) return 'yourCorrection';
+  if (!saved.from || writtenIn(saved, name) === other) return '';
+  return saved.handFixed?.includes(name) ? 'yourCorrection' : 'translatedAutomatically';
+}

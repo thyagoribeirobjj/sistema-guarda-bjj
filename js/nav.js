@@ -106,7 +106,8 @@ function sidebarItem(item) {
 }
 
 export function sidebar() {
-  return html`${shown(students).map(sidebarItem)}<div class="side-coach"><span class="menu-label">${t('coach')}</span>${shown(coach).map(sidebarItem)}</div>`;
+  return html`${shown(students).map(sidebarItem)}<div class="side-coach"><span class="menu-label">${t('coach')}</span>${shown(coach).map(sidebarItem)}</div>
+    <a class="side-foot" href="#privacy" ${current(currentView() === 'privacy')}>${t('privacy')}</a>`;
 }
 
 // ---- inside a part, on phones: back to Curriculum, and a menu of every part ----

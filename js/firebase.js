@@ -106,12 +106,12 @@ export async function saveWeek(week) {
 // site/weeks holds { weeks: [{ weekOf, title, note, techniques }] }, newest first. Read only when someone asks.
 const pastWeeksKept = 52;
 
-export async function loadPastWeeks() {
-  return (await site('weeks'))?.weeks || [];
+export async function loadPastWeeks({ fresh = false } = {}) {
+  return (await site('weeks', fresh))?.weeks || [];
 }
 
 export async function archiveWeek(week) {
-  const past = { weekOf: week.weekOf, title: week.title || {}, note: week.note || {}, techniques: week.techniques || [] };
+  const past = pastEntry(week);
   const older = ((await read('site/weeks'))?.weeks || []).filter((other) => other.weekOf !== past.weekOf);
   await write('site/weeks', { weeks: [past, ...older].slice(0, pastWeeksKept), updatedBy: auth.currentUser.email });
   forget('weeks');
@@ -125,6 +125,22 @@ export function loadUserSettings(uid) {
 export function saveUserSettings(uid, data) {
   const user = auth.currentUser;
   return write(`users/${uid}`, { ...data, email: user.email, name: (user.displayName || '').slice(0, 100) });
+}
+
+// Every student's users/{uid}, for coaches (firestore.rules lets admins read them). Read only when a coach asks:
+// each student is one read. Notes live elsewhere and are never part of this.
+export async function loadStudents() {
+  const snapshot = await fb.getDocs(fb.collection(db, 'users'));
+  return snapshot.docs.map((user) => {
+    const data = user.data();
+    return { ...data, uid: user.id, updatedAt: data.updatedAt?.toMillis?.() ?? null };
+  });
+}
+
+// "Delete my data": the person's notes, then their settings. Signing out afterwards clears this browser.
+export async function deleteMyData(uid) {
+  await fb.deleteDoc(fb.doc(db, `users/${uid}/private/notes`));
+  await fb.deleteDoc(fb.doc(db, `users/${uid}`));
 }
 
 // users/{uid}/private/notes holds { notes: { <technique id>: text } }. Only that person can read it (firestore.rules).
