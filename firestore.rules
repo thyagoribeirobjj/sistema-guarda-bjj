@@ -15,11 +15,12 @@ service cloud.firestore {
     }
     function validSettings() {
       let data = request.resource.data;
-      return data.keys().hasOnly(['email', 'language', 'theme', 'favorites', 'updatedAt'])
+      return data.keys().hasOnly(['email', 'language', 'theme', 'favorites', 'progress', 'updatedAt'])
         && data.email == request.auth.token.email
         && data.language in ['pt', 'en']
         && data.theme in ['', 'light', 'dark']
         && data.favorites is list && data.favorites.size() <= 500
+        && (!('progress' in data) || (data.progress is map && data.progress.size() <= 1000))
         && data.updatedAt == request.time;
     }
 
@@ -46,7 +47,7 @@ service cloud.firestore {
       allow read: if signedIn() && email == request.auth.token.email.lower();
     }
 
-    // Each person's language, theme and favorites. Only they can see or change them.
+    // Each person's language, theme, favorites and progress. Only they can see or change them.
     match /users/{uid} {
       allow read, delete: if isOwner(uid);
       allow create, update: if isOwner(uid) && validSettings();

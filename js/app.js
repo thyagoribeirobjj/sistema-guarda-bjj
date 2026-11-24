@@ -1,9 +1,9 @@
 import { content, loadContent, findTechnique, isModule } from './content.js';
-import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadMedia, saveVideo, saveDiagram, removeDiagram } from './firebase.js';
-import { settings, applyTheme, currentTheme, useAccount, changeSettings, toggleFavorite } from './settings.js';
+import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram } from './firebase.js';
+import { settings, applyTheme, currentTheme, useAccount, changeSettings, toggleFavorite, markProgress } from './settings.js';
 import { state, readHash } from './state.js';
 import { t } from './strings.js';
-import { navigation, moduleView, weekView, treeView, methodView } from './views.js';
+import { navigation, moduleView, weekView, treeView, methodView, searchView } from './views.js';
 import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram } from './panel.js';
 import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
@@ -32,14 +32,28 @@ function renderHeader() {
   $('account').hidden = !state.online;
   $('account').textContent = state.account ? t('signOut') : t('signIn');
   $('account').title = state.account ? state.account.email : t('signInWithGoogle');
+  $('search').placeholder = t('search');
+  $('search').setAttribute('aria-label', t('search'));
   $('nav').setAttribute('aria-label', t('modules'));
   $('nav').innerHTML = navigation();
   $('nav').querySelector('[aria-current]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 
+function mainView() {
+  if (state.search) return searchView();
+  return isModule(state.view) ? moduleView(state.view) : tabs[state.view]();
+}
+
 function render() {
   renderHeader();
-  $('main').innerHTML = isModule(state.view) ? moduleView(state.view) : tabs[state.view]();
+  $('main').innerHTML = mainView();
+}
+
+function search(words) {
+  state.search = words.trim();
+  if (!state.search) $('search').value = '';
+  render();
+  window.scrollTo(0, 0);
 }
 
 function route() {
@@ -53,6 +67,8 @@ function route() {
   }
   if (isTab(target.view)) {
     state.view = target.view;
+    state.search = '';
+    $('search').value = '';
     if (panelOpen()) closePanel();
     render();
     window.scrollTo(0, 0);
@@ -91,6 +107,12 @@ function moveFavorite(index, step) {
 const clickActions = [
   ['[data-lang]', (el) => { changeSettings({ language: el.dataset.lang }); render(); redrawPanel(); }],
   ['[data-favorite]', (el) => { toggleFavorite(el.dataset.favorite); render(); redrawPanel(); }],
+  ['[data-progress]', (el) => {
+    const [id, mark] = el.dataset.progress.split(':');
+    markProgress(id, mark);
+    render();
+    redrawPanel(`[data-progress="${el.dataset.progress}"]`);
+  }],
   ['[data-unfavorite]', (el) => { changeSettings({ favorites: settings.favorites.filter((id) => id !== el.dataset.unfavorite) }); render(); }],
   ['[data-move]', (el) => { const [index, step] = el.dataset.move.split(':').map(Number); moveFavorite(index, step); render(); }],
   ['[data-tree-order]', (el) => { state.treeOrder = el.dataset.treeOrder; render(); }],
@@ -100,6 +122,7 @@ const clickActions = [
     render();
   }],
   ['[data-technique]', (el) => openPanel(el.dataset.technique)],
+  ['nav a, .results a', () => { if (state.search) search(''); }],
   ['[data-play]', (el) => { el.outerHTML = videoPlayer(el.dataset.play); }],
   ['[data-save-video]', (el) => changeMedia(el.dataset.saveVideo, 'video', async () => {
     const videoId = youtubeId($('videoLink').value);
@@ -137,8 +160,14 @@ document.addEventListener('change', (event) => {
   else if (redraw === false) redrawPlan();
 });
 
+document.addEventListener('input', (event) => {
+  if (event.target.id === 'search') search(event.target.value);
+});
+
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && panelOpen()) closePanel();
+  if (event.key !== 'Escape') return;
+  if (panelOpen()) closePanel();
+  else if (state.search) search('');
 });
 
 window.addEventListener('hashchange', route);
@@ -159,6 +188,9 @@ async function start() {
     $('main').innerHTML = `<p class="intro" role="alert">${t('loadFailed')}</p>`;
     throw error;
   }
+  // The last copy this browser saw shows at once; a newer one replaces it below.
+  state.week = lastSeen('week');
+  state.media = lastSeen('media')?.techniques || {};
   route();
 
   state.online = await startFirebase();
@@ -167,7 +199,9 @@ async function start() {
   onAccountChange(accountChanged);
   [state.week, state.media] = await Promise.all([loadWeek().catch(() => null), loadMedia()]);
   if (state.week && (!location.hash || location.hash === '#semana')) state.view = 'semana';
+  if (!isTab(state.view)) state.view = content.order[0];
   render();
+  if (panelOpen()) redrawPanel('#panelClose');
 }
 
 start();

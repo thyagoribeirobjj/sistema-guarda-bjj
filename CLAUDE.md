@@ -44,20 +44,20 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `index.html`, `admin.html` | Markup only. |
 | `css/theme.css` | Every color and font: dark (the default) and light. **The only file with color values.** |
 | `css/app.css` | Layout and components. Uses the theme's variables (`var(--ink)`) only. |
-| `js/app.js` | Starts the site: header, tabs, links (`#top`, `#t-top-base`), clicks, sign-in. |
-| `js/views.js` | The tabs: this week, each module, my tree (favorites), method. |
+| `js/app.js` | Starts the site: header, search box, tabs, links (`#top`, `#t-top-base`), clicks, sign-in. |
+| `js/views.js` | The tabs: this week, each module, my tree (favorites), method; and the search results. |
 | `js/panel.js` | The technique panel: details, video, diagram, "where to go" links, next stage; admins attach media here. |
 | `js/media.js` | YouTube links and player, and shrinking a diagram before it's saved. |
 | `js/lesson.js` | The lesson builder. |
 | `js/admin.js` | The admin page (set this week's class). |
 | `js/strings.js` | Every button and label, in PT and EN. |
-| `js/settings.js` | Each person's language, theme and favorites. |
+| `js/settings.js` | Each person's language, theme, favorites and progress ("Drilling" / "Got it" per move). |
 | `js/firebase.js` | Sign-in and **every** database call. Nothing else talks to Firebase. |
-| `js/content.js`, `js/state.js` | Loads the curriculum; tracks which tab and technique are showing. |
+| `js/content.js`, `js/state.js` | Loads the curriculum and searches it by name; tracks which tab and technique are showing. |
 | `data/content.json` | The guard modules (top, bottom), drills and the method. |
 | `data/curriculum.json` | The other parts of the fight, the tab order (`moduleOrder`) and the "where to go" links (`nx`). |
 | `firestore.rules` | Who can read and change what in the database. |
-| `tests/` | `content.test.js` checks the curriculum; `rules.test.js` checks the database rules. |
+| `tests/` | `content.test.js` checks the curriculum; `rules.test.js` checks the database rules; `smoke.mjs` uses the site in a real browser; `nightly.mjs` checks the published site every night. |
 | `docs/translator.gs` | A copy of the translator that runs in the site's Google account (see Translation). |
 
 ## Text
@@ -86,14 +86,17 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `site/media` | Each move's video (a YouTube id) and whether it has a diagram: `techniques.<id>.video`, `.diagram` | everyone | admins |
 | `diagrams/{id}` | A move's diagram, as a small image (`data:image/webp;base64,…`, under 900 KB) | everyone | admins |
 | `site/config` | `translatorUrl`: where the translator lives | everyone | admins |
-| `users/{uid}` | A person's `language`, `theme`, `favorites` (their "Minha árvore", in their order) | that person | that person |
+| `users/{uid}` | A person's `language`, `theme`, `favorites` (their "Minha árvore", in their order) and `progress` (`<id>: "learning" \| "done"`) | that person | that person |
 
 - `firestore.rules` is the only thing that protects data. The page hiding a button protects nothing.
 - Any change to `firestore.rules` needs a matching test in `tests/rules.test.js`: one that shows the
   allowed case works and one that shows the blocked case is refused.
 - **To add an admin:** Firebase console → Firestore → `admins` → Add document. Document ID: their Google
   email in lowercase. Field `name` (text). Remove the document to remove the admin.
-- Students' settings and favorites are private. Never add a rule that lets one person read another's.
+- Students' settings, favorites and progress are private. Never add a rule that lets one person read another's.
+- **Keep database reads low.** The free plan allows 50,000 reads a day. `site/week` and `site/media` are kept in
+  each browser for 15 minutes (`site()` in `js/firebase.js`), so a change can take that long to reach a student
+  who just visited; admin pages always read fresh. Don't add a database read that runs on every visit.
 
 ## Videos, diagrams and translation
 
@@ -111,8 +114,13 @@ never "fix" a conflict by replacing a whole file with your copy.
 
 - `npm test` runs every test (it needs Node 22 and Java 21). `npm start` serves the site at http://localhost:8000.
   Locally there is no sign-in or database: every tab works except "Esta semana" and the admin page.
-- Every pull request runs the tests. Once one is merged, `main` publishes the site **and** `firestore.rules`
-  about a minute later.
+- Every pull request runs the tests, then opens the site in Chrome and uses it (`tests/smoke.mjs`: tabs, a
+  technique, search, progress, the tree, both languages, the admin page). Once a pull request is merged, `main`
+  publishes the site **and** `firestore.rules` about a minute later, then runs the same browser check on the
+  published site. When you add a feature people click, add a step for it to `tests/smoke.mjs`.
+- Every night `.github/workflows/nightly.yml` checks the published site (`tests/nightly.mjs`): up, safe, still
+  free, and the same as `main`. A failure opens one issue named "Nightly check failed", which closes itself on
+  the next night that passes. If you see that issue open, fix what it names before other work.
 - Before you open or update a pull request: run `npm test`, open the changed pages locally in both languages and
   both themes, and check a phone-width window.
 

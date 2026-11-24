@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "python3 -m http.server 8000",
+    "smoke": "node tests/smoke.mjs",
     "test": "npx --yes firebase-tools@15.35.0 emulators:exec --only firestore --project demo-sistema-guarda \"node --test tests/*.test.js\""
   }
 }

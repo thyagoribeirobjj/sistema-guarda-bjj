@@ -124,7 +124,7 @@ async function start() {
   applyTheme();
   await loadContent();
   if (!(await startFirebase())) return message('liveOnly');
-  saved = { ...saved, ...(await loadWeek().catch(() => null)) };
+  saved = { ...saved, ...(await loadWeek({ fresh: true }).catch(() => null)) };
   week = saved;
   writingIn = saved.from || settings.language;
   onAccountChange(async (user) => {

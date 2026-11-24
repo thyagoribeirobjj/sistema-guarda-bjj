@@ -1,9 +1,9 @@
 import { html } from './html.js';
 import { content, findTechnique } from './content.js';
-import { settings, isFavorite } from './settings.js';
+import { settings, isFavorite, progressOf } from './settings.js';
 import { state } from './state.js';
 import { t, text } from './strings.js';
-import { heart, techniqueChip } from './views.js';
+import { heart, techniqueChip, progressMarks } from './views.js';
 import { videoPreview } from './media.js';
 import { loadDiagram } from './firebase.js';
 
@@ -53,6 +53,7 @@ function panelContent(id) {
     <h3 id="panelTitle">${text(technique.n)}</h3>
     <div class="from">${text(module.title)} · ${t('stage')} ${stageIndex + 1}: ${text(stage.name)}</div>
     <button type="button" class="fav-btn" data-favorite="${id}" aria-pressed="${favorite}">${heart(favorite)}${t(favorite ? 'inTree' : 'addToTree')}</button>
+    <div class="marks" role="group" aria-label="${t('myProgress')}">${['learning', 'done'].map((mark) => html`<button type="button" class="chipbtn" data-progress="${id}:${mark}" aria-pressed="${progressOf(id) === mark}">${progressMarks[mark]} ${t(mark)}</button>`)}</div>
     ${videoPreview(media.video)}
     ${media.diagram ? html`<div class="diagram" id="panelDiagram"></div>` : ''}
     <h5>${t('whatItIs')}</h5><p>${text(technique.d)}</p>
@@ -65,7 +66,7 @@ function panelContent(id) {
     ${state.admin ? mediaControls(id, media) : ''}`;
 }
 
-export function openPanel(id, { remember = true, focus = 'close' } = {}) {
+export function openPanel(id, { remember = true, focus = '#panelClose' } = {}) {
   if (!findTechnique(id)) return;
   if (remember && state.panel.current && state.panel.current !== id) state.panel.history.push(state.panel.current);
   state.panel.current = id;
@@ -75,11 +76,12 @@ export function openPanel(id, { remember = true, focus = 'close' } = {}) {
   panel().scrollTop = 0;
   history.replaceState(null, '', `#t-${id}`);
   if (state.media[id]?.diagram) showDiagram(id);
-  panel().querySelector(focus === 'favorite' ? '[data-favorite]' : '#panelClose')?.focus();
+  panel().querySelector(focus)?.focus();
 }
 
-export function redrawPanel() {
-  if (state.panel.current) openPanel(state.panel.current, { remember: false, focus: 'favorite' });
+// Redraws the open technique; focus says which button keeps the keyboard focus.
+export function redrawPanel(focus = '[data-favorite]') {
+  if (state.panel.current) openPanel(state.panel.current, { remember: false, focus });
 }
 
 export function panelBack() {

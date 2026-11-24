@@ -1,6 +1,7 @@
 // What the page is showing right now. app.js changes it, then calls render().
 export const state = {
   view: '',
+  search: '',
   week: null,
   media: {},
   online: false,
