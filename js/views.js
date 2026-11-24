@@ -8,7 +8,7 @@ export const heart = (filled) => html`<svg viewBox="0 0 24 24" fill="${filled ? 
 
 export const progressMarks = { learning: '◐', done: '✓' };
 
-// ---- pieces used by several tabs ----
+// ---- pieces used by several pages ----
 
 export function techniqueChip(id) {
   const place = findTechnique(id);
@@ -28,8 +28,9 @@ function legend() {
   return html`<div class="legend"><span><b class="mine">★</b> ${t('mine')}</span><span><b class="gtag">G</b> ${t('bookTag')}</span><span><b class="vtag">▶</b> ${t('video')}</span><span><b class="heart">♥</b> ${t('inTree')}</span><span><b class="ptag">◐</b> ${t('learning')}</span><span><b class="ptag">✓</b> ${t('done')}</span></div>`;
 }
 
-function intro(title, lead, extra = '') {
-  return html`<div class="intro"><div><h2>${title}</h2><p>${lead}</p></div>${extra}</div>`;
+// eyebrow: a small line above the title, such as "Coach" on the coach's pages.
+export function intro(title, lead, extra = '', eyebrow = '') {
+  return html`<div class="intro"><div>${eyebrow ? html`<p class="eyebrow">${eyebrow}</p>` : ''}<h2>${title}</h2><p>${lead}</p></div>${extra}</div>`;
 }
 
 function stageBlock(number, title, goal, body) {
@@ -40,14 +41,22 @@ function gameCard(game) {
   return html`<div class="card"><h4>${text(game.n)}${game.mine ? html` <span class="mine">★ ${t('mine')}</span>` : ''}</h4><p>${text(game.d)}</p><div class="rule"><b>${t('who')}</b><span>${text(game.who)}</span><b>${t('wins')}</b><span>${text(game.win)}</span><b>${t('time')}</b><span>${text(game.time)}</span></div></div>`;
 }
 
-export function navigation() {
-  const tab = (key, label, extra = '') => html`<a href="#${key}" ${state.view === key && !state.search ? html`aria-current="page"` : ''}>${label}${extra}</a>`;
-  return html`${state.week ? tab('semana', t('week')) : ''}${content.order.map((key) => tab(key, text(content.modules[key].title)))}${
-    tab('meu', `♥ ${t('myTree')}`, html`<span class="navcount">${settings.favorites.length || ''}</span>`)}${
-    tab('lesson', t('lesson'))}${tab('method', t('method'))}`;
+// Every technique in a part of the fight, once.
+function techniqueIds(module) {
+  return [...new Set(module.stages.flatMap((stage) => stage.items.map((technique) => technique.id)))];
 }
 
-// ---- tabs ----
+// ---- pages ----
+
+// Curriculum home: one card per part of the fight, in order.
+export function curriculumView() {
+  const cards = content.order.map((key, i) => {
+    const module = content.modules[key];
+    const ids = techniqueIds(module);
+    return html`<a class="card part-card" href="#${key}"><span class="part-n" aria-hidden="true">${i + 1}</span><h3>${text(module.title)}</h3><p>${text(module.intro)}</p><span class="part-count">${ids.length} ${t('techniques')}</span>${progressBar(ids)}</a>`;
+  });
+  return html`${intro(t('curriculum'), t('curriculumLead'))}<div class="grid parts">${cards}</div>`;
+}
 
 export function moduleView(key) {
   const module = content.modules[key];
@@ -55,11 +64,11 @@ export function moduleView(key) {
   const games = module.games?.length
     ? html`<section class="games"><h3 class="sect-title">${t('games')}</h3><p class="sect-sub">${t('gamesLead')}</p><div class="grid">${module.games.map(gameCard)}</div></section>`
     : '';
-  const ids = [...new Set(module.stages.flatMap((stage) => stage.items.map((technique) => technique.id)))];
+  const ids = techniqueIds(module);
   return html`${intro(text(module.title), `${text(module.intro)} ${t('tapHint')}`, progressBar(ids))}${legend()}<div class="spine">${stages}</div>${games}`;
 }
 
-// "Got it: 3 of 24", shown once the visitor has marked something in this tab.
+// "Got it: 3 of 24", shown once the visitor has marked something in this part.
 function progressBar(ids) {
   if (!ids.some((id) => progressOf(id))) return '';
   const done = ids.filter((id) => progressOf(id) === 'done').length;
@@ -154,7 +163,7 @@ function fightOrderList(favorites, removeButton) {
 
 export function methodView() {
   const method = content.method;
-  return html`${intro(text(method.title), text(method.intro))}
+  return html`${intro(text(method.title), text(method.intro), '', t('coach'))}
     <div class="steps">${method.steps.map((step, i) => html`<div class="step"><div class="n">${i + 1}</div><h4>${text(step.n)} · ${step.m} min</h4><p>${text(step.d)}</p></div>`)}</div>
     <h3 class="sect-title">${t('principles')}</h3><ol class="principles">${method.principles.map((p) => html`<li><b>${text(p.b)}</b><span>${text(p.s)}</span></li>`)}</ol>
     <h3 class="sect-title">${t('ladder')}</h3><div class="ladder">${method.ladder.map((step) => html`<div><div class="pct">${step.p}</div><div class="lad-bar"><i style="width:${Number(step.w)}%"></i></div><p>${text(step.d)}</p></div>`)}</div>

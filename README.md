@@ -9,11 +9,11 @@ Live site: <https://sistemaguarda.com>
 
 | | Anyone | Signed in with Google | Admin |
 |---|---|---|---|
-| Browse every tab: the parts of the fight, the lesson builder, the method | ✓ | ✓ | ✓ |
+| Browse the curriculum (every part of the fight), and the coach's tools: the lesson builder and the method | ✓ | ✓ | ✓ |
 | See this week's class ("Esta semana") and past weeks | ✓ | ✓ | ✓ |
 | Share a technique (the phone's share sheet, or the link is copied) | ✓ | ✓ | ✓ |
 | Search techniques by name or by a word in their description | ✓ | ✓ | ✓ |
-| Switch language (PT / EN) and dark / light mode | ✓ in this browser | ✓ on every device | ✓ |
+| Switch language (PT / EN) and theme (six, in the account menu) | ✓ in this browser | ✓ on every device | ✓ |
 | Build "Minha árvore" (♥ favorite techniques, in their own order) | ✓ in this browser | ✓ on every device | ✓ |
 | Plan a class in the lesson builder | ✓ in this browser | ✓ on every device | ✓ |
 | Watch a move's video and see its diagram | ✓ | ✓ | ✓ |
@@ -21,6 +21,11 @@ Live site: <https://sistemaguarda.com>
 | Attach a video or diagram to a move (from the move's panel) | | | ✓ |
 
 When someone signs in for the first time, the settings and favorites from their browser are saved to their account.
+
+**Finding your way:** This week, Curriculum (a card for each part of the fight) and My tree. On a phone they sit in a
+bar at the bottom of the screen, with Search; inside a part, the bar at the top jumps to another part. On a computer
+they're in a sidebar on the left. The coach's tools (lesson builder, method, and Admin for admins) are in the account
+menu (the round button at the top right), and at the bottom of the sidebar on a computer.
 
 **Admins write in one language.** On the admin page, pick PT or EN and fill each field once; the other language is
 translated automatically when you save, and you can correct it.
@@ -37,7 +42,7 @@ in lowercase; add a text field `name`. Delete the document to remove them.
 ```
 sistemaguarda.com (static files on Firebase Hosting)
   ├─ data/content.json        guard modules (top, bottom), drills, method
-  ├─ data/curriculum.json     the other parts of the fight, tab order, "where to go" links
+  ├─ data/curriculum.json     the other parts of the fight, their order, "where to go" links
   ├─ Firebase Authentication  "Sign in with Google"
   └─ Firestore database       site/week · site/weeks · admins/{email} · users/{uid}
                               firestore.rules decides who reads and writes what
@@ -47,8 +52,8 @@ sistemaguarda.com (static files on Firebase Hosting)
 |---|---|
 | `index.html`, `admin.html` | Markup, plus the icon and share-preview tags |
 | `img/` | The logo (also the browser icon), the phone home-screen icon and the picture shown when a link is shared |
-| `css/theme.css` | Colors and fonts for dark and light mode. Change the look here. |
-| `css/app.css` | Layout and components |
+| `css/theme.css` | Colors and fonts for every theme. Change the look here. |
+| `css/app.css`, `css/nav.css` | Components; the navigation and page layout |
 | `js/` | The site's code, one file per job (see `CLAUDE.md`) |
 | `js/strings.js` | Button and label text in PT and EN |
 | `data/` | The curriculum |
@@ -60,7 +65,7 @@ sistemaguarda.com (static files on Firebase Hosting)
 
 Edit the files in `data/`. Every technique and game has an `id` such as `top-standing-pass`. Never change an existing
 id (favorites, the week's class and the "where to go" links point at it); give new techniques a new, unique one.
-`CLAUDE.md` explains shared techniques, links and adding a tab.
+`CLAUDE.md` explains shared techniques, links, adding a part of the fight and adding a coach tool.
 
 ## Run it on your computer
 

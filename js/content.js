@@ -23,7 +23,7 @@ export async function loadContent() {
       if (!technique.ref) places.set(technique.id, { technique, moduleKey: key, stageIndex, index });
     }));
   }
-  // A technique shown in two tabs is written once and referenced elsewhere as { "ref": "<id>" }.
+  // A technique shown in two parts is written once and referenced elsewhere as { "ref": "<id>" }.
   for (const key of order) {
     for (const stage of all[key].stages) {
       stage.items = stage.items.map((item) => (item.ref ? places.get(item.ref)?.technique : item)).filter(Boolean);

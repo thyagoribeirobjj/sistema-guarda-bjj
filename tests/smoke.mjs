@@ -1,5 +1,6 @@
-// Opens the site in a real browser and uses it the way a visitor would: tabs, a technique, search,
-// progress, the tree, sharing, the lesson builder, the account menu, past weeks and theme, the back button, both languages, the admin page. A page that fails to load fails here.
+// Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
+// search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
+// the back button, the phone's bottom bar and part switcher, both languages, the admin page. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm install --no-save playwright-core)
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
@@ -11,8 +12,8 @@ const problems = [];
 // Not the site's fault: no icon file, no Firebase settings in a local preview, a video removed from YouTube.
 const expectedMisses = /favicon\.ico|\/__\/firebase\/|ytimg\.com/;
 
-async function open(path, locale) {
-  const context = await browser.newContext({ locale });
+async function open(path, locale, device = {}) {
+  const context = await browser.newContext({ locale, ...device });
   const page = await context.newPage();
   page.on('pageerror', (error) => problems.push(`${path}: ${error.message}`));
   page.on('console', (message) => {
@@ -45,20 +46,35 @@ let firstTab;
 let id = '';
 let name = '';
 
-await step('the page loads with its tabs, in English for an English browser', async () => {
+await step('the page loads with its sidebar, in English for an English browser', async () => {
   page = await open('/', 'en-US');
-  firstTab = page.locator('nav a:not([href="#semana"]):not([href="#meu"]):not([href="#lesson"]):not([href="#method"])').first();
+  firstTab = page.locator('#sidebar .side-parts a').first();
   await firstTab.waitFor();
   assert.equal(await page.getAttribute('html', 'lang'), 'en');
   assert.equal(await page.locator('#appTitle').textContent(), 'Guard System');
-  assert.ok(await page.locator('nav a').count() > 4, 'tabs');
+  assert.ok(await page.locator('#sidebar .side-parts a').count() > 4, 'parts of the fight');
+  assert.ok(!(await page.locator('#bottomBar').isVisible()), 'no bottom bar on a wide screen');
 });
 
-await step('a tab lists techniques and one opens', async () => {
+await step('Curriculum home lists the parts and a card opens one', async () => {
+  await page.locator('#sidebar a[href="#curriculum"]').click();
+  await page.locator('main .part-card').first().waitFor();
+  assert.equal(await page.locator('main .part-card').count(), await page.locator('#sidebar .side-parts a').count());
+  const card = page.locator('main .part-card').nth(1);
+  const href = await card.getAttribute('href');
+  await card.click();
+  await page.locator('main .spine').waitFor();
+  assert.equal(new URL(page.url()).hash, href);
+  assert.equal(await page.locator(`#sidebar a[href="${href}"]`).getAttribute('aria-current'), 'page');
+});
+
+await step('a part of the fight lists techniques and one opens', async () => {
+  // Wait for the part to be on screen before picking from it, then take the id from what actually opened.
+  const part = await firstTab.getAttribute('href');
   await firstTab.click();
-  const chip = page.locator('main .tech').first();
-  id = await chip.getAttribute('data-technique');
-  await chip.click();
+  await page.locator(`#sidebar a[href="${part}"][aria-current="page"]`).waitFor();
+  await page.locator('main .tech').first().click();
+  id = await page.locator('#panel [data-favorite]').getAttribute('data-favorite');
   name = (await page.locator('#panelTitle').textContent()).trim();
   assert.ok(name, 'the technique has a name');
 });
@@ -88,7 +104,7 @@ await step('a technique can be added to "My tree"', async () => {
   await page.locator(`main [data-technique="${id}"]`).first().click();
   await page.locator(`[data-favorite="${id}"]`).click();
   assert.equal(await page.locator(`[data-favorite="${id}"]`).getAttribute('aria-pressed'), 'true');
-  assert.equal((await page.locator('nav .navcount').textContent()).trim(), '1');
+  assert.equal((await page.locator('#sidebar .navcount').textContent()).trim(), '1');
 });
 
 await step('an open technique has a share button', async () => {
@@ -114,8 +130,19 @@ await step('search finds a technique by a word in its description', async () => 
   await page.locator('main .spine').waitFor();
 });
 
+await step('Method and the lesson builder open from the account menu', async () => {
+  await page.locator('#account').click();
+  await page.locator('#accountMenu a[href="#method"]').click();
+  await page.locator('main .principles').first().waitFor();
+  assert.equal(await page.locator('#accountMenu').isVisible(), false);
+  await page.locator('#account').click();
+  await page.locator('#accountMenu a[href="#lesson"]').click();
+  await page.locator('#selDur').waitFor();
+  assert.equal(await page.locator('#sidebar a[href="#lesson"]').getAttribute('aria-current'), 'page');
+});
+
 await step('a lesson builder choice survives a reload', async () => {
-  await page.locator('nav a[href="#lesson"]').click();
+  await page.locator('#sidebar a[href="#lesson"]').click();
   await page.selectOption('#selDur', '90');
   await page.locator('#plan .meta', { hasText: '90 min' }).waitFor();
   await page.reload();
@@ -132,7 +159,7 @@ if (published) {
   });
 
   await step('past weeks open on demand', async () => {
-    const weekTab = page.locator('nav a[href="#semana"]');
+    const weekTab = page.locator('#sidebar a[href="#semana"]');
     await weekTab.waitFor({ timeout: 10000 }).catch(() => {});
     if (!(await weekTab.count())) return;
     await weekTab.click();
@@ -143,20 +170,25 @@ if (published) {
 }
 
 await step('a theme can be chosen and survives a reload', async () => {
-  if (await page.locator('#account').isVisible()) {
-    await page.locator('#account').click();
-    await page.locator('[data-theme-choice="gold"]').click();
-    assert.equal(await page.getAttribute('html', 'data-theme'), 'gold');
-    await page.keyboard.press('Escape');
-  } else {
-    const before = await page.getAttribute('html', 'data-theme');
-    await page.locator('#theme').click();
-    assert.notEqual(await page.getAttribute('html', 'data-theme'), before);
-  }
-  const chosen = await page.getAttribute('html', 'data-theme');
+  await page.locator('#account').click();
+  await page.locator('[data-theme-choice="gold"]').click();
+  assert.equal(await page.getAttribute('html', 'data-theme'), 'gold');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#account').getAttribute('aria-expanded'), 'false');
   await page.reload();
   await firstTab.waitFor();
-  assert.equal(await page.getAttribute('html', 'data-theme'), chosen);
+  assert.equal(await page.getAttribute('html', 'data-theme'), 'gold');
+});
+
+await step('folding the parts away in the sidebar is remembered after a reload', async () => {
+  await page.locator('#partsToggle').click();
+  assert.ok(!(await page.locator('#sideParts').isVisible()), 'the parts fold away');
+  assert.equal(await page.locator('#partsToggle').getAttribute('aria-expanded'), 'false');
+  await page.reload();
+  await page.locator('#partsToggle').waitFor();
+  assert.ok(!(await page.locator('#sideParts').isVisible()), 'still folded after a reload');
+  await page.locator('#partsToggle').click();
+  await firstTab.waitFor();
 });
 
 await step('the back button closes a technique and stays on the site', async () => {
@@ -169,9 +201,72 @@ await step('the back button closes a technique and stays on the site', async () 
   assert.equal(page.url(), tab);
 });
 
+await step('on a phone: the bottom bar, Curriculum, a part, the part switcher, nothing sideways', async () => {
+  const phone = await open('/', 'en-US', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const bar = phone.locator('#bottomBar');
+  await bar.locator('a[href="#curriculum"]').waitFor();
+  assert.ok(!(await phone.locator('#sidebar').isVisible()), 'no sidebar on a phone');
+  await bar.locator('a[href="#curriculum"]').click();
+  await phone.locator('main .part-card').first().waitFor();
+  assert.equal(await bar.locator('a[href="#curriculum"]').getAttribute('aria-current'), 'page');
+  assert.ok(!(await phone.locator('#switcher').isVisible()), 'no part switcher on Curriculum home');
+  await phone.locator('main .part-card').first().click();
+  await phone.locator('main .spine').waitFor();
+  await phone.locator('#partButton').click();
+  const other = phone.locator('#partMenu a:not([aria-current])').first();
+  const href = await other.getAttribute('href');
+  const otherName = (await other.textContent()).trim();
+  await other.click();
+  await phone.waitForFunction((hash) => location.hash === hash, href);
+  assert.equal((await phone.locator('#partButton span').textContent()).trim(), otherName);
+  assert.ok(!(await phone.locator('#partMenu').isVisible()), 'the part menu closes');
+  assert.equal(await bar.locator('a[href="#curriculum"]').getAttribute('aria-current'), 'page');
+  const sideways = await phone.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  assert.ok(sideways <= 0, `the page scrolls sideways by ${sideways}px`);
+  await phone.locator('main .tech').first().click();
+  await phone.locator('#panel').waitFor();
+  const barCovered = await phone.evaluate(() => {
+    const box = document.getElementById('bottomBar').getBoundingClientRect();
+    return !document.elementFromPoint(box.left + 10, box.bottom - 10).closest('#bottomBar');
+  });
+  assert.ok(barCovered, 'the open technique covers the bottom bar');
+});
+
+await step('on a phone: Back returns to the first page, Search, closing the part menu, the My tree count', async () => {
+  const phone = await open('/', 'en-US', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  await phone.locator('main .part-card').first().tap();
+  await phone.locator('main .spine').waitFor();
+  await phone.goBack();
+  await phone.locator('main .part-card').first().waitFor();
+  assert.equal(new URL(phone.url()).hash, '', 'back on the first page');
+  await phone.locator('#bottomBar [data-search-button]').tap();
+  assert.equal(await phone.evaluate(() => document.activeElement.id), 'search');
+  await phone.locator('main .part-card').first().tap();
+  await phone.locator('#partButton').tap();
+  await phone.keyboard.press('Escape');
+  assert.ok(!(await phone.locator('#partMenu').isVisible()), 'Escape closes the part menu');
+  assert.equal(await phone.evaluate(() => document.activeElement.id), 'partButton');
+  await phone.locator('#partButton').tap();
+  // A technique below the open menu, so the tap lands on it and not on the menu.
+  const point = await phone.evaluate(() => {
+    const menuBottom = document.getElementById('partMenu').getBoundingClientRect().bottom;
+    const chip = [...document.querySelectorAll('main .tech')].map((tech) => tech.getBoundingClientRect())
+      .find((box) => box.top > menuBottom + 4 && box.bottom < window.innerHeight - 80);
+    return { x: chip.left + 10, y: chip.top + chip.height / 2 };
+  });
+  const hash = new URL(phone.url()).hash;
+  await phone.touchscreen.tap(point.x, point.y);
+  assert.ok(!(await phone.locator('#partMenu').isVisible()), 'a tap outside closes the part menu');
+  assert.ok(!(await phone.locator('#panel').isVisible()), 'and opens nothing under it');
+  assert.equal(new URL(phone.url()).hash, hash);
+  await phone.locator('main .tech').first().tap();
+  await phone.locator('#panel [data-favorite]').tap();
+  assert.equal((await phone.locator('#bottomBar .navcount').textContent()).trim(), '1');
+});
+
 await step('a Portuguese browser gets Portuguese', async () => {
   const portuguese = await open('/', 'pt-BR');
-  await portuguese.locator('nav a').first().waitFor();
+  await portuguese.locator('#sidebar a').first().waitFor();
   assert.equal(await portuguese.getAttribute('html', 'lang'), 'pt-BR');
   assert.equal(await portuguese.locator('#search').getAttribute('placeholder'), 'Buscar técnica');
   assert.equal(await portuguese.locator('#appTitle').textContent(), 'Sistema Guarda');

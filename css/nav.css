@@ -1,0 +1,70 @@
+/* The site's navigation and page layout (index.html only; admin.html keeps its small tab strip in app.css).
+   Phones and tablets (under 900px): the header scrolls away, a bar fixed to the bottom holds This week,
+   Curriculum, My tree and Search, and inside a part of the fight a slim bar at the top switches parts.
+   Desktop (900px and wider): the header stays on top and a sidebar sits left of the page. */
+.site-header{position:relative;z-index:16;background:var(--surface);border-bottom:2px solid var(--accent)}
+.site-header .bar{padding-block:12px}
+.wide{max-width:1320px}
+.layout>main{min-width:0}
+
+/* bottom bar */
+.bottombar{position:fixed;left:0;right:0;bottom:0;z-index:15;display:flex;background:var(--surface);border-top:1px solid var(--line);
+  padding:0 env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+.bottombar>a,.bottombar>button{position:relative;flex:1 1 0;min-width:0;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  padding:6px 4px;border:0;background:none;color:var(--muted);font:600 11.5px/1.2 var(--body);text-decoration:none;cursor:pointer}
+.bottombar [aria-current="page"]{color:var(--ink)}
+.bottombar [aria-current="page"]::before{content:"";position:absolute;top:0;left:22%;right:22%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+.bottombar [aria-current="page"] svg{color:var(--accent)}
+.nav-icon{position:relative;display:block;line-height:0}
+.nav-icon svg{width:24px;height:24px}
+.nav-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-icon .navcount{position:absolute;top:-6px;left:16px;margin:0;vertical-align:0}
+.layout>main{padding-bottom:calc(56px + env(safe-area-inset-bottom,0px) + 40px)}
+
+/* inside a part of the fight, on phones */
+.switcher{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:8px;min-height:48px;
+  padding:4px max(12px,env(safe-area-inset-right,0px)) 4px max(8px,env(safe-area-inset-left,0px));background:var(--surface);border-bottom:1px solid var(--line)}
+.switcher[hidden]{display:none}
+.switch-back{flex:none;display:inline-flex;align-items:center;min-height:40px;padding:0 8px;border-radius:8px;color:var(--muted);font:600 14px var(--body);text-decoration:none;white-space:nowrap}
+.switch-back:hover{color:var(--ink)}
+.switch-part{flex:1 1 auto;min-width:0;display:inline-flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;padding:0 4px 0 8px;border:0;border-radius:8px;background:none;
+  color:var(--ink);font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.03em;text-transform:uppercase;cursor:pointer}
+.switch-part span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.switch-part[aria-expanded="true"]{color:var(--accent)}
+.part-menu{left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));top:calc(100% + 4px);width:auto}
+/* the open menu covers the bottom bar, so all of it shows on a short screen */
+.switcher:has(.part-menu:not([hidden])){z-index:17}
+
+/* sidebar (desktop only) */
+.sidebar{display:none}
+.side-link{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 12px;border-radius:8px;color:var(--muted);text-decoration:none;
+  font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.04em;text-transform:uppercase}
+.side-link svg{flex:none;width:18px;height:18px}
+.side-link .navcount{margin-left:auto}
+.side-link:hover,.side-parts a:hover{color:var(--ink);background:var(--surface-2)}
+.sidebar [aria-current="page"]{color:var(--ink);background:var(--surface-2);box-shadow:inset 3px 0 var(--accent)}
+.side-row{display:flex;align-items:center;gap:2px}
+.side-row .side-link{flex:1;min-width:0}
+.side-toggle{flex:none;width:34px;height:34px;border:0;border-radius:8px;background:none;color:var(--muted);font-size:14px;cursor:pointer}
+.side-toggle:hover{color:var(--ink);background:var(--surface-2)}
+.side-toggle[aria-expanded="false"]{transform:rotate(-90deg)}
+.side-parts{display:grid;gap:1px;margin:2px 0 6px 21px;padding-left:8px;border-left:1px solid var(--line)}
+.side-parts[hidden]{display:none}
+.side-parts a{display:flex;align-items:center;min-height:34px;padding:4px 10px;border-radius:8px;color:var(--muted);font-size:14px;line-height:1.25;text-decoration:none}
+.side-coach{display:grid;gap:2px;margin-top:auto;padding-top:14px;border-top:1px solid var(--line)}
+.side-coach .menu-label{padding:0 12px;margin-bottom:4px}
+.side-coach .side-link{font-size:15px}
+
+@media (min-width:900px){
+  .site-header{position:sticky;top:env(safe-area-inset-top,0px)}
+  .bottombar,.switcher{display:none}
+  .layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:32px;align-items:start}
+  .layout>main{max-width:1008px;padding-bottom:64px}
+  .sidebar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 90px);display:flex;flex-direction:column;gap:2px;
+    height:calc(100vh - 106px);height:calc(100dvh - 106px);margin-top:24px;padding-bottom:16px;overflow-y:auto;scrollbar-width:thin}
+}
+@media (pointer:coarse){
+  .switch-back,.switch-part,.side-link,.side-parts a{min-height:44px}
+  .side-toggle{width:44px;height:44px}
+}
+@media (prefers-reduced-motion:no-preference){.side-toggle{transition:transform .15s ease-out}}
