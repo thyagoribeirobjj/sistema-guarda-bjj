@@ -1,71 +1,77 @@
 # Sistema Guarda BJJ
 
-Interactive guard-system site for Gracie Sports Fairfield. If a student misses class, they open the site, sign in, and catch up on the week's techniques.
+The guard system and the rest of the fight for Gracie Sports Fairfield, in Portuguese and English. Students who miss
+a class open the site, see this week's techniques, and study them step by step.
 
 Live site: <https://sistemaguarda.com>
 
-## Architecture
+## What people can do
 
-Everything is static files (Firebase Hosting, no build step, no server).
+| | Anyone | Signed in with Google | Admin |
+|---|---|---|---|
+| Browse every tab: the parts of the fight, the lesson builder, the method | ✓ | ✓ | ✓ |
+| See this week's class ("Esta semana") | ✓ | ✓ | ✓ |
+| Switch language (PT / EN) and dark / light mode | ✓ in this browser | ✓ on every device | ✓ |
+| Build "Minha árvore" (♥ favorite techniques, in their own order) | ✓ in this browser | ✓ on every device | ✓ |
+| Change this week's class (`admin.html`) | | | ✓ |
+
+When someone signs in for the first time, the settings and favorites from their browser are saved to their account.
+
+**Adding an admin:** Firebase console → Firestore → `admins` → Add document. The document ID is their Google email
+in lowercase; add a text field `name`. Delete the document to remove them.
+
+## How it fits together
 
 ```
-index.html          App shell: fetches the JSON below, renders the UI
-admin.html          Interim admin: edits the week's content, downloads week.json
-data/content.json   ALL static content (UI strings, drills, both guard modules,
-                    every technique with steps/tips/levels, games, method)
-data/users.json     File-based user database: email -> configuration
-                    { language, level, myTechs[], progress{}, notes }
-data/week.json      Current week's content: { week_of, class_du_jour,
-                    featured technique ids, note }
-.env.example        DATABASE_URL config string (see below)
+sistemaguarda.com (static files on Firebase Hosting)
+  ├─ data/content.json        guard modules (top, bottom), drills, method
+  ├─ data/curriculum.json     the other parts of the fight, tab order, "where to go" links
+  ├─ Firebase Authentication  "Sign in with Google"
+  └─ Firestore database       site/week · admins/{email} · users/{uid}
+                              firestore.rules decides who reads and writes what
 ```
 
-Flow:
+| Path | What it is |
+|---|---|
+| `index.html`, `admin.html` | Markup only |
+| `css/theme.css` | Colors and fonts for dark and light mode. Change the look here. |
+| `css/app.css` | Layout and components |
+| `js/` | The site's code, one file per job (see `CLAUDE.md`) |
+| `js/strings.js` | Button and label text in PT and EN |
+| `data/` | The curriculum |
+| `firestore.rules` | Database access rules |
+| `tests/` | Checks for the curriculum and the database rules |
+| `CLAUDE.md` | How Claude should work in this repo |
 
-1. **Content** lives in `data/content.json`. The app loads it at startup and renders the same modules, stages, technique detail panel, lesson builder and method tab as before.
-2. **Sign-in** comes first: social buttons (Google, GitHub, Apple) are **demo mode** — real OAuth needs hosting. For now, entering an email (or the demo account `demo@example.com`) loads that user's config from `data/users.json`, or creates a default one. No passwords anywhere; in demo mode the config is saved in the browser only.
-3. **User -> config** is the mapping `email -> configuration` in `data/users.json`. The signed-in user's language, level filter and "my system" technique ids personalize the render: their language is applied, their level becomes the default filter, and their techniques get a ★.
-4. **This week** comes from `data/week.json` and is bubbled up in a card at the top of the module views: the class of the day plus the featured techniques (click one to open its detail panel).
-5. **Admin** (`admin.html`) picks the week's featured module/stage/techniques and note. With no backend yet it downloads an updated `data/week.json`; commit that file to the repo and the site updates in about a minute (see Publishing).
+## Editing the curriculum
 
-## Run locally
+Edit the files in `data/`. Every technique and game has an `id` such as `top-standing-pass`. Never change an existing
+id (favorites, the week's class and the "where to go" links point at it); give new techniques a new, unique one.
+`CLAUDE.md` explains shared techniques, links and adding a tab.
 
-Any static server works (opening the file directly does **not** — `fetch` needs HTTP):
+## Run it on your computer
 
 ```bash
-python3 -m http.server 8000
-# open http://localhost:8000
+npm start          # http://localhost:8000
+npm test           # needs Node 22 and Java 21
 ```
+
+Locally there is no sign-in or database, so "Esta semana" and the admin page only work on the live site.
+Everything else works the same.
 
 ## Publishing
 
-Every push to `main` runs the checks in `.github/workflows/deploy.yml`. If they pass, the site is published to Firebase Hosting and is live at <https://sistemaguarda.com> about a minute later. Pull requests run the same checks without publishing.
+Every push to `main` runs the tests (`.github/workflows/deploy.yml`). If they pass, the site and the database rules are
+published, and they're live at <https://sistemaguarda.com> about a minute later. Pull requests run the same tests without
+publishing.
 
-- **What gets published:** everything except `README.md`, `firebase.json`, dotfiles, `docs/` and `tests/` (see `firebase.json`).
 - **Undo a bad publish:** revert the commit, or Firebase console → Hosting → Release history → Roll back.
-- **No keys in this repo:** GitHub signs in to Google with a short-lived token that only works for `main` of this repository.
-- **Cost:** the Google Cloud project `sistema-guarda-515619` is on the free Spark plan with no billing account, so it cannot be charged. Past the free limits (10 GB stored, 360 MB/day served) the site pauses until the next day.
+- **No keys in this repo:** GitHub signs in to Google with a short-lived token that only works for `main` of this
+  repository. The site's Firebase settings come from the hosting itself (`/__/firebase/init.json`).
+- **Cost:** the Google Cloud project is on the free plan with no billing account, so it can't be charged. Past the free
+  limits (for example 50,000 database reads a day) a feature pauses until the next day.
 
-## Database: now and later
+## Later
 
-Today the "database" is the JSON files in `data/`. The configuration mechanism is already the final one: a single `DATABASE_URL` string (see `.env.example`).
-
-```bash
-DATABASE_URL=sqlite:./data/app.db
-```
-
-To move to a real database, swap the value — same mechanism, no data-model change:
-
-```bash
-DATABASE_URL=postgres://user:password@host:5432/sistema_guarda
-DATABASE_URL=spanner://projects/my-project/instances/main/databases/sistema_guarda
-```
-
-The tables mirror the JSON: `users(email PK, config JSON)` and `weeks(week_of PK, class_du_jour, featured, note)`.
-
-## Still to do
-
-- **Real OAuth** for the Google / GitHub / Apple buttons (currently demo-only labels).
-- **A real database** behind `DATABASE_URL`, plus a small write API so sign-in, "my system" toggles and admin edits persist for everyone instead of in one browser.
-- **Admin write API + admin auth**, so `admin.html` can save `week.json` directly instead of downloading it.
-- **Privacy**: user configs currently ship in a public JSON file — fine for demo data, not for real student data. Move users to the database before onboarding real students.
+- An admin page for editing the curriculum itself, so changes don't need a code change.
+- Past weeks ("Missed a class?") and separate weeks for beginner and advanced classes.

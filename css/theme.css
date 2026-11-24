@@ -1,0 +1,16 @@
+/* Colors, fonts and shadows: the only file with color values.
+   Dark (black mat, white text, red for the path and actions) is the default; light is the alternative. */
+:root {
+  color-scheme: dark;
+  --bg: #0C0C0D; --surface: #161618; --surface-2: #1E1E21; --ink: #F3F0EA; --muted: #A9A49C; --line: #2C2C30;
+  --spine: #3D3D42; --accent: #E2373D; --accent-ink: #FFFFFF; --accent-soft: #2B1315;
+  --scrim: rgba(0, 0, 0, .6); --shadow: 0 14px 40px rgba(0, 0, 0, .6);
+  --display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #F4F2EE; --surface: #FFFFFF; --surface-2: #EFECE6; --ink: #151515; --muted: #5F5A53; --line: #DCD6CC;
+  --spine: #C8C1B6; --accent: #C81E26; --accent-ink: #FFFFFF; --accent-soft: #FBE4E5;
+  --scrim: rgba(20, 20, 20, .45); --shadow: 0 14px 40px rgba(20, 20, 20, .18);
+}

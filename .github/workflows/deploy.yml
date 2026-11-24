@@ -25,9 +25,15 @@ jobs:
             python3 -m json.tool "$f" > /dev/null || { echo "::error file=$f::not valid JSON"; exit 1; }
           done
 
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      # Content checks plus the database rules, run against a local copy of Firestore.
       - name: Tests
-        if: hashFiles('tests/**/*.test.js') != ''
-        run: node --test
+        run: |
+          export JAVA_HOME="$JAVA_HOME_21_X64" PATH="$JAVA_HOME_21_X64/bin:$PATH"
+          npm test
 
   # Runs only after "check" passes, and only for main. Google accepts this job's
   # identity token for main of this repository and nothing else, so no keys live here.
@@ -50,5 +56,5 @@ jobs:
           workload_identity_provider: projects/25668106993/locations/global/workloadIdentityPools/github/providers/sistema-guarda-bjj
           service_account: sg-deploy@sistema-guarda-515619.iam.gserviceaccount.com
 
-      - name: Publish to Firebase Hosting
-        run: npx --yes firebase-tools@15.35.0 deploy --only hosting --project sistema-guarda-515619 --non-interactive
+      - name: Publish the site and the database rules
+        run: npx --yes firebase-tools@15.35.0 deploy --only hosting,firestore:rules --project sistema-guarda-515619 --non-interactive

@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// Who can read and change what. tests/rules.test.js checks every line of this file.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()));
+    }
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    function validSettings() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['email', 'language', 'theme', 'favorites', 'updatedAt'])
+        && data.email == request.auth.token.email
+        && data.language in ['pt', 'en']
+        && data.theme in ['', 'light', 'dark']
+        && data.favorites is list && data.favorites.size() <= 500
+        && data.updatedAt == request.time;
+    }
+
+    // The week's lesson and anything else the whole site shows. Everyone reads, admins write.
+    match /site/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // One document per admin, named by their email. Added by hand in the Firebase console.
+    match /admins/{email} {
+      allow read: if signedIn() && email == request.auth.token.email.lower();
+    }
+
+    // Each person's language, theme and favorites. Only they can see or change them.
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validSettings();
+    }
+  }
+}

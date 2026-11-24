@@ -3,7 +3,10 @@
     "public": ".",
     "ignore": [
       "firebase.json",
+      "firestore.rules",
+      "package.json",
       "README.md",
+      "CLAUDE.md",
       "**/.*",
       "**/node_modules/**",
       "docs/**",
@@ -19,11 +22,19 @@
         ]
       },
       {
-        "source": "**/*.@(html|json)",
+        "source": "**/*.@(html|json|js|css)",
         "headers": [
           { "key": "Cache-Control", "value": "no-cache" }
         ]
       }
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "emulators": {
+    "firestore": { "port": 8080 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
   }
 }
