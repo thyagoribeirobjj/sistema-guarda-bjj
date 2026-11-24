@@ -8,6 +8,8 @@
       "README.md",
       "CLAUDE.md",
       "**/.*",
+      "**/.*/**",
+      "gha-creds-*.json",
       "**/node_modules/**",
       "docs/**",
       "tests/**"

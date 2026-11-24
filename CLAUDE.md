@@ -86,6 +86,8 @@ The owner, Thyago, is a coach, not a programmer. Explain changes in plain words 
 - **Never anything that needs billing.** The Google Cloud project is on the free plan with billing off, on
   purpose, so it can never cost money. That rules out Cloud Functions, Cloud Run, Cloud SQL, Cloud Storage
   uploads and the "Blaze" plan. If a feature seems to need one, stop and ask John.
+- Never remove entries from the `ignore` list in `firebase.json`. They keep the git folder and the deploy's
+  temporary Google credentials (`gha-creds-*.json`) off the public site.
 - Never commit keys, passwords or service-account files. The Firebase web settings are public and come from
   the hosting itself; deploys sign in to Google without keys.
 - Google Cloud setup (sign-in providers, the database, permissions, the domain) is John's. Ask him rather
