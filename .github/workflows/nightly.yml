@@ -76,7 +76,7 @@ jobs:
 
   report:
     needs: [checks, browser]
-    if: always()
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -85,17 +85,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PASSED: ${{ needs.checks.result == 'success' && needs.browser.result == 'success' }}
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
           CHECKS: ${{ needs.checks.outputs.failed }}
           BROWSER: ${{ needs.browser.outputs.failed }}
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           title="Nightly check failed"
-          open=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          open=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 200 --json number,title --jq ".[] | select(.title == \"$title\") | .number")
           if [ "$PASSED" = true ]; then
-            if [ -n "$open" ]; then gh issue close "$open" --repo "$GITHUB_REPOSITORY" --comment "Tonight's checks all passed: $RUN"; fi
+            for number in $open; do gh issue close "$number" --repo "$GITHUB_REPOSITORY" --comment "Tonight's checks all passed: $RUN"; done
             exit 0
           fi
           if [ -n "$open" ]; then exit 0; fi
+          if [ "$CHECKS_RESULT" != success ] && [ -z "$CHECKS" ]; then CHECKS="The Google-side checks did not run ($CHECKS_RESULT)."; fi
+          if [ "$BROWSER_RESULT" != success ] && [ -z "$BROWSER" ]; then BROWSER="The browser check did not run ($BROWSER_RESULT)."; fi
           failed=$(printf '%s\n%s\n' "$CHECKS" "$BROWSER" | sed '/^$/d')
           {
             echo "The nightly checks of sistemaguarda.com found a problem. This issue closes itself on the next night they all pass."

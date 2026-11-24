@@ -13,6 +13,8 @@ export const settings = { language: browserLanguage, theme: '', favorites: [], p
 merge(readLocal());
 
 let accountId = null;
+let loading = false;
+let changedWhileLoading = {};
 
 function readLocal() {
   try { return JSON.parse(localStorage.getItem(storageKey)) || {}; } catch { return {}; }
@@ -50,13 +52,41 @@ export function currentTheme() {
   return settings.theme || 'dark';
 }
 
+function forgetPersonalMarks() {
+  settings.favorites = [];
+  settings.progress = {};
+}
+
 export async function useAccount(user) {
   accountId = null;
-  if (!user) return;
-  const fromDatabase = await loadUserSettings(user.uid).catch(() => null);
-  // The first time this browser signs in to an account, what was marked here before is added to the account.
-  // After that the account is the truth, so removing a favorite on one device removes it on the others.
-  if (fromDatabase) merge(fromDatabase, lastAccount() !== user.uid);
+  const previous = lastAccount();
+  if (!user) {
+    // Signed out: the tree and progress stay in the account, not on a device someone else may use next.
+    if (previous) {
+      forgetPersonalMarks();
+      try { localStorage.removeItem(accountKey); } catch {}
+      store();
+    }
+    return;
+  }
+  if (previous && previous !== user.uid) forgetPersonalMarks();
+
+  let fromDatabase;
+  loading = true;
+  changedWhileLoading = {};
+  try {
+    fromDatabase = await loadUserSettings(user.uid);
+  } catch (error) {
+    // Couldn't read the account: keep this visit on the device only, so nothing is written over the account.
+    console.error(error);
+    return;
+  } finally {
+    loading = false;
+  }
+  // A browser that was never signed in adds what was marked here to the account. After that the account is
+  // the truth, so removing a favorite on one device removes it on the others.
+  if (fromDatabase) merge(fromDatabase, !previous);
+  Object.assign(settings, changedWhileLoading);
   accountId = user.uid;
   try { localStorage.setItem(accountKey, user.uid); } catch {}
   store();
@@ -64,6 +94,7 @@ export async function useAccount(user) {
 }
 
 export function changeSettings(changes) {
+  if (loading) Object.assign(changedWhileLoading, changes);
   Object.assign(settings, changes);
   store();
   applyTheme();
