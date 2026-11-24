@@ -41,7 +41,7 @@ sistemaguarda.com (static files on Firebase Hosting)
 | `data/` | The curriculum |
 | `firestore.rules` | Database access rules |
 | `tests/` | Checks for the curriculum and the database rules |
-| `CLAUDE.md` | How Claude should work in this repo |
+| `CLAUDE.md` (and `AGENTS.md`, a link to it) | How coding agents (Claude, Muse and others) should work in this repo |
 
 ## Editing the curriculum
 
