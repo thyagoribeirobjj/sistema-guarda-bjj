@@ -35,9 +35,14 @@ export function answerPlan(plan, answer) {
   return Object.fromEntries(Object.entries(plan).map(([name, step]) => [name, step === 'ask' ? answer : step]));
 }
 
-// The fields still corrected by hand once the plan (with no 'ask' left) is carried out.
-export function handFixedAfter(plan, handFixed = []) {
-  return translatedFields.filter((name) => plan[name] === 'keepEdited' || (plan[name] === 'keep' && handFixed.includes(name)));
+// The fields still corrected by hand once the plan (with no 'ask' left) is carried out. saved and to say whether an
+// edit was to a translation: editing the original itself (written in `to`, shown as "the translation" while the
+// admin writes in the other language) leaves the field as it was.
+export function handFixedAfter(plan, handFixed = [], { saved = {}, to } = {}) {
+  return translatedFields.filter((name) => {
+    if (plan[name] === 'keepEdited') return writtenIn(saved, name) !== to || handFixed.includes(name);
+    return plan[name] === 'keep' && handFixed.includes(name);
+  });
 }
 
 // ---- which language each field was written in ----

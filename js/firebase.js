@@ -132,10 +132,14 @@ export function loadUserSettings(uid) {
   return read(`users/${uid}`);
 }
 
-// The name lets coaches see who is who on their list of students.
-export function saveUserSettings(uid, data) {
+// The name lets coaches see who is who on their list of students. Once the settings exist they are updated, not
+// written anew: an update fails ('not-found') when they were deleted, so a device still signed in elsewhere can't
+// bring back what "Delete my data" removed.
+export function saveUserSettings(uid, data, { create = true } = {}) {
   const user = auth.currentUser;
-  return write(`users/${uid}`, { ...data, email: user.email, name: (user.displayName || '').slice(0, 100) });
+  const settings = { ...data, email: user.email, name: (user.displayName || '').slice(0, 100) };
+  if (create) return write(`users/${uid}`, settings);
+  return fb.updateDoc(fb.doc(db, `users/${uid}`), { lesson: fb.deleteField(), ...settings, updatedAt: fb.serverTimestamp() });
 }
 
 // Every student's users/{uid}, for coaches (firestore.rules lets admins read them). Read only when a coach asks:
@@ -148,22 +152,38 @@ export async function loadStudents() {
   });
 }
 
-// "Delete my data": the person's notes, then their settings. Signing out afterwards clears this browser.
+// "Delete my data": the person's notes, their settings, then their sign-in record on this site, which signs them
+// out (and so clears this browser).
 export async function deleteMyData(uid) {
   await fb.deleteDoc(fb.doc(db, `users/${uid}/private/notes`));
   await fb.deleteDoc(fb.doc(db, `users/${uid}`));
+  try {
+    await fb.deleteUser(auth.currentUser);
+  } catch (error) {
+    if (error.code !== 'auth/requires-recent-login') throw error;
+    // Signed in a while ago: Google asks the person to confirm it's them first.
+    const user = auth.currentUser;
+    await (testPerson
+      ? fb.reauthenticateWithCredential(user, fb.GoogleAuthProvider.credential(testPerson))
+      : fb.reauthenticateWithPopup(user, new fb.GoogleAuthProvider()));
+    await fb.deleteUser(user);
+  }
 }
 
 // users/{uid}/private/notes holds { notes: { <technique id>: text } }. Only that person can read it (firestore.rules).
+// null when there is no notes document (yet, or any more).
 export async function loadNotes(uid) {
-  return (await read(`users/${uid}/private/notes`))?.notes || {};
+  const saved = await read(`users/${uid}/private/notes`);
+  return saved ? saved.notes || {} : null;
 }
 
-// One note per save, naming the note it changes; an empty note is removed.
-export function saveNote(uid, id, note) {
-  return fb.setDoc(fb.doc(db, `users/${uid}/private/notes`),
-    { notes: { [id]: note ? note : fb.deleteField() }, changed: id, updatedAt: fb.serverTimestamp() },
-    { merge: true });
+// One note per save, naming the note it changes; an empty note is removed. Like the settings, once the document
+// exists it is only updated, so a save fails ('not-found') after "Delete my data" instead of bringing it back.
+export function saveNote(uid, id, note, { create = true } = {}) {
+  const notes = fb.doc(db, `users/${uid}/private/notes`);
+  const value = note ? note : fb.deleteField();
+  if (create) return fb.setDoc(notes, { notes: { [id]: value }, changed: id, updatedAt: fb.serverTimestamp() }, { merge: true });
+  return fb.updateDoc(notes, new fb.FieldPath('notes', id), value, 'changed', id, 'updatedAt', fb.serverTimestamp());
 }
 
 // ---- each move's video, diagram and minimum belt ----

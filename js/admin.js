@@ -4,7 +4,7 @@ import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, sav
 import { settings, applyTheme, useAccount } from './settings.js';
 import { t, text } from './strings.js';
 import { translatedFields, translationPlan, answerPlan, handFixedAfter, writtenAfter, translationLabel } from './translation.js';
-import { localDate, nextMonday, classOf, switchOver, worthArchiving } from './week.js';
+import { localDate, firstStart, dateProblem, classOf, switchOver, worthArchiving } from './week.js';
 import { showStudents, hideStudents } from './students.js';
 
 // The admin page: set this week's class, or prepare next week's, which takes this week's place on its start date
@@ -154,7 +154,7 @@ function useStored(stored) {
   const current = classOf(stored);
   const next = stored.next ? classOf(stored.next) : null;
   forms.week = { saved: current, draft: current, basis: current };
-  forms.next = { saved: next, draft: next || { ...emptyClass(), weekOf: nextMonday(localDate()) }, basis: next || emptyClass() };
+  forms.next = { saved: next, draft: next || { ...emptyClass(), weekOf: firstStart(localDate(), current.weekOf) }, basis: next || emptyClass() };
   ({ saved, draft: week, basis } = forms[showing]);
   editing.clear();
   asking = null;
@@ -230,8 +230,9 @@ async function save(answer) {
   if (saving) return;
   week = readForm();
   const draft = week;
-  if (showing === 'next' && !(draft.weekOf > localDate())) {
-    document.getElementById('status').textContent = t('startAfterToday');
+  const problem = dateProblem(showing, draft.weekOf, { today: localDate(), thisWeekOf: forms.week.saved?.weekOf, nextWeekOf: forms.next.saved?.weekOf });
+  if (problem) {
+    document.getElementById('status').textContent = t(problem);
     document.getElementById('weekOf').focus();
     return;
   }
@@ -254,7 +255,7 @@ async function save(answer) {
   try {
     const translatedOk = await fillTranslations(draft, steps, from, to);
     status.textContent = t('saving');
-    const doc = { ...draft, from, handFixed: handFixedAfter(steps, handFixed), written: writtenAfter({ saved: basis, draft, from, to }) };
+    const doc = { ...draft, from, handFixed: handFixedAfter(steps, handFixed, { saved: basis, to }), written: writtenAfter({ saved: basis, draft, from, to }) };
     const stored = await freshWeek();
     if (!stored) return;
     let archivedOk = true;

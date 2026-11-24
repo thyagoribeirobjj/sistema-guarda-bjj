@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { localDate, nextMonday, classOf, weekOn, switchOver, worthArchiving, pastEntry, pastWeeksShown } from '../js/week.js';
+import { localDate, nextMonday, classOf, weekOn, switchOver, worthArchiving, pastEntry, pastWeeksShown, dateProblem, firstStart } from '../js/week.js';
 
 const current = { weekOf: '2026-11-23', title: { pt: 'Passagem', en: 'Passing' }, note: { pt: '', en: '' }, techniques: ['top-base'], from: 'pt', handFixed: [], updatedBy: 'coach@example.com' };
 const next = { weekOf: '2026-11-30', title: { pt: 'Raspagem', en: 'Sweeps' }, note: { pt: 'Tragam água', en: 'Bring water' }, techniques: ['bottom-scissor'], from: 'pt', handFixed: [] };
@@ -84,4 +84,19 @@ test('students see the replaced class first among past weeks, once, and never th
   assert.deepEqual(pastWeeksShown(filed, shown.week, shown.previous).map((week) => week.weekOf), ['2026-11-23', '2026-11-16']);
   assert.deepEqual(pastWeeksShown([{ weekOf: '2026-11-30' }, ...filed], shown.week, null).map((week) => week.weekOf), ['2026-11-23', '2026-11-16']);
   assert.deepEqual(pastWeeksShown([], null, null), []);
+});
+
+test('two classes never share a date: next week starts after today and after this week', () => {
+  // Saturday 28 November, this week dated ahead to Monday 30.
+  const today = '2026-11-28';
+  assert.equal(firstStart(today, '2026-11-30'), '2026-12-07', 'the default is the Monday after this week');
+  assert.equal(firstStart(today, '2026-11-23'), '2026-11-30');
+  assert.equal(firstStart(today), '2026-11-30');
+  assert.equal(dateProblem('next', '2026-11-30', { today, thisWeekOf: '2026-11-30' }), 'startAfterToday', 'the same date as this week');
+  assert.equal(dateProblem('next', '2026-11-28', { today, thisWeekOf: '2026-11-23' }), 'startAfterToday', 'today');
+  assert.equal(dateProblem('next', '2026-12-07', { today, thisWeekOf: '2026-11-30' }), '');
+  assert.equal(dateProblem('week', '2026-11-30', { today, nextWeekOf: '2026-11-30' }), 'beforeNextWeek');
+  assert.equal(dateProblem('week', '2026-12-01', { today, nextWeekOf: '2026-11-30' }), 'beforeNextWeek');
+  assert.equal(dateProblem('week', '2026-11-29', { today, nextWeekOf: '2026-11-30' }), '');
+  assert.equal(dateProblem('week', '2026-11-30', { today }), '', 'no next week prepared');
 });

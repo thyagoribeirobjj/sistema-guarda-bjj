@@ -4,7 +4,7 @@ import { settings, isFavorite, progressOf } from './settings.js';
 import { state } from './state.js';
 import { t, text } from './strings.js';
 import { heart, techniqueChip, progressMarks, beltName, minBeltOf } from './views.js';
-import { noteOf, noteLength, readNotes } from './notes.js';
+import { noteOf, noteLength, readNotes, notesLoading } from './notes.js';
 import { videoPreview } from './media.js';
 import { loadDiagram } from './firebase.js';
 
@@ -55,7 +55,7 @@ function stepButtons(id) {
 // Only for the student: coaches don't see notes.
 function notesBox(id) {
   return html`<h5><label for="noteBox">${t('myNotes')}</label></h5>
-    <textarea class="notebox" id="noteBox" data-note="${id}" maxlength="${noteLength}" rows="3" placeholder="${t('notePlaceholder')}">${noteOf(id)}</textarea>
+    <textarea class="notebox" id="noteBox" data-note="${id}" maxlength="${noteLength}" rows="3" ${notesLoading() ? html`readonly placeholder="${t('loading')}"` : html`placeholder="${t('notePlaceholder')}"`}>${noteOf(id)}</textarea>
     <p class="note-hint" id="noteStatus" role="status">${t(state.account ? 'notesPrivate' : 'notesOnDevice')}</p>`;
 }
 
@@ -100,6 +100,7 @@ export function openPanel(id, { remember = true, focus = '#panelClose', list } =
   if (list) state.panel.list = list;
   else if (!wasOpen) state.panel.list = techniquesIn(document.getElementById('main'));
   state.panel.current = id;
+  const notesRead = readNotes();
   panel().innerHTML = panelContent(id);
   panel().hidden = false;
   scrim().hidden = false;
@@ -113,9 +114,14 @@ export function openPanel(id, { remember = true, focus = '#panelClose', list } =
   }
   if (state.media[id]?.diagram) showDiagram(id);
   (panel().querySelector(focus) || panel().querySelector('#panelClose')).focus();
-  readNotes().then((changed) => {
+  notesRead.then((changed) => {
     const box = document.getElementById('noteBox');
-    if (changed && box && document.activeElement !== box) box.value = noteOf(box.dataset.note);
+    if (!box) return;
+    if (box.readOnly) {
+      box.value = noteOf(box.dataset.note);
+      box.readOnly = false;
+      box.placeholder = t('notePlaceholder');
+    } else if (changed && document.activeElement !== box) box.value = noteOf(box.dataset.note);
   });
 }
 

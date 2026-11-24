@@ -1,4 +1,4 @@
-import { loadUserSettings, saveUserSettings } from './firebase.js';
+import { loadUserSettings, saveUserSettings, signOut } from './firebase.js';
 import { belts } from './content.js';
 import { useNotesAccount, leaveNotesAccount, forgetNotes } from './notes.js';
 
@@ -21,6 +21,7 @@ merge(readLocal());
 takeOldLesson();
 
 let accountId = null;
+let accountSaved = false; // the account's settings exist in the database: read, or written once on this visit
 let loading = false;
 let changedWhileLoading = {};
 
@@ -67,7 +68,15 @@ function saved() {
 
 function store() {
   try { localStorage.setItem(storageKey, JSON.stringify(saved())); } catch {}
-  if (accountId) saveUserSettings(accountId, saved()).catch((error) => console.error(error));
+  if (!accountId) return;
+  const uid = accountId;
+  saveUserSettings(uid, saved(), { create: !accountSaved }).then(() => {
+    if (accountId === uid) accountSaved = true;
+  }, (error) => {
+    // The settings this device saved before are gone: "Delete my data" was used on another device.
+    if (error.code === 'not-found' && accountId === uid) accountDeleted();
+    else console.error(error);
+  });
 }
 
 export function applyTheme() {
@@ -94,6 +103,19 @@ export function leaveAccount() {
   accountId = null;
   leaveNotesAccount();
 }
+
+// "Delete my data" was used on another device: nothing is written back, so the account stays deleted, and this
+// device forgets it all and signs out.
+async function accountDeleted() {
+  leaveAccount();
+  forgetPersonalMarks();
+  try { localStorage.removeItem(accountKey); } catch {}
+  store();
+  forgetNotes();
+  await signOut().catch((error) => console.error(error));
+}
+
+document.addEventListener('account-deleted', () => { if (accountId) accountDeleted(); });
 
 // Signed out, "delete my data" clears what this browser keeps.
 export function clearThisBrowser() {
@@ -129,11 +151,15 @@ export async function useAccount(user) {
   } finally {
     loading = false;
   }
+  // This browser was signed in to this account before, so the account had its settings: gone now means the person
+  // used "Delete my data" on another device.
+  if (!fromDatabase && previous === user.uid) return accountDeleted();
   // A browser that was never signed in adds what was marked here to the account. After that the account is
   // the truth, so removing a favorite on one device removes it on the others.
   if (fromDatabase) merge(fromDatabase, !previous);
   Object.assign(settings, changedWhileLoading);
   accountId = user.uid;
+  accountSaved = Boolean(fromDatabase);
   try { localStorage.setItem(accountKey, user.uid); } catch {}
   store();
   applyTheme();

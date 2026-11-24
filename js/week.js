@@ -20,6 +20,20 @@ export function nextMonday(today) {
   return localDate(date);
 }
 
+// Past weeks are told apart by their date, so two classes must never share one: a prepared week starts after today
+// and after this week's date, and this week's date stays before the prepared week's start.
+// Returns '' when the date is fine, or the message key that says why not.
+export function dateProblem(which, weekOf, { today, thisWeekOf = '', nextWeekOf = '' }) {
+  if (which === 'next') return weekOf > today && weekOf > thisWeekOf ? '' : 'startAfterToday';
+  return nextWeekOf && !(weekOf < nextWeekOf) ? 'beforeNextWeek' : '';
+}
+
+// Where a new prepared week starts unless the admin picks another day: the Monday after today, or after this week's
+// date when the admin dated this week ahead.
+export function firstStart(today, thisWeekOf = '') {
+  return nextMonday(thisWeekOf > today ? thisWeekOf : today);
+}
+
 // Just the class: no `next`, no who-saved-it-when.
 export function classOf(week) {
   if (!week) return {};

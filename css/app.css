@@ -60,11 +60,11 @@ main{padding-block:24px 64px}
 .card p{margin:0;color:var(--muted);font-size:14px}
 .rule{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin-top:8px;font-size:13.5px}
 .rule b{font-weight:600}
-/* panel */
+/* panel (touch-action: a sideways swipe moves to the next technique; without it the browser also goes back a page) */
 .scrim{position:fixed;inset:0;background:var(--scrim);z-index:20}
 html.panel-open{overflow:hidden}
 .panel{position:fixed;z-index:21;background:var(--surface);box-shadow:var(--shadow);overflow:auto;
-  overscroll-behavior:contain;right:0;top:0;bottom:0;width:min(420px,100%);padding:24px max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 22px;padding-top:calc(24px + env(safe-area-inset-top,0px))}
+  overscroll-behavior:contain;touch-action:pan-y pinch-zoom;right:0;top:0;bottom:0;width:min(420px,100%);padding:24px max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 22px;padding-top:calc(24px + env(safe-area-inset-top,0px))}
 @media (max-width:640px){.panel{top:auto;left:0;width:100%;max-height:82vh;max-height:82dvh;border-radius:16px 16px 0 0;padding-left:max(20px,env(safe-area-inset-left,0px));padding-top:20px}}
 .panel .lv{display:inline-block;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:4px}
 .lv.b{background:var(--accent-soft);color:var(--accent)} .lv.a{background:var(--accent-soft);color:var(--accent)}

@@ -138,8 +138,10 @@ async function visitor(person, { locale = 'en-US', today } = {}) {
     if (message.type() === 'error' && !message.text().startsWith('Failed to load resource')) problems.push(`${person.email}: ${message.text()}`);
   });
   page.on('response', (response) => {
-    // A refusal the step asked for (tryInPage) is the point of that step, not a problem.
+    // A refusal the step asked for (tryInPage), or one a device gets for an account deleted elsewhere, is the point
+    // of that step, not a problem.
     if (response.status() === 403 && page.tryingRefused) return;
+    if ([400, 403, 404].includes(response.status()) && page.refusalsExpected) return;
     if (response.status() >= 400 && !expectedMisses.test(response.url())) problems.push(`${person.email}: ${response.status()} ${response.url()}`);
   });
   page.open = async (path = '', hash = '') => {
@@ -191,6 +193,8 @@ const first = 'top-biceps-grips';
 const second = 'top-break-the-grip';
 const fromOtherDevice = 'top-base';
 const noteText = 'Elbows in, hips low (private)';
+const noteBeforeSignIn = 'Grip the sleeve (typed signed out)';
+const noteBeforeSignOut = 'Posture first (typed just before signing out)';
 const oldWeek = { weekOf: '2026-01-05', title: { pt: 'Semana antiga', en: 'Old week' }, note: { pt: '', en: '' }, techniques: [fromOtherDevice], from: 'pt' };
 const pastWeek = { weekOf: '2025-12-29', title: { pt: 'Pegadas e postura', en: 'Grips and posture' }, note: { pt: 'Traga água', en: 'Bring water' }, techniques: [first, second] };
 
@@ -213,6 +217,7 @@ await step('marks made before signing in are added to the account on the first s
   await openTechnique(student, first);
   await student.locator(`[data-favorite="${first}"]`).click();
   await student.locator(`[data-progress="${first}:learning"]`).click();
+  await student.locator('#noteBox').fill(noteBeforeSignIn);
   await student.locator('#panelClose').click();
   await signInOnSite(student);
   const account = await until(async () => {
@@ -223,6 +228,7 @@ await step('marks made before signing in are added to the account on the first s
   assert.deepEqual(account.progress, { [first]: 'learning', [fromOtherDevice]: 'done' });
   assert.equal(account.name, 'Ana Test');
   assert.equal(account.email, people.student.email);
+  assert.ok(account.seenWeek, 'the class of the week this browser noted is saved to the account');
 });
 
 await step('language, theme, favorite, progress, belt and a note are saved to the account', async () => {
@@ -239,8 +245,11 @@ await step('language, theme, favorite, progress, belt and a note are saved to th
     const user = await stored(`users/${uid.student}`);
     return user.language === 'pt' && user.theme === 'royal' && user.belt === 'blue' && user.favorites.includes(second) && user.progress[second] === 'done';
   }, 'the account has the language, theme, belt, favorite and progress');
-  const notes = await until(() => stored(`users/${uid.student}/private/notes`), 'the note is saved');
-  assert.deepEqual(notes.notes, { [second]: noteText });
+  const notes = await until(async () => {
+    const saved = await stored(`users/${uid.student}/private/notes`);
+    return saved?.notes?.[second] && saved;
+  }, 'the note is saved');
+  assert.deepEqual(notes.notes, { [first]: noteBeforeSignIn, [second]: noteText }, 'the note made before signing in joined the account');
   assert.equal(notes.changed, second);
 });
 
@@ -263,12 +272,24 @@ await step('and on another device once signed in, from the account', async () =>
   const settings = await laptop.evaluate(() => JSON.parse(localStorage.getItem('sg-settings')));
   assert.equal(settings.belt, 'blue');
   assert.deepEqual(settings.progress, { [first]: 'learning', [second]: 'done', [fromOtherDevice]: 'done' });
+  // The account's notes arrive slowly: until they do, the box can't be typed in, so nothing replaces them unseen.
+  await laptop.route(/documents:batchGet/, async (route) => {
+    if (route.request().postData()?.includes('private/notes')) await new Promise((done) => setTimeout(done, 1500));
+    await route.continue();
+  });
   await openTechnique(laptop, second);
+  assert.notEqual(await laptop.locator('#noteBox').getAttribute('readonly'), null, 'read-only while the notes load');
   await until(async () => (await laptop.locator('#noteBox').inputValue()) === noteText, 'the note is read from the account');
+  assert.equal(await laptop.locator('#noteBox').getAttribute('readonly'), null, 'then it can be typed in');
+  await laptop.unroute(/documents:batchGet/);
   await laptop.locator('#panelClose').click();
 });
 
 await step('signing out clears the personal marks from the device, not from the account', async () => {
+  // A note typed a moment before signing out still reaches the account.
+  await openTechnique(laptop, fromOtherDevice);
+  await laptop.locator('#noteBox').fill(noteBeforeSignOut);
+  await laptop.locator('#panelClose').click();
   await laptop.locator('#account').click();
   await laptop.locator('#accountMenu #signOut').click();
   await laptop.locator('#accountMenu #signIn').waitFor({ state: 'attached' });
@@ -279,6 +300,7 @@ await step('signing out clears the personal marks from the device, not from the 
   assert.equal(kept.settings.belt, '');
   assert.deepEqual(kept.notes, {});
   assert.equal((await stored(`users/${uid.student}`)).favorites.length, 3, 'the account keeps them');
+  assert.equal((await stored(`users/${uid.student}/private/notes`)).notes[fromOtherDevice], noteBeforeSignOut, 'and the note typed just before');
   await laptop.context().close();
 });
 
@@ -300,7 +322,8 @@ await step('another student cannot read the first student\'s settings, notes or 
 let coach;
 
 await step('a coach sees the Admin link once signed in', async () => {
-  coach = await visitor(people.coach);
+  // The coach's browser keeps today's date for the whole run, even if it passes midnight.
+  coach = await visitor(people.coach, { today });
   await coach.open();
   await coach.locator('#account').waitFor();
   await signInOnSite(coach);
@@ -333,10 +356,37 @@ await step('the coach saves this week in one language; it is translated and the 
   assert.deepEqual(past[0].title, oldWeek.title);
 });
 
-await step('the coach prepares next week, starting from a past week', async () => {
+let tablet;
+
+await step('a new class gets the dot; looking at it on one device clears it on the others', async () => {
+  const seenBefore = (await stored(`users/${uid.student}`)).seenWeek;
+  // The week is kept in each browser for a few minutes; this one forgets it so it sees the coach's new class now.
+  await student.evaluate(() => localStorage.removeItem('sg-site-week'));
+  await student.open('', '#curriculum');
+  await student.reload(); // only the link's #part changed, so the page itself wasn't loaded again
+  await student.locator('#sidebar .newdot').waitFor();
+  await student.locator('#sidebar a[href="#semana"]').click();
+  await student.locator('main', { hasText: 'Passagem com pegadas' }).waitFor();
+  assert.equal(await student.locator('.newdot').count(), 0, 'looking at it clears the dot');
+  await until(async () => {
+    const seen = (await stored(`users/${uid.student}`)).seenWeek;
+    return seen && seen !== seenBefore;
+  }, 'the account notes the class was seen');
+  // A device that last saw the old class: once signed in, the account says it was seen.
+  tablet = await visitor(people.student);
+  await tablet.addInitScript((seen) => {
+    if (!localStorage.getItem('sg-settings')) localStorage.setItem('sg-settings', JSON.stringify({ seenWeek: seen }));
+  }, seenBefore);
+  await tablet.open('', '#curriculum');
+  await tablet.locator('#sidebar .newdot').waitFor();
+  await signInOnSite(tablet);
+  await tablet.locator('#sidebar .newdot').waitFor({ state: 'detached' });
+});
+
+async function prepareFromPastWeek() {
   await coach.locator('[data-form="next"]').click();
   assert.equal(await coach.locator('#weekOf').inputValue(), startsOn, 'next Monday by default');
-  await coach.locator('[data-reuse]').click();
+  if (await coach.locator('[data-reuse]').count()) await coach.locator('[data-reuse]').click();
   await coach.locator('#reuseWeek').selectOption({ label: `${pastWeek.weekOf} · ${pastWeek.title.en}` });
   assert.equal(await coach.locator('#title').inputValue(), pastWeek.title.pt);
   assert.equal(await coach.locator('#note').inputValue(), pastWeek.note.pt);
@@ -349,6 +399,37 @@ await step('the coach prepares next week, starting from a past week', async () =
   assert.equal(week.next.weekOf, startsOn);
   assert.deepEqual(week.next.title, pastWeek.title, 'the past week\'s own words are kept, not translated again');
   assert.deepEqual([...week.next.techniques].sort(), [...pastWeek.techniques].sort());
+}
+
+await step('the coach prepares next week, starting from a past week', prepareFromPastWeek);
+
+await step('editing this week keeps the prepared week, and this week cannot be dated on or after its start', async () => {
+  const prepared = (await stored('site/week')).next;
+  await coach.locator('[data-form="week"]').click();
+  await coach.locator('#weekOf').fill(startsOn);
+  await coach.locator('#weekForm [type="submit"]').click();
+  await coach.locator('#status', { hasText: "before next week's start" }).waitFor();
+  assert.equal((await stored('site/week')).weekOf, today, 'nothing saved');
+  await coach.locator('#weekOf').fill(today);
+  await coach.locator('#note').fill('Chegue cedo e traga água');
+  await coach.locator('#weekForm [type="submit"]').click();
+  await coach.locator('#status', { hasText: 'Saved' }).waitFor();
+  const week = await stored('site/week');
+  assert.equal(week.note.pt, 'Chegue cedo e traga água');
+  assert.deepEqual(week.next, prepared, 'next week is still prepared, unchanged');
+  assert.deepEqual((await stored('site/weeks')).weeks.map((one) => one.weekOf), [oldWeek.weekOf, pastWeek.weekOf], 'the same week edited is not filed');
+});
+
+await step('cancelling next week removes it, and it can be prepared again', async () => {
+  await coach.locator('[data-form="next"]').click();
+  await coach.locator('[data-cancel-next="ask"]').click();
+  await coach.locator('[data-cancel-next="yes"]').click();
+  await coach.locator('#status', { hasText: 'Next week was removed' }).waitFor();
+  const week = await stored('site/week');
+  assert.equal(week.next, undefined);
+  assert.equal(week.weekOf, today, 'this week stays');
+  assert.equal(week.title.pt, 'Passagem com pegadas');
+  await prepareFromPastWeek();
 });
 
 await step('on its start date students see next week, and the coach\'s visit switches the database', async () => {
@@ -383,7 +464,20 @@ await step('the Students list shows the student with the right counts, and never
   assert.equal(await tryInPage(coach, 'loadNotes', uid.student), 'permission-denied', 'coaches cannot read notes');
 });
 
-await step('"Delete my data" deletes the account\'s settings and notes and signs out', async () => {
+await step('"Delete my data" deletes the account\'s settings, notes and sign-in record, and signs out', async () => {
+  // Other devices signed in to the same account, to see that none of them can bring anything back.
+  const signedInDevice = async () => {
+    const device = await visitor(people.student);
+    await device.open('', '#meu');
+    await device.locator('#account').waitFor();
+    await signInOnSite(device);
+    await device.locator(`main [data-technique="${first}"]`).first().waitFor();
+    return device;
+  };
+  const phone = await signedInDevice();
+  const desk = await signedInDevice();
+  await openTechnique(phone, first); // reads the account's notes
+  await until(async () => (await phone.locator('#noteBox').inputValue()) === noteBeforeSignIn, 'the phone has the notes');
   await student.open('', '#privacy');
   await student.locator('[data-delete-data="ask"]').click();
   await student.locator('[data-delete-data="yes"]').click();
@@ -395,6 +489,39 @@ await step('"Delete my data" deletes the account\'s settings and notes and signs
   const kept = await student.evaluate(() => JSON.parse(localStorage.getItem('sg-settings')));
   assert.deepEqual(kept.favorites, []);
   assert.deepEqual(kept.progress, {});
+  const lookup = await fetch(`${authEmulator}/identitytoolkit.googleapis.com/v1/projects/${project}/accounts:lookup`, {
+    method: 'POST', headers: { ...owner, 'Content-Type': 'application/json' }, body: JSON.stringify({ localId: [uid.student] }),
+  });
+  assert.equal((await lookup.json()).users, undefined, 'the sign-in record is gone too');
+
+  // Still open on the tablet: its next change finds the account gone, writes nothing back and signs out.
+  tablet.refusalsExpected = true;
+  await tablet.locator('#sidebar a[href="#meu"]').click();
+  await tablet.locator(`main [data-technique="${second}"]`).first().click();
+  await tablet.locator(`#panel [data-favorite="${second}"]`).click();
+  await tablet.locator('#panelClose').click();
+  await tablet.locator('#account').click();
+  await tablet.locator('#accountMenu #signIn').waitFor();
+  // Still open on the phone: a note typed there finds the notes gone and signs out too.
+  phone.refusalsExpected = true;
+  await phone.locator('#noteBox').fill('Typed after the delete');
+  await phone.locator('#panelClose').click();
+  await phone.locator('#account').click();
+  await phone.locator('#accountMenu #signIn').waitFor();
+  // The desk, reloaded: it finds the account gone and signs out.
+  desk.refusalsExpected = true;
+  await desk.reload();
+  await desk.locator('#account').click();
+  await desk.locator('#accountMenu #signIn').waitFor();
+  for (const device of [tablet, phone, desk]) {
+    await until(() => device.evaluate(() => {
+      const left = JSON.parse(localStorage.getItem('sg-settings'));
+      return !left.favorites.length && !Object.keys(left.progress).length && !left.belt && localStorage.getItem('sg-notes') === '{}';
+    }), 'the device forgets the marks and notes');
+  }
+  await new Promise((done) => setTimeout(done, 1000));
+  assert.equal(await stored(`users/${uid.student}`), null, 'nothing was brought back');
+  assert.equal(await stored(`users/${uid.student}/private/notes`), null);
 });
 
 await browser.close();

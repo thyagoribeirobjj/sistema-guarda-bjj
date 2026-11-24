@@ -2,8 +2,8 @@ import { html } from './html.js';
 import { state } from './state.js';
 import { t } from './strings.js';
 import { intro } from './views.js';
-import { deleteMyData, signOut } from './firebase.js';
-import { leaveAccount, clearThisBrowser } from './settings.js';
+import { deleteMyData } from './firebase.js';
+import { leaveAccount, clearThisBrowser, useAccount } from './settings.js';
 
 // The privacy page (#privacy): what is kept, who sees it, and "Delete my data". Keep its words true to the code:
 // firestore.rules says who can read what, and js/settings.js and js/notes.js what is kept.
@@ -23,7 +23,7 @@ export function privacyView() {
   return html`${intro(t('privacy'), t('privacyLead'))}<div class="privacy">${sections.map((name) => html`<section class="card privacy-part"><h3>${t(`privacy${name}Title`)}</h3><p>${t(`privacy${name}`)}</p></section>`)}${deleteBlock()}</div>`;
 }
 
-// Signed in: the notes and the account's settings are deleted, then signing out clears this browser.
+// Signed in: the notes, the account's settings and the sign-in record are deleted, which signs out and clears this browser.
 // Signed out: only this browser holds anything, so it is cleared.
 async function deleteEverything(render) {
   if (!state.account) {
@@ -34,14 +34,17 @@ async function deleteEverything(render) {
   }
   state.deleting = 'working';
   render();
+  const account = state.account;
   leaveAccount();
   try {
-    await deleteMyData(state.account.uid);
-    await signOut();
+    await deleteMyData(account.uid);
     state.deleting = 'deleted';
   } catch (error) {
     console.error(error);
     state.deleting = 'failed';
+    // Back to saving to the account, so nothing is quietly kept on this device only (signed out instead, if the
+    // account's settings are already gone).
+    await useAccount(account);
   }
   render();
 }

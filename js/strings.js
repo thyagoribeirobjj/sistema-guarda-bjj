@@ -72,7 +72,7 @@ export const strings = {
   upToMyBelt: { pt: 'Até a minha faixa', en: 'Up to my belt' },
   everything: { pt: 'Tudo', en: 'Everything' },
   nothingAtMyBelt: { pt: 'Nada até a sua faixa nesta etapa.', en: 'Nothing up to your belt in this stage.' },
-  pickBeltHint: { pt: 'Escolha sua faixa no menu (sua foto, no alto) para ver só as técnicas do seu nível.', en: 'Pick your belt in the menu (your photo, at the top) to see just the techniques for your level.' },
+  pickBeltHint: { pt: 'Escolha sua faixa no menu, no alto à direita, para ver só as técnicas do seu nível.', en: 'Pick your belt in the menu at the top right to see just the techniques for your level.' },
 
   learning: { pt: 'Treinando', en: 'Drilling' },
   done: { pt: 'Já sei', en: 'Got it' },
@@ -179,7 +179,8 @@ export const strings = {
   yesCancelNext: { pt: 'Sim, apagar', en: 'Yes, remove it' },
   keepIt: { pt: 'Manter', en: 'Keep it' },
   nextCancelled: { pt: 'A próxima semana foi apagada.', en: 'Next week was removed.' },
-  startAfterToday: { pt: 'Escolha um dia de início depois de hoje. Para mudar a aula de agora, use “Esta semana”.', en: 'Pick a start date after today. To change the class now, use “This week”.' },
+  startAfterToday: { pt: 'Escolha um dia de início depois de hoje e depois da data desta semana. Para mudar a aula de agora, use “Esta semana”.', en: "Pick a start date after today and after this week's date. To change the class now, use “This week”." },
+  beforeNextWeek: { pt: 'A data desta semana precisa ser antes do início da próxima semana. Para mudar a próxima, use “Próxima semana”.', en: "This week's date must be before next week's start. To change next week, use “Next week”." },
   nextStarted: { pt: 'A semana preparada começou e agora é esta semana. A anterior foi para “Semanas anteriores”.', en: 'The prepared week has started and is now this week. The previous one moved to “Past weeks”.' },
   nextStartedSaveAgain: { pt: 'A semana preparada acabou de começar, então nada foi salvo. Confira e salve de novo.', en: 'The prepared week has just started, so nothing was saved. Check and save again.' },
   nextStartFailed: { pt: 'A semana preparada já aparece para os alunos, mas não foi possível passá-la para esta semana aqui. Recarregue a página para tentar de novo.', en: "Students already see the prepared week, but it couldn't be moved into this week here. Reload the page to try again." },
@@ -221,7 +222,7 @@ export const strings = {
   privacyAdsTitle: { pt: 'Sem anúncios, sem rastreamento', en: 'No ads, no tracking' },
   privacyAds: { pt: 'Não há anúncios, nem estatísticas de visitas, nem rastreamento neste site. As letras vêm do Google Fonts, e as imagens e o player dos vídeos vêm do YouTube (o vídeo só quando você aperta o play), então esses serviços percebem que seu aparelho os carregou.', en: 'There are no ads, no visitor statistics and no tracking on this site. The lettering comes from Google Fonts, and video pictures and the video player from YouTube (the video only when you press play), so those services can tell your device loaded them.' },
   privacyDeleteTitle: { pt: 'Apagar seus dados', en: 'Delete your data' },
-  privacyDelete: { pt: 'Apaga suas anotações e tudo o que fica na sua conta neste site, e depois sai da conta. Sua conta Google em si não muda. Se entrar de novo depois, você começa do zero.', en: 'Deletes your notes and everything kept with your account on this site, then signs you out. Your Google account itself is not touched. If you sign in again later, you start fresh.' },
+  privacyDelete: { pt: 'Apaga suas anotações, tudo o que fica na sua conta neste site e o registro de que você entra aqui (nome, e-mail e foto do Google), e depois sai da conta. O Google pode pedir para você confirmar que é você. Sua conta Google em si não muda. Outros aparelhos em que você entrou saem da conta na próxima vez que abrirem o site. Se entrar de novo depois, você começa do zero.', en: "Deletes your notes, everything kept with your account on this site and the record that you sign in here (your Google name, email and photo), then signs you out. Google may ask you to confirm it's you. Your Google account itself is not touched. Other devices where you're signed in are signed out the next time they use the site. If you sign in again later, you start fresh." },
   privacyDeleteLocal: { pt: 'Você não entrou, então suas marcas estão só neste navegador. Este botão apaga daqui a árvore, o progresso, a faixa, as anotações e os planos de aula.', en: "You're not signed in, so your marks are only in this browser. This button clears the tree, progress, belt, notes and lesson plans from it." },
   deleteMyData: { pt: 'Apagar meus dados', en: 'Delete my data' },
   clearThisBrowser: { pt: 'Apagar deste navegador', en: 'Clear this browser' },
@@ -231,7 +232,7 @@ export const strings = {
   deleting: { pt: 'Apagando…', en: 'Deleting…' },
   deleted: { pt: 'Pronto: seus dados foram apagados e você saiu da conta.', en: 'Done: your data was deleted and you are signed out.' },
   cleared: { pt: 'Pronto: este navegador não guarda mais suas marcas.', en: 'Done: this browser no longer keeps your marks.' },
-  deleteFailed: { pt: 'Não foi possível apagar tudo. Recarregue a página e tente de novo.', en: "Couldn't delete everything. Reload the page and try again." },
+  deleteFailed: { pt: 'Não foi possível apagar tudo. Tente de novo (entre outra vez, se tiver saído da conta).', en: "Couldn't delete everything. Try again (sign in again first if you were signed out)." },
 };
 
 export function text(value) {

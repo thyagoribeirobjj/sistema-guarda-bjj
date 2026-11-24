@@ -136,7 +136,11 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 - **Next week.** A prepared week lives inside `site/week` as `next`, so it costs no extra read. Each browser shows it as
   this week from its start date on (by that browser's own date), with the old class as the newest past week. The
   database itself is switched (the old class filed in `site/weeks`, `next` becomes the week) the next time an admin
-  opens or saves the admin page. `js/week.js` decides all of this.
+  opens or saves the admin page. `js/week.js` decides all of this. Past weeks are told apart by their date, so a
+  prepared week must start after today and after this week's date (`dateProblem()`).
+- **Delete my data** (the privacy page) deletes the notes, `users/{uid}` and the person's sign-in record (Google may
+  ask them to confirm it's them first). Once a device knows the account's documents exist it only updates them, never
+  writes them anew, so another device still signed in finds them gone, writes nothing back and signs out.
 - **Students.** The admin page lists every `users/{uid}` only when the coach taps "Show students": one read per
   student, so it is never loaded by itself.
 - **Keep database reads low.** The free plan allows 50,000 reads a day. `site/week`, `site/media` and `site/weeks` are kept

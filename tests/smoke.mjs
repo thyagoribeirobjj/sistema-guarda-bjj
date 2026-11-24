@@ -289,19 +289,29 @@ await step('next and previous move through the part; Back still closes the techn
   assert.equal(visit.url(), part);
 });
 
-await step('on a phone: swiping an open technique moves to the next one, and Back closes it', async () => {
+await step('on a phone: swiping an open technique moves to the next one and back, and Back closes it', async () => {
   const phone = await open('/#top', 'en-US', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   const part = phone.url();
   await phone.locator('main .tech').first().tap();
   const first = await phone.locator('#panel [data-favorite]').getAttribute('data-favorite');
-  await phone.evaluate(() => {
-    const title = document.getElementById('panelTitle');
-    const touch = (x) => new Touch({ identifier: 1, target: title, clientX: x, clientY: 300 });
-    title.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: [touch(300)], changedTouches: [touch(300)] }));
-    title.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: [touch(140)] }));
-  });
+  // Real touches, through the browser itself, so the browser's own swipe-to-go-back gets its chance too.
+  const touchscreen = await phone.context().newCDPSession(phone);
+  const title = await phone.locator('#panelTitle').boundingBox();
+  const swipe = async (fromX, toX) => {
+    const y = title.y + title.height / 2;
+    await touchscreen.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: fromX, y }] });
+    for (let i = 1; i <= 8; i++) await touchscreen.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: fromX + ((toX - fromX) * i) / 8, y }] });
+    await touchscreen.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await phone.waitForTimeout(400);
+  };
+  const position = async () => (await phone.locator('#panel .step-count').textContent()).trim().split(' ')[0];
+  await swipe(330, 80);
   assert.notEqual(await phone.locator('#panel [data-favorite]').getAttribute('data-favorite'), first);
-  assert.equal((await phone.locator('#panel .step-count').textContent()).trim().split(' ')[0], '2');
+  assert.equal(await position(), '2');
+  await swipe(150, 330);
+  assert.ok(await phone.locator('#panel').isVisible(), 'swiping back keeps the technique open');
+  assert.equal(await position(), '1');
+  assert.equal(new URL(phone.url()).hash, `#t-${first}`);
   await phone.goBack();
   await phone.locator('#panel').waitFor({ state: 'hidden' });
   assert.equal(phone.url(), part);
@@ -357,14 +367,17 @@ await step('a minimum belt an admin set shows on its technique, and "up to my be
   assert.equal(await visit.locator('main .tech .belt').count(), 2, 'only the techniques with a minimum are marked');
   assert.equal(await visit.locator('main [data-technique="top-biceps-grips"] .belt').getAttribute('aria-label'), 'Minimum belt: Blue belt');
   assert.ok(await visit.locator('main .belt-hint').isVisible(), 'a hint to pick a belt');
+  assert.match(await visit.locator('main .belt-hint').textContent(), /menu at the top right/, 'signed out there is no photo to point at');
   await visit.locator('main [data-technique="top-biceps-grips"]').click();
   await visit.locator('#panel .from', { hasText: 'Minimum belt: Blue belt' }).waitFor();
   await visit.locator('#panelClose').click();
   await visit.locator('#account').click();
   await visit.locator('[data-belt-choice="white"]').click();
   assert.equal(await visit.locator('[data-belt-choice="white"]').getAttribute('aria-checked'), 'true');
+  assert.equal(await visit.locator('[data-belt-choice="blue"]').getAttribute('aria-checked'), 'false', 'a screen reader hears the others as not chosen');
   await visit.keyboard.press('Escape');
   await visit.locator('main [data-belt-filter="mine"][aria-pressed="true"]').waitFor();
+  assert.equal(await visit.locator('main [data-belt-filter="all"]').getAttribute('aria-pressed'), 'false');
   assert.equal(await visit.locator('main .tech').count(), all - 1, 'only the blue-belt technique is hidden');
   assert.equal(await visit.locator('main [data-technique="top-biceps-grips"]').count(), 0);
   assert.equal(await visit.locator('main [data-technique="top-break-the-grip"]').count(), 1, 'a white-belt minimum stays');

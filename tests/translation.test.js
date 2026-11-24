@@ -150,3 +150,20 @@ test('nothing is claimed for text whose history is unknown (an old past week reu
   assert.equal(translationLabel(past, 'title', 'Sweep', 'en'), '');
   assert.equal(translationLabel(past, 'title', 'Sweeps', 'en'), 'yourCorrection');
 });
+
+test('correcting the original through "Edit translation" does not make the automatic translation a correction', () => {
+  // Written in Portuguese, English translated automatically.
+  const first = { from: 'pt', title: { pt: 'A', en: 'en:A' }, note: { pt: '', en: '' }, written: { title: 'pt' }, handFixed: [] };
+  // Now writing in English, the admin edits the Portuguese line (the original) to "A2".
+  const draft = { ...copy(first), title: { pt: 'A2', en: 'en:A' } };
+  const steps = translationPlan({ saved: first, draft, from: 'en', to: 'pt', handFixed: [] });
+  assert.equal(steps.title, 'keepEdited');
+  const handFixed = handFixedAfter(steps, [], { saved: first, to: 'pt' });
+  assert.deepEqual(handFixed, []);
+  const second = { ...draft, from: 'en', handFixed, written: writtenAfter({ saved: first, draft, from: 'en', to: 'pt' }) };
+  // Back to writing in Portuguese: the English line is still the automatic one.
+  assert.equal(translationLabel(second, 'title', 'en:A', 'en'), 'translatedAutomatically');
+  // A real correction of the translation still counts, and an earlier one is not forgotten.
+  assert.deepEqual(handFixedAfter(steps, [], { saved: first, to: 'en' }), ['title']);
+  assert.deepEqual(handFixedAfter(steps, ['title'], { saved: first, to: 'pt' }), ['title']);
+});

@@ -7,7 +7,7 @@ import { moduleView, curriculumView, weekView, treeView, methodView, searchView 
 import { accountButton, accountMenu } from './account.js';
 import { bottomBar, sidebar, partSwitcher, toggleParts, openMenu, closeMenus, openedMenu, moveInMenu, noteWeekSeen } from './nav.js';
 import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram, stepPanel, techniquesIn, typing } from './panel.js';
-import { changeNote } from './notes.js';
+import { changeNote, sendWaiting } from './notes.js';
 import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
 import { privacyView, privacyActions } from './privacy.js';
@@ -210,7 +210,8 @@ const clickActions = [
   }],
   ['[aria-haspopup="menu"]', (el) => (el.getAttribute('aria-expanded') === 'true' ? closeMenus() : openMenu(el))],
   ['#signIn', () => { closeMenus(); signIn().catch(() => alert(t('signInFailed'))); }],
-  ['#signOut', () => { closeMenus(true); signOut(); }],
+  // A note typed just now is saved to the account before signing out clears it from this device.
+  ['#signOut', async () => { closeMenus(true); await sendWaiting(); signOut(); }],
   ...privacyActions(() => render()),
   ['#copyPlan', () => navigator.clipboard.writeText(planText()).then(
     () => { $('copyStatus').textContent = t('copied'); },

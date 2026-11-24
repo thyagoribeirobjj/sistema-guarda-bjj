@@ -12,7 +12,9 @@ const saveDelay = 800;
 let notes = readLocal();
 let user = null; // signed in, notes not read yet
 let accountId = null; // read: changes go to this account
+let notesSaved = false; // the account's notes document exists: read, or written once on this visit
 let loading = null;
+let reading = false;
 let changedWhileLoading = new Set();
 const waiting = new Map(); // technique id → timer of a save not sent yet
 
@@ -48,6 +50,7 @@ export function useNotesAccount(person, previous) {
   user = null;
   accountId = null;
   loading = null;
+  notesSaved = false;
   const joined = joinedAccount();
   if (!person) {
     if (previous || joined) forgetNotes();
@@ -55,6 +58,12 @@ export function useNotesAccount(person, previous) {
   }
   if ((previous && previous !== person.uid) || (joined && joined !== person.uid)) forgetNotes();
   user = person;
+}
+
+// While the account's notes are being read the note box can't be typed in: a note typed now would replace the one
+// the account holds without it ever being shown.
+export function notesLoading() {
+  return reading;
 }
 
 // Called when a technique opens. Resolves true when the notes shown changed.
@@ -67,15 +76,20 @@ export function readNotes() {
 async function join(uid) {
   changedWhileLoading = new Set();
   let fromAccount;
+  reading = true;
   try {
     fromAccount = await loadNotes(uid);
   } catch (error) {
     // Couldn't read the account: notes stay on this device for this visit, so nothing is written over the account.
     console.error(error);
     return false;
+  } finally {
+    reading = false;
   }
   if (user?.uid !== uid) return false;
   const firstTime = joinedAccount() !== uid;
+  notesSaved = Boolean(fromAccount);
+  fromAccount = fromAccount || {};
   const here = notes;
   // A browser joining for the first time adds its notes to the account; after that the account is the truth.
   notes = firstTime ? { ...fromAccount, ...here } : { ...fromAccount };
@@ -105,9 +119,15 @@ export function changeNote(id, value) {
 async function send(id) {
   waiting.delete(id);
   if (!accountId) return;
+  const uid = accountId;
   try {
-    await saveNote(accountId, id, notes[id] || '');
+    await saveNote(uid, id, notes[id] || '', { create: !notesSaved });
+    if (accountId === uid) notesSaved = true;
   } catch (error) {
+    if (error.code === 'not-found') {
+      document.dispatchEvent(new CustomEvent('account-deleted'));
+      return;
+    }
     console.error(error);
     document.dispatchEvent(new CustomEvent('note-not-saved', { detail: id }));
   }
@@ -121,12 +141,13 @@ export function leaveNotesAccount() {
   accountId = null;
 }
 
-// Sends any note still waiting, for example when the page is closing.
+// Sends any note still waiting, for example when the page is closing or before signing out.
 export function sendWaiting() {
-  for (const [id, timer] of waiting) {
+  const sending = [...waiting].map(([id, timer]) => {
     clearTimeout(timer);
-    send(id);
-  }
+    return send(id);
+  });
+  return Promise.all(sending);
 }
 
 addEventListener('pagehide', sendWaiting);
