@@ -22,7 +22,9 @@ async function open(path, locale) {
     if (response.status() >= 400 && !expectedMisses.test(response.url())) problems.push(`${path}: ${response.status()} ${response.url()}`);
   });
   page.on('requestfailed', (request) => {
-    if (!expectedMisses.test(request.url())) problems.push(`${path}: could not load ${request.url()}`);
+    // A reload or a closed tab cuts requests off; that is not a failure.
+    if (request.failure()?.errorText === 'net::ERR_ABORTED' || expectedMisses.test(request.url())) return;
+    problems.push(`${path}: could not load ${request.url()} (${request.failure()?.errorText})`);
   });
   await page.goto(address + path);
   return page;
@@ -38,12 +40,14 @@ async function step(name, run) {
   }
 }
 
-const page = await open('/', 'en-US');
-const firstTab = page.locator('nav a:not([href="#semana"]):not([href="#meu"]):not([href="#lesson"]):not([href="#method"])').first();
+let page;
+let firstTab;
 let id = '';
 let name = '';
 
 await step('the page loads with its tabs, in English for an English browser', async () => {
+  page = await open('/', 'en-US');
+  firstTab = page.locator('nav a:not([href="#semana"]):not([href="#meu"]):not([href="#lesson"]):not([href="#method"])').first();
   await firstTab.waitFor();
   assert.equal(await page.getAttribute('html', 'lang'), 'en');
   assert.equal(await page.locator('#appTitle').textContent(), 'Guard System');

@@ -70,7 +70,7 @@ export function searchView() {
   const found = searchTechniques(state.search);
   if (!found.length) return html`${intro(t('searchResults'), `“${state.search}”`)}<div class="empty"><h3>${t('nothingFound')}</h3><p class="note">${t('nothingFoundHint')}</p></div>`;
   const groups = content.order.map((key) => ({ key, places: found.filter((place) => place.moduleKey === key) })).filter((group) => group.places.length);
-  return html`${intro(t('searchResults'), `“${state.search}” · ${found.length} ${t('found')}`)}<div class="results">${groups.map((group) => html`<section class="week"><h3 class="sect-title"><a class="plain" href="#${group.key}">${text(content.modules[group.key].title)}</a></h3>
+  return html`${intro(t('searchResults'), `“${state.search}” · ${found.length} ${t(found.length === 1 ? 'foundOne' : 'found')}`)}<div class="results">${groups.map((group) => html`<section class="week"><h3 class="sect-title"><a class="plain" href="#${group.key}">${text(content.modules[group.key].title)}</a></h3>
     <div class="techs">${group.places.map((place) => techniqueChip(place.technique.id))}</div></section>`)}</div>`;
 }
 

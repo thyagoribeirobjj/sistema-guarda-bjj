@@ -120,7 +120,11 @@ never "fix" a conflict by replacing a whole file with your copy.
   published site. When you add a feature people click, add a step for it to `tests/smoke.mjs`.
 - Every night `.github/workflows/nightly.yml` checks the published site (`tests/nightly.mjs`): up, safe, still
   free, and the same as `main`. A failure opens one issue named "Nightly check failed", which closes itself on
-  the next night that passes. If you see that issue open, fix what it names before other work.
+  the next night that passes. If you see that issue open, fix what it names before other work. GitHub switches
+  scheduled workflows off after 60 days with no activity in the repo; turn it back on from the Actions tab
+  (or `gh workflow enable nightly.yml`).
+- Signing out clears the tree and progress from that device (they stay in the account), so a shared tablet
+  never mixes two students' marks.
 - Before you open or update a pull request: run `npm test`, open the changed pages locally in both languages and
   both themes, and check a phone-width window.
 

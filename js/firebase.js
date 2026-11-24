@@ -81,7 +81,8 @@ export function lastSeen(name) {
 
 async function site(name, fresh) {
   const copy = kept(name);
-  if (!fresh && copy && Date.now() - copy.at < keepMinutes * 60000) return copy.value;
+  const age = copy ? Date.now() - copy.at : -1;
+  if (!fresh && age >= 0 && age < keepMinutes * 60000) return copy.value;
   if (!db) return copy?.value ?? null;
   try {
     const value = await read(`site/${name}`);

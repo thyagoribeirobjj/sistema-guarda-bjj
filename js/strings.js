@@ -36,6 +36,7 @@ export const strings = {
   search: { pt: 'Buscar técnica', en: 'Search techniques' },
   searchResults: { pt: 'Busca', en: 'Search' },
   found: { pt: 'encontradas', en: 'found' },
+  foundOne: { pt: 'encontrada', en: 'found' },
   nothingFound: { pt: 'Nenhuma técnica com esse nome.', en: 'No technique matches that.' },
   nothingFoundHint: { pt: 'Tente outra palavra, em português ou inglês.', en: 'Try another word, in Portuguese or English.' },
 

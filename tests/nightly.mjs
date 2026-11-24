@@ -30,7 +30,10 @@ const status = async (url) => (await fetch(url, { redirect: 'manual' })).status;
 
 async function google(url) {
   const response = await fetch(url, { headers: { Authorization: `Bearer ${process.env.GOOGLE_TOKEN}`, 'X-Goog-User-Project': project } });
-  if (!response.ok) throw new Error(`${new URL(url).hostname} answered ${response.status}`);
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(`${new URL(url).hostname} answered ${response.status}: ${body.error?.message ?? ''}`);
+  }
   return response.json();
 }
 
@@ -61,8 +64,8 @@ await check('the live database rules are main\'s firestore.rules', async () => {
 
 await check('only site files are published', async () => {
   const hosting = 'https://firebasehosting.googleapis.com/v1beta1/';
-  const { releases } = await google(`${hosting}sites/${project}/releases?pageSize=1`);
-  const { files = [] } = await google(`${hosting}${releases[0].version.name}/files?pageSize=1000`);
+  const live = await google(`${hosting}sites/${project}/channels/live`);
+  const { files = [] } = await google(`${hosting}${live.release.version.name}/files?pageSize=1000`);
   const unwanted = files.map((file) => file.path).filter((path) => /\/\.|gha-creds|^\/(docs|tests|node_modules)\/|AGENTS|CLAUDE|README|firebase\.json|firestore\.rules|package/.test(path));
   for (const path of mustNotBePublished) if (await status(site + path) !== 404) unwanted.push(path);
   return unwanted.length ? unwanted.join(' ') : '';
