@@ -8,6 +8,9 @@ const storageKey = 'sg-settings';
 // Each one is a block of colors in css/theme.css.
 export const themes = ['dark', 'light', 'orange', 'gold', 'royal', 'emerald'];
 const accountKey = 'sg-account';
+// Set while this browser belongs to an account whose settings it has not yet seen in the database (read or saved):
+// until then a missing document means "not saved yet", never "deleted".
+const unconfirmedKey = 'sg-account-unconfirmed';
 
 // First visit: Portuguese for a browser set to Portuguese, English for everyone else.
 const browserLanguage = (navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en';
@@ -22,6 +25,7 @@ takeOldLesson();
 
 let accountId = null;
 let accountSaved = false; // the account's settings exist in the database: read, or written once on this visit
+let settingsSaved = () => {}; // tells js/notes.js the settings exist, so the notes may be started
 let loading = false;
 let changedWhileLoading = {};
 
@@ -71,12 +75,18 @@ function store() {
   if (!accountId) return;
   const uid = accountId;
   saveUserSettings(uid, saved(), { create: !accountSaved }).then(() => {
-    if (accountId === uid) accountSaved = true;
+    if (accountId === uid) settingsExist();
   }, (error) => {
     // The settings this device saved before are gone: "Delete my data" was used on another device.
     if (error.code === 'not-found' && accountId === uid) accountDeleted();
     else console.error(error);
   });
+}
+
+function settingsExist() {
+  accountSaved = true;
+  try { localStorage.removeItem(unconfirmedKey); } catch {}
+  settingsSaved();
 }
 
 export function applyTheme() {
@@ -109,7 +119,7 @@ export function leaveAccount() {
 async function accountDeleted() {
   leaveAccount();
   forgetPersonalMarks();
-  try { localStorage.removeItem(accountKey); } catch {}
+  forgetAccount();
   store();
   forgetNotes();
   await signOut().catch((error) => console.error(error));
@@ -124,15 +134,29 @@ export function clearThisBrowser() {
   forgetNotes();
 }
 
+function forgetAccount() {
+  try {
+    localStorage.removeItem(accountKey);
+    localStorage.removeItem(unconfirmedKey);
+  } catch {}
+}
+
+// This browser knows the account's settings existed: it read them, or saved them, before.
+function knownSaved(uid) {
+  try { return localStorage.getItem(accountKey) === uid && localStorage.getItem(unconfirmedKey) !== uid; } catch { return false; }
+}
+
 export async function useAccount(user) {
   accountId = null;
   const previous = lastAccount();
-  useNotesAccount(user, previous);
+  const settingsSavedBefore = user ? knownSaved(user.uid) : false;
+  const settingsReady = new Promise((resolve) => { settingsSaved = resolve; });
+  useNotesAccount(user, previous, settingsReady);
   if (!user) {
     // Signed out: the tree and progress stay in the account, not on a device someone else may use next.
     if (previous) {
       forgetPersonalMarks();
-      try { localStorage.removeItem(accountKey); } catch {}
+      forgetAccount();
       store();
     }
     return;
@@ -151,16 +175,20 @@ export async function useAccount(user) {
   } finally {
     loading = false;
   }
-  // This browser was signed in to this account before, so the account had its settings: gone now means the person
-  // used "Delete my data" on another device.
-  if (!fromDatabase && previous === user.uid) return accountDeleted();
-  // A browser that was never signed in adds what was marked here to the account. After that the account is
+  // This browser saw the account's settings before: gone now means the person used "Delete my data" on another device.
+  // (A first sign-in whose first save never arrived is only "not saved yet": what is here is kept and saved now.)
+  if (!fromDatabase && settingsSavedBefore) return accountDeleted();
+  // A browser that has not saved to the account yet adds what was marked here to it. After that the account is
   // the truth, so removing a favorite on one device removes it on the others.
-  if (fromDatabase) merge(fromDatabase, !previous);
+  if (fromDatabase) merge(fromDatabase, !settingsSavedBefore);
   Object.assign(settings, changedWhileLoading);
   accountId = user.uid;
-  accountSaved = Boolean(fromDatabase);
-  try { localStorage.setItem(accountKey, user.uid); } catch {}
+  accountSaved = false;
+  try {
+    localStorage.setItem(accountKey, user.uid);
+    if (!fromDatabase) localStorage.setItem(unconfirmedKey, user.uid);
+  } catch {}
+  if (fromDatabase) settingsExist();
   store();
   applyTheme();
 }

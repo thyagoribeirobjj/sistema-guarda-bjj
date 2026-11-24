@@ -2,7 +2,8 @@
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
 // previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and
 // "Clear this browser", a prepared next week taking over on its date,
-// the back button, the phone's bottom bar and part switcher, both languages, the admin page. A page that fails to load fails here.
+// the back button, the phone's bottom bar and part switcher, both languages, the admin page, robots.txt and the "noai"
+// tags. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm ci)
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
@@ -396,6 +397,7 @@ await step('the privacy page opens from the sidebar and the account menu, and sa
   assert.match(words, /coaches and the site's administrators can see/i);
   assert.match(words, /except your notes/);
   assert.match(words, /no tracking/i);
+  assert.match(words, /may not be collected to train AI systems/);
   await visit.locator('#sidebar a[href="#curriculum"]').click();
   await visit.locator('main .part-card').first().waitFor();
   await visit.locator('#account').click();
@@ -468,6 +470,29 @@ await step('a Portuguese browser gets Portuguese', async () => {
 await step('the admin page loads', async () => {
   const admin = await open('/admin.html', 'en-US');
   await admin.locator('main :is(p, form, h2)').first().waitFor();
+});
+
+await step('AI crawlers are asked to stay out; search engines may list the pages', async () => {
+  const response = await fetch(`${address}/robots.txt`);
+  assert.equal(response.status, 200, 'robots.txt is published');
+  const robots = (await response.text()).replace(/\r\n/g, '\n');
+  for (const bot of ['GPTBot', 'ClaudeBot', 'CCBot', 'Google-Extended', 'PerplexityBot', 'Bytespider', 'Applebot-Extended', 'Meta-ExternalAgent']) {
+    assert.match(robots, new RegExp(`^User-agent: ${bot}$`, 'm'), bot);
+  }
+  assert.doesNotMatch(robots, /^User-agent: (Googlebot|Bingbot|DuckDuckBot|Applebot)$/im, 'search engines are not refused');
+  assert.match(robots, /^Content-Signal: search=yes, ai-train=no, ai-input=no$/m);
+  assert.match(robots, /User-agent: \*\n(?:.*\n)*?Disallow: \/data\/\nDisallow: \/admin\.html\nAllow: \/\n/);
+  for (const [path, words] of [['/', 'noai, noimageai'], ['/admin.html', 'noindex, noai, noimageai']]) {
+    const html = await (await fetch(address + path)).text();
+    assert.ok(html.includes(`<meta name="robots" content="${words}">`), `${path} asks for ${words}`);
+  }
+  // The headers come from firebase.json, so only the published site sends them.
+  if (published) {
+    const tag = async (path) => (await fetch(address + path)).headers.get('x-robots-tag');
+    assert.equal(await tag('/'), 'noai, noimageai');
+    assert.equal(await tag('/admin.html'), 'noindex, noai, noimageai');
+    assert.equal(await tag('/data/content.json'), 'noindex, noai, noimageai');
+  }
 });
 
 await browser.close();

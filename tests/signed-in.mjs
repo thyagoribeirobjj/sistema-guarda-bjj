@@ -20,6 +20,7 @@ const translatorUrl = 'https://translator.example.test/exec';
 const people = {
   student: { sub: 'student-ana', email: 'ana@example.com', email_verified: true, name: 'Ana Test' },
   other: { sub: 'student-bia', email: 'bia@example.com', email_verified: true, name: 'Bia Test' },
+  newcomer: { sub: 'student-dan', email: 'dan@example.com', email_verified: true, name: 'Dan Test' },
   coach: { sub: 'coach-caio', email: 'caio@example.com', email_verified: true, name: 'Caio Coach' },
 };
 
@@ -135,6 +136,8 @@ async function visitor(person, { locale = 'en-US', today } = {}) {
   const page = await context.newPage();
   page.on('pageerror', (error) => problems.push(`${person.email}: ${error.message}`));
   page.on('console', (message) => {
+    // A step that makes saving fail on purpose expects the site to report it.
+    if (page.failuresExpected) return;
     if (message.type() === 'error' && !message.text().startsWith('Failed to load resource')) problems.push(`${person.email}: ${message.text()}`);
   });
   page.on('response', (response) => {
@@ -319,6 +322,40 @@ await step('another student cannot read the first student\'s settings, notes or 
   await other.context().close();
 });
 
+await step('a first sign-in whose first save fails loses nothing: the next visit saves it all', async () => {
+  const newcomer = await visitor(people.newcomer);
+  await newcomer.open('', '#top');
+  await newcomer.locator('#account').waitFor();
+  await openTechnique(newcomer, first);
+  await newcomer.locator(`[data-favorite="${first}"]`).click();
+  await newcomer.locator('#noteBox').fill(noteBeforeSignIn);
+  await newcomer.locator('#panelClose').click();
+  // Every save fails on this visit (as with no network); reading still works.
+  newcomer.failuresExpected = true;
+  await newcomer.route(/documents:commit/, (route) => route.abort());
+  await signInOnSite(newcomer);
+  await until(() => newcomer.evaluate((id) => localStorage.getItem('sg-account') === id, uid.newcomer), 'the browser notes the account');
+  await openTechnique(newcomer, second); // reads the account's notes (none yet)
+  await new Promise((done) => setTimeout(done, 1500));
+  assert.equal(await stored(`users/${uid.newcomer}`), null, 'nothing reached the account');
+  await newcomer.unroute(/documents:commit/);
+  newcomer.failuresExpected = false;
+  await newcomer.locator('#panelClose').click();
+  await openTechnique(newcomer, first);
+  await newcomer.reload();
+  await newcomer.locator(`#panel [data-favorite="${first}"]`).waitFor();
+  const account = await until(async () => {
+    const user = await stored(`users/${uid.newcomer}`);
+    return user?.favorites?.includes(first) && user;
+  }, 'the next visit saves the marks made before signing in');
+  assert.equal(account.email, people.newcomer.email);
+  const notes = await until(async () => (await stored(`users/${uid.newcomer}/private/notes`))?.notes, 'and the note');
+  assert.deepEqual(notes, { [first]: noteBeforeSignIn });
+  assert.match(await newcomer.locator('#account').getAttribute('aria-label'), /Dan Test/, 'still signed in');
+  assert.equal(await newcomer.locator('#noteBox').inputValue(), noteBeforeSignIn);
+  await newcomer.context().close();
+});
+
 let coach;
 
 await step('a coach sees the Admin link once signed in', async () => {
@@ -476,6 +513,7 @@ await step('"Delete my data" deletes the account\'s settings, notes and sign-in 
   };
   const phone = await signedInDevice();
   const desk = await signedInDevice();
+  const pad = await signedInDevice(); // never reads the account's notes before the delete
   await openTechnique(phone, first); // reads the account's notes
   await until(async () => (await phone.locator('#noteBox').inputValue()) === noteBeforeSignIn, 'the phone has the notes');
   await student.open('', '#privacy');
@@ -513,7 +551,14 @@ await step('"Delete my data" deletes the account\'s settings, notes and sign-in 
   await desk.reload();
   await desk.locator('#account').click();
   await desk.locator('#accountMenu #signIn').waitFor();
-  for (const device of [tablet, phone, desk]) {
+  // Still open on a device that never read the notes: a note typed there can't start them again, and it signs out.
+  pad.refusalsExpected = true;
+  await openTechnique(pad, first);
+  await pad.locator('#noteBox').fill('Typed after the delete, notes never read here');
+  await pad.locator('#panelClose').click();
+  await pad.locator('#account').click();
+  await pad.locator('#accountMenu #signIn').waitFor();
+  for (const device of [tablet, phone, desk, pad]) {
     await until(() => device.evaluate(() => {
       const left = JSON.parse(localStorage.getItem('sg-settings'));
       return !left.favorites.length && !Object.keys(left.progress).length && !left.belt && localStorage.getItem('sg-notes') === '{}';

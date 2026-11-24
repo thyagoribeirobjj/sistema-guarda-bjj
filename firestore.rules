@@ -77,9 +77,12 @@ service cloud.firestore {
     }
 
     // A person's notes on techniques. Only they can see them: not even coaches.
+    // They can be started only while the person's settings exist, so a device still signed in after "Delete my data"
+    // can't start them again. Ordinary saves are updates and cost no extra read.
     match /users/{uid}/private/notes {
       allow read, delete: if isOwner(uid);
-      allow create, update: if isOwner(uid) && validNotes();
+      allow create: if isOwner(uid) && validNotes() && exists(/databases/$(database)/documents/users/$(uid));
+      allow update: if isOwner(uid) && validNotes();
     }
   }
 }

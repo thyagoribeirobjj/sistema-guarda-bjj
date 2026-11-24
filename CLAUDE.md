@@ -42,6 +42,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | Path | What it is |
 |---|---|
 | `index.html`, `admin.html` | Markup only, plus the icon and share-preview tags. The header is the logo, title, search, PT/EN and the account button. `index.html` has empty slots the navigation fills (`#sidebar`, `#bottomBar`, `#switcher`); `admin.html` keeps its own two-link tab strip ("← Site", "Admin"). |
+| `robots.txt` | Tells crawlers what they may visit. Search engines (Google, Bing, DuckDuckGo) may list the pages, but not `/data/` or `admin.html`; AI training, AI search and AI assistant crawlers are refused by name; `Content-Signal` (contentsignals.org) says search yes, AI training and AI answers no. **To refuse another AI crawler,** add one `User-agent: <its name>` line to the first group (the list at github.com/ai-robots-txt/ai.robots.txt is a good source); never add a search engine's own crawler (`Googlebot`, `Bingbot`, `DuckDuckBot`, `Applebot`) or `facebookexternalhit` (link previews). The same wish is in the `robots` meta tag of `index.html` and `admin.html` (`noai, noimageai`; the admin page also `noindex`) and in the `X-Robots-Tag` headers in `firebase.json` (`noindex` too for `/data/**` and `admin.html`; never on the main page). |
 | `img/` | `logo.svg` (the logo and browser icon), `icon-180.png` (phone home screen), `share.png` (the 1200×630 picture shown when a link is shared). |
 | `css/theme.css` | Every color and font: dark (the default), light, and four more themes people pick in the account menu. A new theme is one block here plus its name in `themes` (`js/settings.js`), its label in `js/strings.js` and its name in `firestore.rules`. **The only file with color values**, apart from the logo and the `theme-color` tag's first-paint default (`applyTheme()` sets it from `--surface`). |
 | `css/app.css` | Components (and the admin page's tab strip). Uses the theme's variables (`var(--ink)`) only. On touch screens (`pointer: coarse`) everything people tap is at least 44px tall, and inputs are 16px so phones don't zoom in. |
@@ -140,7 +141,12 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   prepared week must start after today and after this week's date (`dateProblem()`).
 - **Delete my data** (the privacy page) deletes the notes, `users/{uid}` and the person's sign-in record (Google may
   ask them to confirm it's them first). Once a device knows the account's documents exist it only updates them, never
-  writes them anew, so another device still signed in finds them gone, writes nothing back and signs out.
+  writes them anew, so another device still signed in finds them gone, writes nothing back and signs out. The notes
+  document can only be started (created) while `users/{uid}` exists (`firestore.rules`), so a device that never read
+  the notes can't start them again either; the site saves the settings before the first note, and treats a refused
+  start as "deleted" only after reading that `users/{uid}` is gone. A browser concludes "deleted" only when it saw the
+  settings before (read or saved them); until then `sg-account-unconfirmed` is set, and a first save that failed is
+  simply tried again, keeping everything marked in that browser.
 - **Students.** The admin page lists every `users/{uid}` only when the coach taps "Show students": one read per
   student, so it is never loaded by itself.
 - **Keep database reads low.** The free plan allows 50,000 reads a day. `site/week`, `site/media` and `site/weeks` are kept
@@ -178,7 +184,8 @@ whether it was translated automatically or corrected by hand (nothing when that 
 - Every pull request runs the tests, then opens the site in Chrome and uses it (`tests/smoke.mjs`: the sidebar,
   Curriculum home, a technique, search, progress, the tree, sharing, the coach's tools from the account menu, the
   phone's bottom bar and part switcher, previous / next in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and "Clear this
-  browser", a prepared next week taking over on its date, both languages, the admin page). It then does the same signed in (`tests/signed-in.mjs`). Once a pull request is merged, `main`
+  browser", a prepared next week taking over on its date, both languages, the admin page, `robots.txt` and the `noai`
+  tags; on the published site also the `X-Robots-Tag` headers). It then does the same signed in (`tests/signed-in.mjs`). Once a pull request is merged, `main`
   publishes the site **and** `firestore.rules` about a minute later, then runs the same browser check on the
   published site. When you add a feature people click, add a step for it to `tests/smoke.mjs`.
 - Every night `.github/workflows/nightly.yml` checks the published site (`tests/nightly.mjs`): up, safe, still

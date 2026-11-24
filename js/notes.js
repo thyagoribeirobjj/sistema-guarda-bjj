@@ -1,4 +1,4 @@
-import { loadNotes, saveNote } from './firebase.js';
+import { loadNotes, saveNote, loadUserSettings } from './firebase.js';
 
 // Each person's notes on techniques: { <technique id>: text }. Only they see them, coaches don't.
 // Signed out, they live in this browser. Signed in, they are read from the account the first time a technique
@@ -13,6 +13,11 @@ let notes = readLocal();
 let user = null; // signed in, notes not read yet
 let accountId = null; // read: changes go to this account
 let notesSaved = false; // the account's notes document exists: read, or written once on this visit
+// firestore.rules start the notes only once the account's settings exist, and a first sign-in saves those first:
+// until js/settings.js says they exist, saves that would start the notes wait (the notes stay in this browser).
+let settingsReady = null;
+let settingsExist = false;
+const afterSettings = new Set(); // technique ids waiting for the settings
 let loading = null;
 let reading = false;
 let changedWhileLoading = new Set();
@@ -43,14 +48,24 @@ export function noteOf(id) {
   return notes[id] || '';
 }
 
-// previous: the account this browser was last signed in to (js/settings.js).
+// previous: the account this browser was last signed in to (js/settings.js); settingsSaved: resolves once that
+// account's settings exist in the database.
 // Like favorites and progress, a signed-out device keeps no one's notes, and a different account starts clean.
-export function useNotesAccount(person, previous) {
+export function useNotesAccount(person, previous, settingsSaved) {
   sendWaiting();
   user = null;
   accountId = null;
   loading = null;
   notesSaved = false;
+  settingsExist = false;
+  afterSettings.clear();
+  settingsReady = settingsSaved;
+  settingsSaved?.then(() => {
+    if (settingsReady !== settingsSaved) return;
+    settingsExist = true;
+    for (const id of afterSettings) send(id);
+    afterSettings.clear();
+  });
   const joined = joinedAccount();
   if (!person) {
     if (previous || joined) forgetNotes();
@@ -87,7 +102,8 @@ async function join(uid) {
     reading = false;
   }
   if (user?.uid !== uid) return false;
-  const firstTime = joinedAccount() !== uid;
+  // With no notes in the account yet, what is here was never saved there (or the first save didn't arrive): keep it.
+  const firstTime = joinedAccount() !== uid || !fromAccount;
   notesSaved = Boolean(fromAccount);
   fromAccount = fromAccount || {};
   const here = notes;
@@ -120,11 +136,16 @@ async function send(id) {
   waiting.delete(id);
   if (!accountId) return;
   const uid = accountId;
+  const create = !notesSaved;
+  if (create && !settingsExist) {
+    afterSettings.add(id);
+    return;
+  }
   try {
-    await saveNote(uid, id, notes[id] || '', { create: !notesSaved });
+    await saveNote(uid, id, notes[id] || '', { create });
     if (accountId === uid) notesSaved = true;
   } catch (error) {
-    if (error.code === 'not-found') {
+    if (error.code === 'not-found' || (create && error.code === 'permission-denied' && await settingsGone(uid))) {
       document.dispatchEvent(new CustomEvent('account-deleted'));
       return;
     }
@@ -133,10 +154,17 @@ async function send(id) {
   }
 }
 
+// Starting the notes was refused. The settings existed, so they are gone now only if "Delete my data" was used on
+// another device. One read, only after a refusal.
+async function settingsGone(uid) {
+  try { return (await loadUserSettings(uid)) === null; } catch { return false; }
+}
+
 // The account is being deleted: drop what is waiting and write nothing more to it.
 export function leaveNotesAccount() {
   for (const timer of waiting.values()) clearTimeout(timer);
   waiting.clear();
+  afterSettings.clear();
   user = null;
   accountId = null;
 }

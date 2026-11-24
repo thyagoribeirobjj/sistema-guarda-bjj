@@ -180,7 +180,19 @@ test('the class last looked at (seenWeek) is a short text saved with the setting
 const notesPath = 'users/student-uid/private/notes';
 const manyNotes = (count) => Object.fromEntries(Array.from({ length: count }, (_, i) => [`move-${i}`, 'note']));
 
+test('notes can be started only while the person\'s settings exist; saves after that are updates', async () => {
+  const note = (text) => ({ notes: { 'top-base': text }, changed: 'top-base' });
+  assert.equal(await write(notesPath, note('Hips low'), 'student'), 'denied', 'no settings (deleted, or not saved yet)');
+  await write('users/student-uid', settings('student@example.com'), 'setup');
+  assert.equal(await write(notesPath, note('Hips low'), 'student'), 'allowed');
+  await remove('users/student-uid', 'student');
+  assert.equal(await write(notesPath, note('Still here'), 'student'), 'allowed', 'an update needs no settings read');
+  await remove(notesPath, 'student');
+  assert.equal(await write(notesPath, note('Brought back'), 'student'), 'denied', 'after "Delete my data" nothing starts them again');
+});
+
 test('notes: only the person can read, write or delete their own, not even a coach', async () => {
+  await write('users/student-uid', settings('student@example.com'), 'setup');
   assert.equal(await write(notesPath, { notes: { 'top-base': 'Hips low' }, changed: 'top-base' }, 'student'), 'allowed');
   assert.equal(await read(notesPath, 'student'), 'allowed');
   assert.equal(await read(notesPath, 'admin'), 'denied');
@@ -197,6 +209,7 @@ test('notes: only the person can read, write or delete their own, not even a coa
 
 test('notes: one short note changes per save, at most 500 notes, nothing else stored there', async () => {
   const save = (notes, changed, extra = {}) => write(notesPath, changed ? { notes, changed, ...extra } : { notes, ...extra }, 'student');
+  await write('users/student-uid', settings('student@example.com'), 'setup');
   assert.equal(await save({}), 'allowed');
   assert.equal(await save({ a: 'x'.repeat(2000) }, 'a'), 'allowed');
   assert.equal(await save({ a: 'x'.repeat(2000), b: 'Second' }, 'b'), 'allowed');
