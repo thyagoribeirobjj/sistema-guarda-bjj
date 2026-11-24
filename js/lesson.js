@@ -1,14 +1,17 @@
 import { html } from './html.js';
 import { content } from './content.js';
+import { settings, changeSettings } from './settings.js';
 import { t, text } from './strings.js';
 
-// The coach's lesson builder: any part of the fight, one level for everyone. Choices stay in this browser.
-const storageKey = 'sg-pick5';
-const pick = { mod: '', dur: '60', items: [], game: '' };
-try { Object.assign(pick, JSON.parse(localStorage.getItem(storageKey)) || {}); } catch {}
+// The coach's lesson builder: any part of the fight, one level for everyone. The choices are saved with the
+// person's other settings (settings.lesson), in this browser and in their account once signed in.
+let pick = { mod: '', dur: '60', items: [], game: '' };
+let pickedFrom;
 
 function remember() {
-  try { localStorage.setItem(storageKey, JSON.stringify(pick)); } catch {}
+  const { mod, dur, items, game } = pick;
+  changeSettings({ lesson: { mod, dur, items, game } });
+  pickedFrom = settings.lesson;
 }
 
 let firstVisit = true;
@@ -28,6 +31,13 @@ function chosenGame() {
 }
 
 export function lessonView() {
+  // Signing in can bring a lesson saved on another device.
+  if (settings.lesson !== pickedFrom) {
+    pickedFrom = settings.lesson;
+    pick = { mod: '', dur: '60', items: [], game: '', ...settings.lesson };
+    if (!Array.isArray(pick.items)) pick.items = [];
+    if (!minutes[pick.dur]) pick.dur = '60';
+  }
   if (!content.modules[pick.mod]) Object.assign(pick, { mod: content.order[0], items: [] });
   if (firstVisit && !pick.items.length) pick.items = ['0-0', '0-1', '1-0'];
   firstVisit = false;

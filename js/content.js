@@ -51,7 +51,20 @@ function plain(value) {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
-// Techniques whose name (in either language) has every word typed; names that start with it come first.
+// Built once per technique, the first time it is searched: its description, key point, drill and steps.
+const otherText = new Map();
+
+function textOf(technique) {
+  if (!otherText.has(technique)) {
+    const parts = [technique.d, technique.t, technique.dr].flatMap((value) => [value?.pt, value?.en]);
+    (technique.s || []).forEach((pair) => parts.push(...pair));
+    otherText.set(technique, plain(parts.filter(Boolean).join(' ')));
+  }
+  return otherText.get(technique);
+}
+
+// Techniques where every word typed is in the name (in either language) or in the rest of the text.
+// Names with every word that start with the first word come first, then other name matches, then the rest.
 // Each result is what findTechnique() returns.
 export function searchTechniques(query) {
   const words = plain(query).split(/\s+/).filter(Boolean);
@@ -59,9 +72,11 @@ export function searchTechniques(query) {
   const found = [];
   for (const [id, { technique }] of places) {
     const names = [plain(technique.n?.pt), plain(technique.n?.en)];
-    if (words.every((word) => names.some((name) => name.includes(word)))) {
-      found.push({ id, starts: names.some((name) => name.startsWith(words[0])) });
-    }
+    const inName = (word) => names.some((name) => name.includes(word));
+    if (!words.every((word) => inName(word) || textOf(technique).includes(word))) continue;
+    let rank = 2;
+    if (words.every(inName)) rank = names.some((name) => name.startsWith(words[0])) ? 0 : 1;
+    found.push({ id, rank });
   }
-  return found.sort((a, b) => b.starts - a.starts).map(({ id }) => findTechnique(id));
+  return found.sort((a, b) => a.rank - b.rank).map(({ id }) => findTechnique(id));
 }

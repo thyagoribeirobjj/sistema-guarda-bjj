@@ -52,7 +52,8 @@ function panelContent(id) {
     ${technique.mine ? html`<span class="mine">★ ${t('mine')}</span> ` : ''}${technique.g ? html`<span class="gtag">G</span>` : ''}
     <h3 id="panelTitle">${text(technique.n)}</h3>
     <div class="from">${text(module.title)} · ${t('stage')} ${stageIndex + 1}: ${text(stage.name)}</div>
-    <button type="button" class="fav-btn" data-favorite="${id}" aria-pressed="${favorite}">${heart(favorite)}${t(favorite ? 'inTree' : 'addToTree')}</button>
+    <div class="actions panel-actions"><button type="button" class="fav-btn" data-favorite="${id}" aria-pressed="${favorite}">${heart(favorite)}${t(favorite ? 'inTree' : 'addToTree')}</button>
+    <button type="button" class="chipbtn" data-share="${id}">${t('share')}</button><span class="status" id="shareStatus" role="status"></span></div>
     <div class="marks" role="group" aria-label="${t('myProgress')}">${['learning', 'done'].map((mark) => html`<button type="button" class="chipbtn" data-progress="${id}:${mark}" aria-pressed="${progressOf(id) === mark}">${progressMarks[mark]} ${t(mark)}</button>`)}</div>
     ${videoPreview(media.video)}
     ${media.diagram ? html`<div class="diagram" id="panelDiagram"></div>` : ''}
@@ -69,12 +70,19 @@ function panelContent(id) {
 export function openPanel(id, { remember = true, focus = '#panelClose' } = {}) {
   if (!findTechnique(id)) return;
   if (remember && state.panel.current && state.panel.current !== id) state.panel.history.push(state.panel.current);
+  const wasOpen = panelOpen();
   state.panel.current = id;
   panel().innerHTML = panelContent(id);
   panel().hidden = false;
   scrim().hidden = false;
+  document.documentElement.classList.add('panel-open');
   panel().scrollTop = 0;
-  history.replaceState(null, '', `#t-${id}`);
+  // Opening a technique adds one step to the browser's history, so the phone's back button closes it.
+  // Moving between techniques inside the panel replaces that step. { panel: true } marks a step the site added.
+  if (location.hash !== `#t-${id}`) {
+    if (wasOpen) history.replaceState(history.state, '', `#t-${id}`);
+    else history.pushState({ panel: true }, '', `#t-${id}`);
+  }
   if (state.media[id]?.diagram) showDiagram(id);
   panel().querySelector(focus)?.focus();
 }
@@ -88,11 +96,16 @@ export function panelBack() {
   if (state.panel.history.length) openPanel(state.panel.history.pop(), { remember: false });
 }
 
-export function closePanel() {
+// fromHistory: the back button (or another link) already left the technique's step in the history.
+export function closePanel({ fromHistory = false } = {}) {
   panel().hidden = true;
   scrim().hidden = true;
+  document.documentElement.classList.remove('panel-open');
   state.panel = { current: null, history: [] };
-  history.replaceState(null, '', `#${state.view}`);
+  if (fromHistory) return;
+  // A technique opened from a shared link has no step of ours to go back to: going back would leave the site.
+  if (history.state?.panel) history.back();
+  else history.replaceState(null, '', `#${state.view}`);
 }
 
 export function panelOpen() {

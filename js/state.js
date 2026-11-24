@@ -3,6 +3,8 @@ export const state = {
   view: '',
   search: '',
   week: null,
+  pastWeeks: null,
+  pastWeeksStatus: '',
   media: {},
   online: false,
   account: null,

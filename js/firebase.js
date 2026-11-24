@@ -103,6 +103,20 @@ export async function saveWeek(week) {
   forget('week');
 }
 
+// site/weeks holds { weeks: [{ weekOf, title, note, techniques }] }, newest first. Read only when someone asks.
+const pastWeeksKept = 52;
+
+export async function loadPastWeeks() {
+  return (await site('weeks'))?.weeks || [];
+}
+
+export async function archiveWeek(week) {
+  const past = { weekOf: week.weekOf, title: week.title || {}, note: week.note || {}, techniques: week.techniques || [] };
+  const older = ((await read('site/weeks'))?.weeks || []).filter((other) => other.weekOf !== past.weekOf);
+  await write('site/weeks', { weeks: [past, ...older].slice(0, pastWeeksKept), updatedBy: auth.currentUser.email });
+  forget('weeks');
+}
+
 export function loadUserSettings(uid) {
   return read(`users/${uid}`);
 }

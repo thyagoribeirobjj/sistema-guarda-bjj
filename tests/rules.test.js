@@ -86,6 +86,14 @@ test('only an admin can change the week', async () => {
   assert.equal(await write('site/week', week, 'adminMixedCase'), 'allowed');
 });
 
+test('anyone can read past weeks; only an admin can change them', async () => {
+  const weeks = { weeks: [week] };
+  assert.equal(await read('site/weeks'), 'allowed');
+  assert.equal(await write('site/weeks', weeks, 'student'), 'denied');
+  assert.equal(await write('site/weeks', weeks), 'denied');
+  assert.equal(await write('site/weeks', weeks, 'admin'), 'allowed');
+});
+
 test('people can read their own admin entry and no one else’s; nobody adds admins from the site', async () => {
   assert.equal(await read('admins/coach@example.com', 'admin'), 'allowed');
   assert.equal(await read('admins/student@example.com', 'student'), 'allowed');
@@ -113,9 +121,16 @@ test('settings must have the expected shape', async () => {
   assert.equal(await save(settings('someone-else@example.com')), 'denied');
   assert.equal(await save({ ...settings('student@example.com'), language: 'fr' }), 'denied');
   assert.equal(await save({ ...settings('student@example.com'), theme: 'purple' }), 'denied');
+  assert.equal(await save({ ...settings('student@example.com'), theme: 'gold' }), 'allowed');
   assert.equal(await save({ ...settings('student@example.com'), favorites: 'top-base' }), 'denied');
   assert.equal(await save({ ...settings('student@example.com'), progress: { 'top-base': 'done' } }), 'allowed');
   assert.equal(await save({ ...settings('student@example.com'), progress: 'done' }), 'denied');
+  const lesson = { mod: 'top', dur: '60', items: ['0-0', '1-0'], game: 'top:0' };
+  assert.equal(await save({ ...settings('student@example.com'), lesson }), 'allowed');
+  assert.equal(await save({ ...settings('student@example.com'), lesson: 'top' }), 'denied');
+  assert.equal(await save({ ...settings('student@example.com'), lesson: { ...lesson, other: 'x' } }), 'denied');
+  const longLesson = { ...lesson, items: Array.from({ length: 201 }, (_, i) => `0-${i}`) };
+  assert.equal(await save({ ...settings('student@example.com'), lesson: longLesson }), 'denied');
   const tooMany = Object.fromEntries(Array.from({ length: 1001 }, (_, i) => [`move-${i}`, 'done']));
   assert.equal(await save({ ...settings('student@example.com'), progress: tooMany }), 'denied');
 });

@@ -1,6 +1,6 @@
 import { html } from './html.js';
 import { content, loadContent, findTechnique } from './content.js';
-import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, saveWeek, translate } from './firebase.js';
+import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, saveWeek, archiveWeek, translate } from './firebase.js';
 import { settings, applyTheme, useAccount } from './settings.js';
 import { t, text } from './strings.js';
 
@@ -92,6 +92,24 @@ async function fillTranslations(draft) {
   }
 }
 
+// A new week moves the live one into "Past weeks". It is read fresh, since another admin may have saved since this
+// page opened; if that read fails, nothing is saved. Saving goes ahead if only the archiving fails.
+// The same class with a corrected date is not a new week.
+async function archivePrevious(draft) {
+  const previous = (await loadWeek({ fresh: true })) || {};
+  const hasContent = previous.techniques?.length || previous.title?.pt || previous.title?.en;
+  const sameClass = JSON.stringify(previous.techniques || []) === JSON.stringify(draft.techniques)
+    && previous.title?.pt === draft.title.pt && previous.title?.en === draft.title.en;
+  if (!previous.weekOf || previous.weekOf === draft.weekOf || !hasContent || sameClass) return true;
+  try {
+    await archiveWeek(previous);
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
 main.addEventListener('submit', async (event) => {
   event.preventDefault();
   const status = document.getElementById('status');
@@ -99,10 +117,12 @@ main.addEventListener('submit', async (event) => {
     const draft = readForm();
     const translatedOk = await fillTranslations(draft);
     status.textContent = t('saving');
+    const archivedOk = await archivePrevious(draft);
     await saveWeek({ ...draft, from: writingIn });
     saved = draft;
     week = draft;
-    showForm(main.dataset.email, t(translatedOk ? 'saved' : 'translateFailed'));
+    const messages = [t(translatedOk ? 'saved' : 'translateFailed'), archivedOk ? '' : t('archiveFailed')];
+    showForm(main.dataset.email, messages.filter(Boolean).join(' '));
   } catch (error) {
     console.error(error);
     status.textContent = t('saveFailed');

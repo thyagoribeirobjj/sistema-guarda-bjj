@@ -74,11 +74,39 @@ export function searchView() {
     <div class="techs">${group.places.map((place) => techniqueChip(place.technique.id))}</div></section>`)}</div>`;
 }
 
-export function weekView() {
-  const week = state.week;
-  return html`${intro(t('week'), t('weekLead'))}<section class="week"><h3 class="sect-title">${text(week.title)}</h3>
+// "Week of 24 Nov" from "2026-11-24"; nothing when the date is missing or not a date.
+function weekDate(weekOf) {
+  const [year, month, day] = /^(\d{4})-(\d{2})-(\d{2})$/.exec(weekOf || '')?.slice(1).map(Number) || [];
+  const date = new Date(year, month - 1, day);
+  if (!year || date.getMonth() !== month - 1) return '';
+  return `${t('weekOf')} ${date.toLocaleDateString(settings.language === 'pt' ? 'pt-BR' : 'en-GB', { day: 'numeric', month: 'short' })}`;
+}
+
+// A past week's title sits under the "Past weeks" heading, one level down.
+function weekCard(week, past = false) {
+  const date = weekDate(week.weekOf);
+  const title = past ? html`<h4 class="week-title">${text(week.title)}</h4>` : html`<h3 class="week-title">${text(week.title)}</h3>`;
+  return html`<section class="week">${date ? html`<p class="week-date">${date}</p>` : ''}${title}
     <div class="techs">${(week.techniques || []).map(techniqueChip)}</div>
     ${text(week.note) ? html`<p class="note">${text(week.note)}</p>` : ''}</section>`;
+}
+
+// The archive is read only when someone asks for it, to keep database reads low.
+function pastWeeks() {
+  if (state.pastWeeksStatus === 'loading') return html`<p class="status" role="status">${t('pastWeeksLoading')}</p>`;
+  if (!state.pastWeeks) {
+    // Until the database is reachable there is nothing to read past weeks from.
+    if (!state.online) return '';
+    return html`<div class="actions"><button type="button" class="chipbtn" data-past-weeks>${t('pastWeeks')}</button>${
+      state.pastWeeksStatus === 'failed' ? html`<span class="status" role="status">${t('pastWeeksFailed')}</span>` : ''}</div>`;
+  }
+  const weeks = state.pastWeeks.filter((week) => week.weekOf !== state.week.weekOf);
+  return html`<h3 class="sect-title">${t('pastWeeks')}</h3>${
+    weeks.length ? html`<div class="results">${weeks.map((week) => weekCard(week, true))}</div>` : html`<p class="note">${t('noPastWeeks')}</p>`}`;
+}
+
+export function weekView() {
+  return html`${intro(t('week'), t('weekLead'))}${weekCard(state.week)}<div class="past-weeks">${pastWeeks()}</div>`;
 }
 
 function accountNote() {

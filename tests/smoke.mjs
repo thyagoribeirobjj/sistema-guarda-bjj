@@ -1,5 +1,5 @@
 // Opens the site in a real browser and uses it the way a visitor would: tabs, a technique, search,
-// progress, the tree, both languages, the admin page. A page that fails to load fails here.
+// progress, the tree, sharing, the lesson builder, the account menu, past weeks and theme, the back button, both languages, the admin page. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm install --no-save playwright-core)
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
@@ -67,6 +67,8 @@ await step('marking "Got it" shows on the technique and survives a reload', asyn
   await page.locator(`[data-progress="${id}:done"]`).click();
   assert.equal(await page.locator(`[data-progress="${id}:done"]`).getAttribute('aria-pressed'), 'true');
   await page.locator('#panelClose').click();
+  await page.locator('#panel').waitFor({ state: 'hidden' });
+  await page.waitForFunction(() => !location.hash.startsWith('#t-'));
   await page.locator(`main [data-technique="${id}"] .ptag`).first().waitFor();
   await page.locator('main .progress').waitFor();
   await page.reload();
@@ -89,18 +91,90 @@ await step('a technique can be added to "My tree"', async () => {
   assert.equal((await page.locator('nav .navcount').textContent()).trim(), '1');
 });
 
+await step('an open technique has a share button', async () => {
+  if (await page.locator('#panel').isVisible()) await page.locator('#panelClose').click();
+  await page.locator(`main [data-technique="${id}"]`).first().click();
+  await page.locator(`#panel [data-share="${id}"]`).waitFor();
+  await page.locator('#panelClose').click();
+});
+
+await step('search finds a technique by a word in its description', async () => {
+  const guard = await (await fetch(`${address}/data/content.json`)).json();
+  const techniques = Object.values(guard.modules).flatMap((module) => module.stages.flatMap((stage) => stage.items)).filter((item) => item.id);
+  const names = techniques.map((item) => `${item.n.pt} ${item.n.en}`.toLowerCase()).join(' ');
+  let found;
+  for (const technique of techniques) {
+    const word = (technique.d?.en || '').toLowerCase().split(/[^a-z]+/).find((part) => part.length >= 7 && !names.includes(part));
+    if (word) { found = { id: technique.id, word }; break; }
+  }
+  assert.ok(found, 'a description has a word no name has');
+  await page.fill('#search', found.word);
+  await page.locator(`main .results [data-technique="${found.id}"]`).first().waitFor();
+  await page.fill('#search', '');
+  await page.locator('main .spine').waitFor();
+});
+
+await step('a lesson builder choice survives a reload', async () => {
+  await page.locator('nav a[href="#lesson"]').click();
+  await page.selectOption('#selDur', '90');
+  await page.locator('#plan .meta', { hasText: '90 min' }).waitFor();
+  await page.reload();
+  assert.equal(await page.locator('#selDur').inputValue(), '90');
+});
+
 if (published) {
-  await step('sign-in is available', async () => {
+  await step('the account menu offers sign-in', async () => {
     await page.locator('#account').waitFor({ state: 'visible', timeout: 20000 });
+    await page.locator('#account').click();
+    await page.locator('#accountMenu #signIn').waitFor();
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('#account').getAttribute('aria-expanded'), 'false');
+  });
+
+  await step('past weeks open on demand', async () => {
+    const weekTab = page.locator('nav a[href="#semana"]');
+    await weekTab.waitFor({ timeout: 10000 }).catch(() => {});
+    if (!(await weekTab.count())) return;
+    await weekTab.click();
+    await page.locator('[data-past-weeks]').click();
+    await page.locator('.past-weeks :is(h3, .note)').first().waitFor();
+    assert.equal(await page.locator('.past-weeks .status').count(), 0);
   });
 }
+
+await step('a theme can be chosen and survives a reload', async () => {
+  if (await page.locator('#account').isVisible()) {
+    await page.locator('#account').click();
+    await page.locator('[data-theme-choice="gold"]').click();
+    assert.equal(await page.getAttribute('html', 'data-theme'), 'gold');
+    await page.keyboard.press('Escape');
+  } else {
+    const before = await page.getAttribute('html', 'data-theme');
+    await page.locator('#theme').click();
+    assert.notEqual(await page.getAttribute('html', 'data-theme'), before);
+  }
+  const chosen = await page.getAttribute('html', 'data-theme');
+  await page.reload();
+  await firstTab.waitFor();
+  assert.equal(await page.getAttribute('html', 'data-theme'), chosen);
+});
+
+await step('the back button closes a technique and stays on the site', async () => {
+  await firstTab.click();
+  const tab = page.url();
+  await page.locator('main .tech').first().click();
+  await page.locator('#panel').waitFor();
+  await page.goBack();
+  await page.locator('#panel').waitFor({ state: 'hidden' });
+  assert.equal(page.url(), tab);
+});
 
 await step('a Portuguese browser gets Portuguese', async () => {
   const portuguese = await open('/', 'pt-BR');
   await portuguese.locator('nav a').first().waitFor();
   assert.equal(await portuguese.getAttribute('html', 'lang'), 'pt-BR');
   assert.equal(await portuguese.locator('#search').getAttribute('placeholder'), 'Buscar técnica');
-  assert.equal(await portuguese.locator('#theme').getAttribute('title'), 'Modo claro');
+  assert.equal(await portuguese.locator('#appTitle').textContent(), 'Sistema Guarda');
 });
 
 await step('the admin page loads', async () => {
