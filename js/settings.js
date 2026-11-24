@@ -1,6 +1,6 @@
 import { loadUserSettings, saveUserSettings } from './firebase.js';
 
-// Each visitor's language, theme, favorites and progress. Kept in this browser, and in the
+// Each visitor's language, theme, favorites, progress and lesson plan. Kept in this browser, and in the
 // database (users/{uid}) once they sign in, so they follow them to other devices.
 const storageKey = 'sg-settings';
 const accountKey = 'sg-account';
@@ -9,8 +9,10 @@ const accountKey = 'sg-account';
 const browserLanguage = (navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en';
 
 // progress: { <technique id>: 'learning' | 'done' }
-export const settings = { language: browserLanguage, theme: '', favorites: [], progress: {} };
+// lesson: the lesson builder's choices, { mod, dur, items, game }; null until something is picked.
+export const settings = { language: browserLanguage, theme: '', favorites: [], progress: {}, lesson: null };
 merge(readLocal());
+takeOldLesson();
 
 let accountId = null;
 let loading = false;
@@ -26,6 +28,23 @@ function merge(from, keep = false) {
   if (typeof from.theme === 'string') settings.theme = from.theme;
   if (Array.isArray(from.favorites)) settings.favorites = keep ? [...new Set([...from.favorites, ...settings.favorites])] : from.favorites;
   if (from.progress && typeof from.progress === 'object') settings.progress = keep ? { ...from.progress, ...settings.progress } : from.progress;
+  if (isLesson(from.lesson) && !(keep && settings.lesson)) settings.lesson = from.lesson;
+}
+
+function isLesson(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+// The lesson builder used to keep its choices in their own place in this browser: move them in once.
+function takeOldLesson() {
+  try {
+    const old = JSON.parse(localStorage.getItem('sg-pick5'));
+    if (!settings.lesson && isLesson(old)) {
+      settings.lesson = old;
+      localStorage.setItem(storageKey, JSON.stringify(saved()));
+    }
+    localStorage.removeItem('sg-pick5');
+  } catch {}
 }
 
 function lastAccount() {
@@ -33,8 +52,8 @@ function lastAccount() {
 }
 
 function saved() {
-  const { language, theme, favorites, progress } = settings;
-  return { language, theme, favorites, progress };
+  const { language, theme, favorites, progress, lesson } = settings;
+  return lesson ? { language, theme, favorites, progress, lesson } : { language, theme, favorites, progress };
 }
 
 function store() {
@@ -55,6 +74,7 @@ export function currentTheme() {
 function forgetPersonalMarks() {
   settings.favorites = [];
   settings.progress = {};
+  settings.lesson = null;
 }
 
 export async function useAccount(user) {

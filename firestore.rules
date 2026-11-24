@@ -15,17 +15,19 @@ service cloud.firestore {
     }
     function validSettings() {
       let data = request.resource.data;
-      return data.keys().hasOnly(['email', 'language', 'theme', 'favorites', 'progress', 'updatedAt'])
+      return data.keys().hasOnly(['email', 'language', 'theme', 'favorites', 'progress', 'lesson', 'updatedAt'])
         && data.email == request.auth.token.email
         && data.language in ['pt', 'en']
         && data.theme in ['', 'light', 'dark']
         && data.favorites is list && data.favorites.size() <= 500
         && (!('progress' in data) || (data.progress is map && data.progress.size() <= 1000))
+        && (!('lesson' in data) || (data.lesson is map && data.lesson.size() <= 10))
         && data.updatedAt == request.time;
     }
 
-    // What the whole site shows: the week (site/week), each move's video and diagram flag (site/media),
-    // and settings such as the translator's address (site/config). Everyone reads, admins write.
+    // What the whole site shows: the week (site/week), past weeks (site/weeks), each move's video and
+    // diagram flag (site/media), and settings such as the translator's address (site/config).
+    // Everyone reads, admins write.
     match /site/{document} {
       allow read: if true;
       allow write: if isAdmin();
@@ -47,7 +49,7 @@ service cloud.firestore {
       allow read: if signedIn() && email == request.auth.token.email.lower();
     }
 
-    // Each person's language, theme, favorites and progress. Only they can see or change them.
+    // Each person's language, theme, favorites, progress and lesson plan. Only they can see or change them.
     match /users/{uid} {
       allow read, delete: if isOwner(uid);
       allow create, update: if isOwner(uid) && validSettings();

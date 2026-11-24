@@ -1,8 +1,8 @@
 import { content, loadContent, findTechnique, isModule } from './content.js';
-import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram } from './firebase.js';
+import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadPastWeeks, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram } from './firebase.js';
 import { settings, applyTheme, currentTheme, useAccount, changeSettings, toggleFavorite, markProgress } from './settings.js';
 import { state, readHash } from './state.js';
-import { t } from './strings.js';
+import { t, text } from './strings.js';
 import { navigation, moduleView, weekView, treeView, methodView, searchView } from './views.js';
 import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram } from './panel.js';
 import { youtubeId, videoPlayer, shrinkImage } from './media.js';
@@ -96,6 +96,40 @@ async function changeMedia(id, field, save) {
   }
 }
 
+// The phone's share sheet where there is one; otherwise the link is copied.
+async function shareTechnique(id) {
+  const url = `${location.origin}/#t-${id}`;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: text(findTechnique(id).technique.n), url });
+    } catch (error) {
+      if (error.name !== 'AbortError') console.error(error);
+    }
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    $('shareStatus').textContent = t('linkCopied');
+  } catch {
+    $('shareStatus').textContent = t('linkCopyFailed');
+  }
+}
+
+// Past weeks are read once, when asked for: null until then, [] when there are none.
+async function showPastWeeks() {
+  if (state.pastWeeks || state.pastWeeksStatus === 'loading') return;
+  state.pastWeeksStatus = 'loading';
+  render();
+  try {
+    state.pastWeeks = await loadPastWeeks();
+    state.pastWeeksStatus = '';
+  } catch (error) {
+    console.error(error);
+    state.pastWeeksStatus = 'failed';
+  }
+  render();
+}
+
 function moveFavorite(index, step) {
   const favorites = [...settings.favorites];
   const other = index + step;
@@ -121,6 +155,8 @@ const clickActions = [
     state.confirmEmptyTree = el.dataset.emptyTree === 'ask';
     render();
   }],
+  ['[data-past-weeks]', showPastWeeks],
+  ['[data-share]', (el) => shareTechnique(el.dataset.share)],
   ['[data-technique]', (el) => openPanel(el.dataset.technique)],
   ['nav a, .results a', () => { if (state.search) search(''); }],
   ['[data-play]', (el) => { el.outerHTML = videoPlayer(el.dataset.play); }],

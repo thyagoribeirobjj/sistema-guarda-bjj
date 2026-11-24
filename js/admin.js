@@ -1,6 +1,6 @@
 import { html } from './html.js';
 import { content, loadContent, findTechnique } from './content.js';
-import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, saveWeek, translate } from './firebase.js';
+import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, saveWeek, archiveWeek, translate } from './firebase.js';
 import { settings, applyTheme, useAccount } from './settings.js';
 import { t, text } from './strings.js';
 
@@ -92,6 +92,20 @@ async function fillTranslations(draft) {
   }
 }
 
+// A new week moves the one saved before it into "Past weeks". Saving the new week goes ahead even if that fails.
+async function archivePrevious(draft) {
+  const previous = saved;
+  const hasContent = previous.techniques?.length || previous.title?.pt || previous.title?.en;
+  if (!previous.weekOf || previous.weekOf === draft.weekOf || !hasContent) return true;
+  try {
+    await archiveWeek(previous);
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
 main.addEventListener('submit', async (event) => {
   event.preventDefault();
   const status = document.getElementById('status');
@@ -99,10 +113,12 @@ main.addEventListener('submit', async (event) => {
     const draft = readForm();
     const translatedOk = await fillTranslations(draft);
     status.textContent = t('saving');
+    const archivedOk = await archivePrevious(draft);
     await saveWeek({ ...draft, from: writingIn });
     saved = draft;
     week = draft;
-    showForm(main.dataset.email, t(translatedOk ? 'saved' : 'translateFailed'));
+    const messages = [t(translatedOk ? 'saved' : 'translateFailed'), archivedOk ? '' : t('archiveFailed')];
+    showForm(main.dataset.email, messages.filter(Boolean).join(' '));
   } catch (error) {
     console.error(error);
     status.textContent = t('saveFailed');

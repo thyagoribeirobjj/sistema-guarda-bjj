@@ -45,15 +45,15 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `css/theme.css` | Every color and font: dark (the default) and light. **The only file with color values.** |
 | `css/app.css` | Layout and components. Uses the theme's variables (`var(--ink)`) only. |
 | `js/app.js` | Starts the site: header, search box, tabs, links (`#top`, `#t-top-base`), clicks, sign-in. |
-| `js/views.js` | The tabs: this week, each module, my tree (favorites), method; and the search results. |
-| `js/panel.js` | The technique panel: details, video, diagram, "where to go" links, next stage; admins attach media here. |
+| `js/views.js` | The tabs: this week (and past weeks), each module, my tree (favorites), method; and the search results. |
+| `js/panel.js` | The technique panel: details, share, video, diagram, "where to go" links, next stage; admins attach media here. |
 | `js/media.js` | YouTube links and player, and shrinking a diagram before it's saved. |
-| `js/lesson.js` | The lesson builder. |
-| `js/admin.js` | The admin page (set this week's class). |
+| `js/lesson.js` | The lesson builder. Its choices are saved in `settings.lesson`. |
+| `js/admin.js` | The admin page (set this week's class; a new week moves the last one into past weeks). |
 | `js/strings.js` | Every button and label, in PT and EN. |
-| `js/settings.js` | Each person's language, theme, favorites and progress ("Drilling" / "Got it" per move). |
+| `js/settings.js` | Each person's language, theme, favorites, progress ("Drilling" / "Got it" per move) and lesson builder choices. |
 | `js/firebase.js` | Sign-in and **every** database call. Nothing else talks to Firebase. |
-| `js/content.js`, `js/state.js` | Loads the curriculum and searches it by name; tracks which tab and technique are showing. |
+| `js/content.js`, `js/state.js` | Loads the curriculum and searches it (names first, then descriptions, key points, drills and steps); tracks which tab and technique are showing. |
 | `data/content.json` | The guard modules (top, bottom), drills and the method. |
 | `data/curriculum.json` | The other parts of the fight, the tab order (`moduleOrder`) and the "where to go" links (`nx`). |
 | `firestore.rules` | Who can read and change what in the database. |
@@ -82,11 +82,12 @@ never "fix" a conflict by replacing a whole file with your copy.
 | Document | Holds | Who can read | Who can change |
 |---|---|---|---|
 | `site/week` | This week's class (the "Esta semana" tab): `weekOf`, `title`, `note`, `techniques` (ids) | everyone | admins |
+| `site/weeks` | Past weeks, newest first, at most 52: `weeks: [{ weekOf, title, note, techniques }]`. Saving a new week on the admin page adds the previous one. Read only when someone taps "Past weeks". | everyone | admins |
 | `admins/{email}` | One document per admin, named by their lowercase email | that person | nobody from the site; add in the Firebase console |
 | `site/media` | Each move's video (a YouTube id) and whether it has a diagram: `techniques.<id>.video`, `.diagram` | everyone | admins |
 | `diagrams/{id}` | A move's diagram, as a small image (`data:image/webp;base64,…`, under 900 KB) | everyone | admins |
 | `site/config` | `translatorUrl`: where the translator lives | everyone | admins |
-| `users/{uid}` | A person's `language`, `theme`, `favorites` (their "Minha árvore", in their order) and `progress` (`<id>: "learning" \| "done"`) | that person | that person |
+| `users/{uid}` | A person's `language`, `theme`, `favorites` (their "Minha árvore", in their order), `progress` (`<id>: "learning" \| "done"`) and `lesson` (the lesson builder's choices: `mod`, `dur`, `items`, `game`) | that person | that person |
 
 - `firestore.rules` is the only thing that protects data. The page hiding a button protects nothing.
 - Any change to `firestore.rules` needs a matching test in `tests/rules.test.js`: one that shows the
@@ -94,8 +95,8 @@ never "fix" a conflict by replacing a whole file with your copy.
 - **To add an admin:** Firebase console → Firestore → `admins` → Add document. Document ID: their Google
   email in lowercase. Field `name` (text). Remove the document to remove the admin.
 - Students' settings, favorites and progress are private. Never add a rule that lets one person read another's.
-- **Keep database reads low.** The free plan allows 50,000 reads a day. `site/week` and `site/media` are kept in
-  each browser for 15 minutes (`site()` in `js/firebase.js`), so a change can take that long to reach a student
+- **Keep database reads low.** The free plan allows 50,000 reads a day. `site/week`, `site/media` and `site/weeks` are kept
+  in each browser for 15 minutes (`site()` in `js/firebase.js`), so a change can take that long to reach a student
   who just visited; admin pages always read fresh. Don't add a database read that runs on every visit.
 
 ## Videos, diagrams and translation
@@ -115,7 +116,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 - `npm test` runs every test (it needs Node 22 and Java 21). `npm start` serves the site at http://localhost:8000.
   Locally there is no sign-in or database: every tab works except "Esta semana" and the admin page.
 - Every pull request runs the tests, then opens the site in Chrome and uses it (`tests/smoke.mjs`: tabs, a
-  technique, search, progress, the tree, both languages, the admin page). Once a pull request is merged, `main`
+  technique, search, progress, the tree, sharing, the lesson builder, both languages, the admin page). Once a pull request is merged, `main`
   publishes the site **and** `firestore.rules` about a minute later, then runs the same browser check on the
   published site. When you add a feature people click, add a step for it to `tests/smoke.mjs`.
 - Every night `.github/workflows/nightly.yml` checks the published site (`tests/nightly.mjs`): up, safe, still

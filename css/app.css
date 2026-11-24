@@ -127,6 +127,8 @@ select{width:100%;font:500 14px var(--body);padding:8px 10px;border:1px solid va
 .fav-btn{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;margin:2px 0 4px;border:1.5px solid var(--accent);border-radius:999px;background:transparent;color:var(--accent);font:700 13.5px var(--body);cursor:pointer}
 .fav-btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .fav-btn svg{width:16px;height:16px}
+.panel-actions{margin-top:0}
+.panel-actions .chipbtn{min-height:40px}
 .navcount{display:inline-block;min-width:18px;height:18px;margin-left:6px;padding:0 5px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:700 11px/18px var(--body);text-align:center;vertical-align:2px}
 .navcount:empty{display:none}
 .pback{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;height:34px;padding:0 12px;font:600 13px var(--body);cursor:pointer;margin-right:46px}
@@ -197,3 +199,5 @@ a.primary{text-decoration:none;display:inline-block}
 .marks{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
 .progress{min-width:180px;font-size:13.5px;color:var(--muted)}
 .progress b{color:var(--ink)}
+.week-date{margin:0 0 2px;font-size:13px;color:var(--muted)}
+.past-weeks{margin-top:18px}

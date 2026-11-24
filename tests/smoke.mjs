@@ -1,5 +1,5 @@
 // Opens the site in a real browser and uses it the way a visitor would: tabs, a technique, search,
-// progress, the tree, both languages, the admin page. A page that fails to load fails here.
+// progress, the tree, sharing, the lesson builder, both languages, the admin page. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm install --no-save playwright-core)
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
@@ -87,6 +87,37 @@ await step('a technique can be added to "My tree"', async () => {
   await page.locator(`[data-favorite="${id}"]`).click();
   assert.equal(await page.locator(`[data-favorite="${id}"]`).getAttribute('aria-pressed'), 'true');
   assert.equal((await page.locator('nav .navcount').textContent()).trim(), '1');
+});
+
+await step('an open technique has a share button', async () => {
+  if (await page.locator('#panel').isVisible()) await page.locator('#panelClose').click();
+  await page.locator(`main [data-technique="${id}"]`).first().click();
+  await page.locator(`#panel [data-share="${id}"]`).waitFor();
+  await page.locator('#panelClose').click();
+});
+
+await step('search finds a technique by a word in its description', async () => {
+  const guard = await (await fetch(`${address}/data/content.json`)).json();
+  const techniques = Object.values(guard.modules).flatMap((module) => module.stages.flatMap((stage) => stage.items)).filter((item) => item.id);
+  const names = techniques.map((item) => `${item.n.pt} ${item.n.en}`.toLowerCase()).join(' ');
+  let found;
+  for (const technique of techniques) {
+    const word = (technique.d?.en || '').toLowerCase().split(/[^a-z]+/).find((part) => part.length >= 7 && !names.includes(part));
+    if (word) { found = { id: technique.id, word }; break; }
+  }
+  assert.ok(found, 'a description has a word no name has');
+  await page.fill('#search', found.word);
+  await page.locator(`main .results [data-technique="${found.id}"]`).first().waitFor();
+  await page.fill('#search', '');
+  await page.locator('main .spine').waitFor();
+});
+
+await step('a lesson builder choice survives a reload', async () => {
+  await page.locator('nav a[href="#lesson"]').click();
+  await page.selectOption('#selDur', '90');
+  await page.locator('#plan .meta', { hasText: '90 min' }).waitFor();
+  await page.reload();
+  assert.equal(await page.locator('#selDur').inputValue(), '90');
 });
 
 if (published) {
