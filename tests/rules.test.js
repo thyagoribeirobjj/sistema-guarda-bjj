@@ -167,6 +167,16 @@ test('a name and a belt can be saved with the settings, in the expected shape', 
   assert.equal(await save({ name: ['Ana'] }), 'denied');
 });
 
+test('the class last looked at (seenWeek) is a short text saved with the settings', async () => {
+  const save = (data) => write('users/student-uid', { ...settings('student@example.com'), ...data }, 'student');
+  assert.equal(await save({ seenWeek: '2026-11-23:abc123' }), 'allowed');
+  assert.equal(await save({ seenWeek: '' }), 'allowed');
+  assert.equal(await save({ seenWeek: 'x'.repeat(100) }), 'allowed');
+  assert.equal(await save({ seenWeek: 'x'.repeat(101) }), 'denied');
+  assert.equal(await save({ seenWeek: 3 }), 'denied');
+  assert.equal(await write('users/student-uid', { ...settings('student@example.com'), seenWeek: 'a:b' }, 'otherStudent'), 'denied');
+});
+
 const notesPath = 'users/student-uid/private/notes';
 const manyNotes = (count) => Object.fromEntries(Array.from({ length: count }, (_, i) => [`move-${i}`, 'note']));
 

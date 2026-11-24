@@ -42,19 +42,13 @@ export function findTechnique(id) {
   return { ...place, module, stage: module.stages[place.stageIndex] };
 }
 
-// Belts in order. Each technique has a level: the belt it is taught from. The curriculum marks every technique
-// basic ("lv": "b") or advanced ("a"); basic is white belt and advanced blue, unless an admin set another level
-// (site/media, techniques.<id>.level).
+// Belts in order. A technique has a minimum belt only where an admin set one (site/media, techniques.<id>.minBelt);
+// without one it is for everyone.
 export const belts = ['white', 'blue', 'purple', 'brown', 'black'];
 
-export function levelOf(technique, chosenLevel) {
-  if (belts.includes(chosenLevel)) return chosenLevel;
-  return technique.lv === 'a' ? 'blue' : 'white';
-}
-
-// "Up to my belt": a white belt sees white-belt techniques, a blue belt white and blue, and so on.
-export function upToBelt(level, belt) {
-  return !belts.includes(belt) || belts.indexOf(level) <= belts.indexOf(belt);
+// "Up to my belt": techniques with no minimum, and those whose minimum is my belt or below. No belt keeps everything.
+export function upToBelt(minBelt, belt) {
+  return !belts.includes(belt) || !belts.includes(minBelt) || belts.indexOf(minBelt) <= belts.indexOf(belt);
 }
 
 export function isModule(key) {

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { belts, levelOf, upToBelt } from '../js/content.js';
+import { upToBelt } from '../js/content.js';
 
 const read = (name) => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url), 'utf8'));
 const content = read('content.json');
@@ -42,16 +42,10 @@ test('every technique has a name in Portuguese and English, and a level', () => 
   }
 });
 
-test('every technique has a belt level: basic is white, advanced blue, unless an admin chose another', () => {
-  for (const { item } of techniques) assert.ok(belts.includes(levelOf(item)), `belt level: ${item.id}`);
-  assert.equal(levelOf({ lv: 'b' }), 'white');
-  assert.equal(levelOf({ lv: 'a' }), 'blue');
-  assert.equal(levelOf({ lv: 'b' }, 'purple'), 'purple');
-  assert.equal(levelOf({ lv: 'a' }, 'red'), 'blue', 'an unknown level is ignored');
-  assert.ok(techniques.some(({ item }) => levelOf(item) === 'white') && techniques.some(({ item }) => levelOf(item) === 'blue'));
-});
-
-test('"up to my belt" keeps my belt and the ones below it; no belt keeps everything', () => {
+test('"up to my belt" keeps techniques with no minimum and those at my belt or below; no belt keeps everything', () => {
+  assert.ok(upToBelt('', 'white'), 'no minimum belt: for everyone');
+  assert.ok(upToBelt(undefined, 'white'));
+  assert.ok(upToBelt('red', 'white'), 'an unknown minimum is ignored');
   assert.ok(upToBelt('white', 'white'));
   assert.ok(!upToBelt('blue', 'white'));
   assert.ok(upToBelt('blue', 'purple'));

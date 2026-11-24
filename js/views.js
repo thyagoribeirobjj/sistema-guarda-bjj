@@ -1,5 +1,5 @@
 import { html } from './html.js';
-import { content, findTechnique, searchTechniques, levelOf, upToBelt } from './content.js';
+import { content, findTechnique, searchTechniques, belts, upToBelt } from './content.js';
 import { pastWeeksShown } from './week.js';
 import { settings, isFavorite, progressOf } from './settings.js';
 import { state } from './state.js';
@@ -16,12 +16,15 @@ export function beltName(belt) {
   return t(`belt${belt.charAt(0).toUpperCase()}${belt.slice(1)}`);
 }
 
-export function levelOfId(id) {
-  return levelOf(findTechnique(id).technique, state.media[id]?.level);
+// The minimum belt an admin set for a technique, or '' (for everyone).
+export function minBeltOf(id) {
+  const belt = state.media[id]?.minBelt;
+  return belts.includes(belt) ? belt : '';
 }
 
+// With label, the mark on a technique: its minimum belt.
 export const beltMark = (belt, label = false) => (label
-  ? html`<i class="belt" data-belt="${belt}" role="img" aria-label="${beltName(belt)}" title="${beltName(belt)}"></i>`
+  ? html`<i class="belt" data-belt="${belt}" role="img" aria-label="${t('minBelt')}: ${beltName(belt)}" title="${t('minBelt')}: ${beltName(belt)}"></i>`
   : html`<i class="belt" data-belt="${belt}" aria-hidden="true"></i>`);
 
 export function techniqueChip(id) {
@@ -30,7 +33,7 @@ export function techniqueChip(id) {
   const technique = place.technique;
   const favorite = isFavorite(id);
   const progress = progressOf(id);
-  return html`<button type="button" class="tech b${favorite ? ' on' : ''}" data-technique="${id}">${text(technique.n)} ${beltMark(levelOfId(id), true)}${
+  return html`<button type="button" class="tech b${favorite ? ' on' : ''}" data-technique="${id}">${text(technique.n)}${minBeltOf(id) ? html` ${beltMark(minBeltOf(id), true)}` : ''}${
     progress ? html` <span class="ptag" aria-label="${t(progress)}">${progressMarks[progress]}</span>` : ''}${
     technique.mine ? html` <span class="mine">★</span>` : ''}${
     technique.g ? html` <span class="gtag">G</span>` : ''}${
@@ -38,8 +41,9 @@ export function techniqueChip(id) {
     favorite ? html` <span class="heart" aria-label="${t('inTree')}">♥</span>` : ''}</button>`;
 }
 
-function legend() {
-  return html`<div class="legend"><span><b class="mine">★</b> ${t('mine')}</span><span><b class="gtag">G</b> ${t('bookTag')}</span><span><b class="vtag">▶</b> ${t('video')}</span><span><b class="heart">♥</b> ${t('inTree')}</span><span><b class="ptag">◐</b> ${t('learning')}</span><span><b class="ptag">✓</b> ${t('done')}</span><span>${beltMark('white')}${beltMark('blue')} ${t('beltLevel')}</span></div>`;
+function legend(withBelts) {
+  return html`<div class="legend"><span><b class="mine">★</b> ${t('mine')}</span><span><b class="gtag">G</b> ${t('bookTag')}</span><span><b class="vtag">▶</b> ${t('video')}</span><span><b class="heart">♥</b> ${t('inTree')}</span><span><b class="ptag">◐</b> ${t('learning')}</span><span><b class="ptag">✓</b> ${t('done')}</span>${
+    withBelts ? html`<span>${beltMark('white')}${beltMark('blue')} ${t('minBelt')}</span>` : ''}</div>`;
 }
 
 // eyebrow: a small line above the title, such as "Coach" on the coach's pages.
@@ -80,12 +84,12 @@ function beltFilterOn() {
 function beltFilter() {
   if (!settings.belt) return html`<p class="note belt-hint">${t('pickBeltHint')}</p>`;
   const on = beltFilterOn();
-  return html`<div class="filters belt-filter" role="group" aria-label="${t('beltLevel')}"><button type="button" class="chipbtn" data-belt-filter="mine" aria-pressed="${on}">${t('upToMyBelt')} (${beltName(settings.belt)})</button><button type="button" class="chipbtn" data-belt-filter="all" aria-pressed="${!on}">${t('everything')}</button></div>`;
+  return html`<div class="filters belt-filter" role="group" aria-label="${t('myBelt')}"><button type="button" class="chipbtn" data-belt-filter="mine" aria-pressed="${on}">${t('upToMyBelt')} (${beltName(settings.belt)})</button><button type="button" class="chipbtn" data-belt-filter="all" aria-pressed="${!on}">${t('everything')}</button></div>`;
 }
 
 function stageTechniques(stage) {
   const ids = stage.items.map((technique) => technique.id);
-  const shown = beltFilterOn() ? ids.filter((id) => upToBelt(levelOfId(id), settings.belt)) : ids;
+  const shown = beltFilterOn() ? ids.filter((id) => upToBelt(minBeltOf(id), settings.belt)) : ids;
   if (!shown.length) return html`<p class="note">${t('nothingAtMyBelt')}</p>`;
   return html`<div class="techs">${shown.map(techniqueChip)}</div>`;
 }
@@ -97,7 +101,9 @@ export function moduleView(key) {
     ? html`<section class="games"><h3 class="sect-title">${t('games')}</h3><p class="sect-sub">${t('gamesLead')}</p><div class="grid">${module.games.map(gameCard)}</div></section>`
     : '';
   const ids = techniqueIds(module);
-  return html`${intro(text(module.title), `${text(module.intro)} ${t('tapHint')}`, progressBar(ids))}${beltFilter()}${legend()}<div class="spine">${stages}</div>${games}`;
+  // The belt filter and the legend's belt mark only where an admin set a minimum belt on something in this part.
+  const withBelts = ids.some(minBeltOf);
+  return html`${intro(text(module.title), `${text(module.intro)} ${t('tapHint')}`, progressBar(ids))}${withBelts ? beltFilter() : ''}${legend(withBelts)}<div class="spine">${stages}</div>${games}`;
 }
 
 // "Got it: 3 of 24", shown once the visitor has marked something in this part.

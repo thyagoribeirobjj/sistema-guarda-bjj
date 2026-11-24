@@ -1,9 +1,9 @@
 import { html } from './html.js';
-import { content, findTechnique, belts, levelOf } from './content.js';
+import { content, findTechnique, belts } from './content.js';
 import { settings, isFavorite, progressOf } from './settings.js';
 import { state } from './state.js';
 import { t, text } from './strings.js';
-import { heart, techniqueChip, progressMarks, beltName, levelOfId } from './views.js';
+import { heart, techniqueChip, progressMarks, beltName, minBeltOf } from './views.js';
 import { noteOf, noteLength, readNotes } from './notes.js';
 import { videoPreview } from './media.js';
 import { loadDiagram } from './firebase.js';
@@ -15,10 +15,10 @@ const linkKinds = ['next', 'chain', 'combo', 'counter'];
 const diagrams = new Map();
 
 // Admins attach a YouTube link and a diagram to each move right here, from any device.
-function mediaControls(id, media, technique) {
-  const levels = belts.map((belt) => html`<option value="${belt}" ${media.level === belt ? 'selected' : ''}>${beltName(belt)}</option>`);
-  return html`<section class="media-admin"><h5><label for="levelChoice">${t('admin')} · ${t('beltLevel')}</label></h5>
-    <div class="row"><select id="levelChoice" data-level="${id}"><option value="">${t('levelFromCurriculum')}: ${beltName(levelOf(technique))}</option>${levels}</select></div>
+function mediaControls(id, media) {
+  const choices = belts.map((belt) => html`<option value="${belt}" ${media.minBelt === belt ? 'selected' : ''}>${beltName(belt)}</option>`);
+  return html`<section class="media-admin"><h5><label for="minBeltChoice">${t('admin')} · ${t('minBelt')}</label></h5>
+    <div class="row"><select id="minBeltChoice" data-min-belt="${id}"><option value="">${t('noMinBelt')}</option>${choices}</select></div>
     <h5>${t('admin')} · ${t('video')}</h5>
     <div class="row"><input type="url" id="videoLink" placeholder="${t('videoPlaceholder')}" value="${media.video ? `https://youtu.be/${media.video}` : ''}">
     <button type="button" class="chipbtn" data-save-video="${id}">${t('save')}</button>${media.video ? html`<button type="button" class="chipbtn" data-remove-video="${id}">${t('remove')}</button>` : ''}</div>
@@ -74,7 +74,7 @@ function panelContent(id) {
     <button type="button" class="close" id="panelClose" aria-label="${t('close')}">×</button>
     ${technique.mine ? html`<span class="mine">★ ${t('mine')}</span> ` : ''}${technique.g ? html`<span class="gtag">G</span>` : ''}
     <h3 id="panelTitle">${text(technique.n)}</h3>
-    <div class="from">${text(module.title)} · ${t('stage')} ${stageIndex + 1}: ${text(stage.name)} · ${beltName(levelOfId(id))}</div>
+    <div class="from">${text(module.title)} · ${t('stage')} ${stageIndex + 1}: ${text(stage.name)}${minBeltOf(id) ? ` · ${t('minBelt')}: ${beltName(minBeltOf(id))}` : ''}</div>
     <div class="actions panel-actions"><button type="button" class="fav-btn" data-favorite="${id}" aria-pressed="${favorite}">${heart(favorite)}${t(favorite ? 'inTree' : 'addToTree')}</button>
     <button type="button" class="chipbtn" data-share="${id}">${t('share')}</button><span class="status" id="shareStatus" role="status"></span></div>
     <div class="marks" role="group" aria-label="${t('myProgress')}">${['learning', 'done'].map((mark) => html`<button type="button" class="chipbtn" data-progress="${id}:${mark}" aria-pressed="${progressOf(id) === mark}">${progressMarks[mark]} ${t(mark)}</button>`)}</div>
@@ -88,7 +88,7 @@ function panelContent(id) {
     ${technique.g || technique.bk ? html`<p class="note">${t('bookReference')}</p>` : ''}
     ${links}
     ${nextStage ? html`<h5>${t('nextStage')} · ${text(nextStage.name)}</h5><div class="next">${nextStage.items.map((item) => techniqueChip(item.id))}</div>` : ''}
-    ${state.admin ? mediaControls(id, media, technique) : ''}`;
+    ${state.admin ? mediaControls(id, media) : ''}`;
 }
 
 // list: the techniques next and previous move through. Without one, a technique opened from outside the panel

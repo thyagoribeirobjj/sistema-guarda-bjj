@@ -155,9 +155,9 @@ export function saveNote(uid, id, note) {
     { merge: true });
 }
 
-// ---- each move's video, diagram and belt level ----
-// site/media holds { techniques: { <id>: { video: <YouTube id>, diagram: true, level: 'blue' } } }.
-// level is set only where an admin changed the move's belt level from the one the curriculum gives it.
+// ---- each move's video, diagram and minimum belt ----
+// site/media holds { techniques: { <id>: { video: <YouTube id>, diagram: true, minBelt: 'blue' } } }.
+// minBelt is set only where an admin gave the move a minimum belt; without it the move is for everyone.
 // The diagram image itself sits in diagrams/<id> and is read only when someone opens that move.
 
 export async function loadMedia({ fresh = false } = {}) {
@@ -176,8 +176,9 @@ export function saveVideo(id, videoId) {
   return saveMediaField(id, 'video', videoId);
 }
 
-export function saveLevel(id, level) {
-  return saveMediaField(id, 'level', level || null);
+// '' clears the minimum belt: the technique is for everyone.
+export function saveMinBelt(id, belt) {
+  return saveMediaField(id, 'minBelt', belt || null);
 }
 
 export async function loadDiagram(id) {

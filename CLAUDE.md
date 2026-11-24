@@ -50,7 +50,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/nav.js` | The navigation, described once (see Navigation below), and the menus (the account menu and the part switcher). |
 | `js/account.js` | The header's account button (`#account`, the person's Google photo) and its menu (`#accountMenu`): sign in or out, the Coach section, the theme picker. The button always shows; without Firebase (a local preview) the menu has no sign-in. |
 | `js/views.js` | The pages: Curriculum home, this week (and past weeks), each part of the fight, my tree (favorites), method; and the search results. |
-| `js/panel.js` | The technique panel: details, share, notes, video, diagram, "where to go" links, next stage; admins attach media and set the belt level here. Previous / next (buttons, arrow keys, swiping) move through the list it was opened from. Opening it adds one step to the browser history and moving replaces it, so a phone's back button closes it in one press. |
+| `js/panel.js` | The technique panel: details, share, notes, video, diagram, "where to go" links, next stage; admins attach media and set a minimum belt here. Previous / next (buttons, arrow keys, swiping) move through the list it was opened from. Opening it adds one step to the browser history and moving replaces it, so a phone's back button closes it in one press. |
 | `js/notes.js` | Each person's private notes on techniques: in this browser, and in `users/{uid}/private/notes` once signed in (read the first time a technique opens, saved one note at a time). |
 | `js/media.js` | YouTube links and player, and shrinking a diagram before it's saved. |
 | `js/lesson.js` | The lesson builder. Its choices are saved in `settings.lesson`. |
@@ -114,10 +114,10 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 | `site/week` | This week's class (the "Esta semana" page): `weekOf`, `title`, `note`, `techniques` (ids), `from` (the language the admin last wrote in), `written` (`{ title: 'pt', note: 'en' }`: the language each field's original was typed in) and `handFixed` (`'title'` and/or `'note'`: translations the admin corrected by hand; missing means none). Optionally `next`: a prepared class with the same fields, whose `weekOf` is the day it takes over (see below) | everyone | admins |
 | `site/weeks` | Past weeks, newest first, at most 52: `weeks: [{ weekOf, title, note, techniques, from, written, handFixed }]` (older entries have only the first four). Saving a new week on the admin page adds the previous one. Read only when someone taps "Past weeks" or "Start from a past week". | everyone | admins |
 | `admins/{email}` | One document per admin, named by their lowercase email | that person | nobody from the site; add in the Firebase console |
-| `site/media` | Each move's video (a YouTube id), whether it has a diagram and, where an admin changed it, its belt level: `techniques.<id>.video`, `.diagram`, `.level` | everyone | admins |
+| `site/media` | Each move's video (a YouTube id), whether it has a diagram and, where an admin set one, its minimum belt: `techniques.<id>.video`, `.diagram`, `.minBelt` | everyone | admins |
 | `diagrams/{id}` | A move's diagram, as a small image (`data:image/webp;base64,…`, under 900 KB) | everyone | admins |
 | `site/config` | `translatorUrl`: where the translator lives | everyone | admins |
-| `users/{uid}` | A person's `email`, `name` (from Google), `language`, `theme`, `belt` (`''` or `white`…`black`, picked by them), `favorites` (their "Minha árvore", in their order), `progress` (`<id>: "learning" \| "done"`) and `lesson` (the lesson builder's choices: `mod`, `dur`, `items`, `game`) | that person and admins (coaches) | that person |
+| `users/{uid}` | A person's `email`, `name` (from Google), `language`, `theme`, `belt` (`''` or `white`…`black`, picked by them), `seenWeek` (a short mark of the class last looked at on This week, for the "new" dot), `favorites` (their "Minha árvore", in their order), `progress` (`<id>: "learning" \| "done"`) and `lesson` (the lesson builder's choices: `mod`, `dur`, `items`, `game`) | that person and admins (coaches) | that person |
 | `users/{uid}/private/notes` | Their notes: `notes: { <id>: text }` (at most 500, each under 2,000 characters), `changed` (the note the last save changed: each save changes one) | that person only, not admins | that person |
 
 - `firestore.rules` is the only thing that protects data. The page hiding a button protects nothing.
@@ -127,9 +127,12 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   email in lowercase. Field `name` (text). Remove the document to remove the admin.
 - Coaches (admins) can read every student's `users/{uid}` (name, email, belt, favorites, progress) to follow them; the
   privacy page says so. Nobody else can, and notes stay readable by their owner only. Never widen either.
-- **Belt levels.** Every technique is basic (`"lv": "b"`, white belt) or advanced (`"a"`, blue belt) in the `data/`
-  files; an admin can set another belt on the technique's panel, saved in `site/media` (no extra read). `levelOf()` in
-  `js/content.js` decides.
+- **Minimum belts.** A technique has a minimum belt only where an admin set one on its panel (`site/media`, no extra
+  read); without one it is for everyone. Nothing is derived from the `data/` files. "Up to my belt" (`upToBelt()` in
+  `js/content.js`) keeps techniques with no minimum and those at or below the student's belt; a part shows the filter
+  only when something in it has a minimum.
+- **The "new" dot** on This week compares the week with `seenWeek` in the settings, so looking at it on one device
+  clears it on the others (at most one save, only when the class changed). A first visit just notes the class.
 - **Next week.** A prepared week lives inside `site/week` as `next`, so it costs no extra read. Each browser shows it as
   this week from its start date on (by that browser's own date), with the old class as the newest past week. The
   database itself is switched (the old class filed in `site/weeks`, `next` becomes the week) the next time an admin

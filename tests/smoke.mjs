@@ -335,25 +335,39 @@ await step('a new class gets a dot on This week until it is opened; a first visi
   await visit.locator('#sidebar a[href="#semana"]').click();
   await visit.locator('main .week-title', { hasText: 'Passing' }).waitFor();
   assert.equal(await dot.count(), 0, 'the dot goes once This week is open');
+  const seen = await visit.evaluate(() => JSON.parse(localStorage.getItem('sg-settings')).seenWeek);
+  assert.match(seen, /^2026-11-23:[0-9a-z]+$/, 'kept with the settings, short enough for the account');
   await visit.locator('#sidebar a[href="#curriculum"]').click();
   await visit.reload();
   await visit.locator('#sidebar a[href="#semana"]').waitFor();
   assert.equal(await dot.count(), 0, 'and stays gone');
 });
 
-await step('picking a belt filters a part to that belt and below; Everything shows all again', async () => {
+await step('a minimum belt an admin set shows on its technique, and "up to my belt" hides it; Everything shows all again', async () => {
   const visit = await open('/#top', 'en-US');
   await visit.locator('main .tech').first().waitFor();
+  assert.equal(await visit.locator('main .tech .belt').count(), 0, 'no minimum belt set: no belt marks');
+  assert.equal(await visit.locator('main .belt-hint, main .belt-filter').count(), 0, 'and no belt filter');
+  // What site/media would hold after an admin set two minimum belts (kept in this browser like the real copy).
+  await visit.evaluate(() => localStorage.setItem('sg-site-media', JSON.stringify({ at: Date.now(), value: {
+    techniques: { 'top-biceps-grips': { minBelt: 'blue' }, 'top-break-the-grip': { minBelt: 'white' } } } })));
+  await visit.reload();
+  await visit.locator('main .tech').first().waitFor();
   const all = await visit.locator('main .tech').count();
+  assert.equal(await visit.locator('main .tech .belt').count(), 2, 'only the techniques with a minimum are marked');
+  assert.equal(await visit.locator('main [data-technique="top-biceps-grips"] .belt').getAttribute('aria-label'), 'Minimum belt: Blue belt');
   assert.ok(await visit.locator('main .belt-hint').isVisible(), 'a hint to pick a belt');
+  await visit.locator('main [data-technique="top-biceps-grips"]').click();
+  await visit.locator('#panel .from', { hasText: 'Minimum belt: Blue belt' }).waitFor();
+  await visit.locator('#panelClose').click();
   await visit.locator('#account').click();
   await visit.locator('[data-belt-choice="white"]').click();
   assert.equal(await visit.locator('[data-belt-choice="white"]').getAttribute('aria-checked'), 'true');
   await visit.keyboard.press('Escape');
   await visit.locator('main [data-belt-filter="mine"][aria-pressed="true"]').waitFor();
-  const white = await visit.locator('main .tech').count();
-  assert.ok(white > 0 && white < all, `${white} of ${all} techniques shown`);
-  assert.equal(await visit.locator('main .tech .belt:not([data-belt="white"])').count(), 0);
+  assert.equal(await visit.locator('main .tech').count(), all - 1, 'only the blue-belt technique is hidden');
+  assert.equal(await visit.locator('main [data-technique="top-biceps-grips"]').count(), 0);
+  assert.equal(await visit.locator('main [data-technique="top-break-the-grip"]').count(), 1, 'a white-belt minimum stays');
   await visit.locator('main [data-belt-filter="all"]').click();
   assert.equal(await visit.locator('main .tech').count(), all);
   await visit.reload();

@@ -1,5 +1,5 @@
 import { loadContent, findTechnique, isModule } from './content.js';
-import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadPastWeeks, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram, saveLevel } from './firebase.js';
+import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadPastWeeks, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram, saveMinBelt } from './firebase.js';
 import { settings, applyTheme, useAccount, changeSettings, toggleFavorite, markProgress } from './settings.js';
 import { state, readHash } from './state.js';
 import { t, text } from './strings.js';
@@ -247,9 +247,9 @@ document.addEventListener('change', (event) => {
     changeMedia(id, 'diagram', async () => { await saveDiagram(id, await shrinkImage(event.target.files[0])); return true; });
     return;
   }
-  const level = event.target.dataset?.level;
-  if (level) {
-    changeMedia(level, 'level', async () => { await saveLevel(level, event.target.value); return event.target.value || null; });
+  const minBeltId = event.target.dataset?.minBelt;
+  if (minBeltId) {
+    changeMedia(minBeltId, 'minBelt', async () => { await saveMinBelt(minBeltId, event.target.value); return event.target.value || null; });
     return;
   }
   const redraw = changeLesson(event.target);

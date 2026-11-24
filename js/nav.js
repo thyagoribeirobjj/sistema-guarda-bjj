@@ -1,6 +1,6 @@
 import { html } from './html.js';
 import { content, isModule } from './content.js';
-import { settings } from './settings.js';
+import { settings, seeWeek } from './settings.js';
 import { state } from './state.js';
 import { t, text } from './strings.js';
 import { heart } from './views.js';
@@ -33,30 +33,23 @@ const favoritesCount = () => html`<span class="navcount">${settings.favorites.le
 const newDot = (item) => (item.dot?.() ? html`<span class="newdot" role="img" aria-label="${t('newClass')}"></span>` : '');
 
 // ---- the "new" dot on This week ----
-// This browser remembers the class it last showed on This week. A different class gets the dot until This week is opened.
-// The first visit just remembers the class, without a dot.
-const weekSeenKey = 'sg-week-seen';
-
-function weekSignature(week) {
-  return JSON.stringify([week.weekOf || '', week.title || {}, week.note || {}, week.techniques || []]);
-}
-
-function seenWeek() {
-  try { return localStorage.getItem(weekSeenKey); } catch { return null; }
+// The settings remember the class last looked at on This week (seenWeek, so it follows the account to other devices).
+// A different class gets the dot until This week is opened. The first visit just remembers the class, without a dot.
+// The mark is short: the week's date and a hash of its title, note and techniques.
+export function weekSignature(week) {
+  const whole = JSON.stringify([week.title || {}, week.note || {}, week.techniques || []]);
+  let hash = 0;
+  for (let i = 0; i < whole.length; i++) hash = (Math.imul(hash, 31) + whole.charCodeAt(i)) | 0;
+  return `${String(week.weekOf || '').slice(0, 20)}:${(hash >>> 0).toString(36)}`;
 }
 
 // Called on every render.
 export function noteWeekSeen() {
-  if (!state.week) return;
-  const looking = state.view === 'semana' && !state.search;
-  if (looking || seenWeek() === null) {
-    try { localStorage.setItem(weekSeenKey, weekSignature(state.week)); } catch {}
-  }
+  if (state.week) seeWeek(weekSignature(state.week), state.view === 'semana' && !state.search);
 }
 
 function weekIsNew() {
-  const seen = seenWeek();
-  return Boolean(state.week) && seen !== null && seen !== weekSignature(state.week);
+  return Boolean(state.week) && Boolean(settings.seenWeek) && settings.seenWeek !== weekSignature(state.week);
 }
 
 // Which entry is "here": a part of the fight belongs to Curriculum. Nothing is, while searching.

@@ -15,10 +15,11 @@ service cloud.firestore {
     }
     function validSettings() {
       let data = request.resource.data;
-      return data.keys().hasOnly(['email', 'name', 'language', 'theme', 'belt', 'favorites', 'progress', 'lesson', 'updatedAt'])
+      return data.keys().hasOnly(['email', 'name', 'language', 'theme', 'belt', 'seenWeek', 'favorites', 'progress', 'lesson', 'updatedAt'])
         && data.email == request.auth.token.email
         && (!('name' in data) || (data.name is string && data.name.size() <= 100))
         && (!('belt' in data) || data.belt in ['', 'white', 'blue', 'purple', 'brown', 'black'])
+        && (!('seenWeek' in data) || (data.seenWeek is string && data.seenWeek.size() <= 100))
         && data.language in ['pt', 'en']
         && data.theme in ['', 'light', 'dark', 'orange', 'gold', 'royal', 'emerald']
         && data.favorites is list && data.favorites.size() <= 500
@@ -67,7 +68,7 @@ service cloud.firestore {
       allow read: if signedIn() && email == request.auth.token.email.lower();
     }
 
-    // Each person's name, language, theme, belt, favorites, progress and lesson plan. Only they can change them;
+    // Each person's name, language, theme, belt, the class they last looked at, favorites, progress and lesson plan. Only they can change them;
     // coaches (admins) can see them, to follow their students.
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();

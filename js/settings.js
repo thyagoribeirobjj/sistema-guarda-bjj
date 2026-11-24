@@ -15,7 +15,8 @@ const browserLanguage = (navigator.language || '').toLowerCase().startsWith('pt'
 // progress: { <technique id>: 'learning' | 'done' }
 // lesson: the lesson builder's choices, { mod, dur, items, game }; null until something is picked.
 // belt: the belt the person says they have ('' until they pick one; one of belts in js/content.js).
-export const settings = { language: browserLanguage, theme: '', belt: '', favorites: [], progress: {}, lesson: null };
+// seenWeek: a short mark of the class last looked at on This week, for the "new" dot (js/nav.js); '' before the first visit.
+export const settings = { language: browserLanguage, theme: '', belt: '', seenWeek: '', favorites: [], progress: {}, lesson: null };
 merge(readLocal());
 takeOldLesson();
 
@@ -32,6 +33,8 @@ function merge(from, keep = false) {
   if (from.language === 'pt' || from.language === 'en') settings.language = from.language;
   if (from.theme === '' || themes.includes(from.theme)) settings.theme = from.theme;
   if ((from.belt === '' || belts.includes(from.belt)) && !(keep && settings.belt)) settings.belt = from.belt;
+  // The account's mark wins even on a first sign-in: this browser may have just noted a class nobody looked at.
+  if (typeof from.seenWeek === 'string' && from.seenWeek && from.seenWeek.length <= 100) settings.seenWeek = from.seenWeek;
   if (Array.isArray(from.favorites)) settings.favorites = keep ? [...new Set([...from.favorites, ...settings.favorites])] : from.favorites;
   if (from.progress && typeof from.progress === 'object') settings.progress = keep ? { ...from.progress, ...settings.progress } : from.progress;
   if (isLesson(from.lesson)) settings.lesson = from.lesson;
@@ -58,8 +61,8 @@ function lastAccount() {
 }
 
 function saved() {
-  const { language, theme, belt, favorites, progress, lesson } = settings;
-  return lesson ? { language, theme, belt, favorites, progress, lesson } : { language, theme, belt, favorites, progress };
+  const { language, theme, belt, seenWeek, favorites, progress, lesson } = settings;
+  return lesson ? { language, theme, belt, seenWeek, favorites, progress, lesson } : { language, theme, belt, seenWeek, favorites, progress };
 }
 
 function store() {
@@ -141,6 +144,13 @@ export function changeSettings(changes) {
   Object.assign(settings, changes);
   store();
   applyTheme();
+}
+
+// The "new" dot: looking at This week marks its class seen (one save, only when it changed). Otherwise the very first
+// visit marks it silently, so there is no dot; not while the account is being read, which may know an older class.
+export function seeWeek(signature, looking) {
+  if (settings.seenWeek === signature) return;
+  if (looking || (!settings.seenWeek && !loading)) changeSettings({ seenWeek: signature });
 }
 
 export function isFavorite(id) {
