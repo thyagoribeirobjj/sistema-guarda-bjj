@@ -16,11 +16,12 @@ export function techniqueChip(id) {
   return html`<button type="button" class="tech b${favorite ? ' on' : ''}" data-technique="${id}">${text(technique.n)}${
     technique.mine ? html` <span class="mine">★</span>` : ''}${
     technique.g ? html` <span class="gtag">G</span>` : ''}${
+    state.media[id]?.video ? html` <span class="vtag" aria-label="${t('video')}">▶</span>` : ''}${
     favorite ? html` <span class="heart" aria-label="${t('inTree')}">♥</span>` : ''}</button>`;
 }
 
 function legend() {
-  return html`<div class="legend"><span><b class="mine">★</b> ${t('mine')}</span><span><b class="gtag">G</b> ${t('bookTag')}</span><span><b class="heart">♥</b> ${t('inTree')}</span></div>`;
+  return html`<div class="legend"><span><b class="mine">★</b> ${t('mine')}</span><span><b class="gtag">G</b> ${t('bookTag')}</span><span><b class="vtag">▶</b> ${t('video')}</span><span><b class="heart">♥</b> ${t('inTree')}</span></div>`;
 }
 
 function intro(title, lead, extra = '') {

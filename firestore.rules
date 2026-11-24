@@ -23,10 +23,22 @@ service cloud.firestore {
         && data.updatedAt == request.time;
     }
 
-    // The week's lesson and anything else the whole site shows. Everyone reads, admins write.
+    // What the whole site shows: the week (site/week), each move's video and diagram flag (site/media),
+    // and settings such as the translator's address (site/config). Everyone reads, admins write.
     match /site/{document} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // One diagram per move, as a small image stored in the document. Everyone reads, admins write.
+    match /diagrams/{technique} {
+      allow read: if true;
+      allow delete: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['image', 'updatedBy', 'updatedAt'])
+        && request.resource.data.image is string
+        && request.resource.data.image.size() < 900000
+        && request.resource.data.image.matches('data:image/(webp|png|jpeg);base64,[A-Za-z0-9+/=]+');
     }
 
     // One document per admin, named by their email. Added by hand in the Firebase console.

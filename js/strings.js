@@ -89,12 +89,25 @@ export const strings = {
   saved: { pt: 'Salvo. Já está no site.', en: 'Saved. It is on the site now.' },
   saveFailed: { pt: 'Não foi possível salvar.', en: "Couldn't save." },
   backToSite: { pt: '← Voltar ao site', en: '← Back to the site' },
+
+  video: { pt: 'Vídeo', en: 'Video' },
+  playVideo: { pt: 'Ver o vídeo', en: 'Play the video' },
+  videoPlaceholder: { pt: 'Link do YouTube (não listado)', en: 'YouTube link (unlisted)' },
+  badVideoLink: { pt: 'Isso não parece um link do YouTube.', en: "That doesn't look like a YouTube link." },
+  diagram: { pt: 'Diagrama', en: 'Diagram' },
+  addDiagram: { pt: 'Adicionar imagem', en: 'Add image' },
+  replaceDiagram: { pt: 'Trocar imagem', en: 'Replace image' },
+
+  writingIn: { pt: 'Estou escrevendo em', en: "I'm writing in" },
+  autoTranslated: { pt: 'tradução automática, pode corrigir', en: 'translated automatically, you can fix it' },
+  translating: { pt: 'Traduzindo…', en: 'Translating…' },
+  translateFailed: { pt: 'Salvo, mas a tradução falhou. O texto aparece só no idioma original.', en: 'Saved, but the translation failed. The text shows in its original language only.' },
 };
 
 export function text(value) {
   if (value == null) return '';
   if (typeof value === 'string') return value;
-  return value[settings.language] || value.pt || '';
+  return value[settings.language] || value.pt || value.en || '';
 }
 
 export function t(key) {

@@ -2,6 +2,7 @@
 export const state = {
   view: '',
   week: null,
+  media: {},
   online: false,
   account: null,
   admin: false,
