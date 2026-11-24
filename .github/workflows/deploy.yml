@@ -29,6 +29,10 @@ jobs:
         with:
           node-version: 22
 
+      # The test tools, at the versions in package-lock.json.
+      - name: Install the test tools
+        run: npm ci
+
       # Content checks plus the database rules, run against a local copy of Firestore.
       - name: Tests
         run: |
@@ -38,10 +42,16 @@ jobs:
       # Opens the site in Chrome and uses it: a page that would load blank fails here, before it is published.
       - name: The site works in a real browser
         run: |
-          npm install --no-save playwright-core@1.65.1
           python3 -m http.server 8000 > /dev/null 2>&1 &
           curl --silent --output /dev/null --retry 10 --retry-connrefused --retry-delay 1 http://localhost:8000/
           npm run smoke -- http://localhost:8000
+
+      # Signed in as made-up students and a made-up coach, against local copies of sign-in and the database only.
+      # No Google identity and no real account: the emulators accept anyone.
+      - name: The site works signed in
+        run: |
+          export JAVA_HOME="$JAVA_HOME_21_X64" PATH="$JAVA_HOME_21_X64/bin:$PATH"
+          npm run signed-in
 
   # Runs only after "check" passes, and only for main. Google accepts this job's
   # identity token for main of this repository and nothing else, so no keys live here.
@@ -61,13 +71,17 @@ jobs:
         with:
           node-version: 22
 
+      # Installed before the job gets its Google identity, so no package's install step runs while it exists.
+      - name: Install the publishing tool
+        run: npm ci
+
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: projects/25668106993/locations/global/workloadIdentityPools/github/providers/sistema-guarda-bjj
           service_account: sg-deploy@sistema-guarda-515619.iam.gserviceaccount.com
 
       - name: Publish the site and the database rules
-        run: npx --yes firebase-tools@15.35.0 deploy --only hosting,firestore:rules --project sistema-guarda-515619 --non-interactive
+        run: npx firebase deploy --only hosting,firestore:rules --project sistema-guarda-515619 --non-interactive
 
   # A separate job on purpose: it installs a package and runs a browser, so it gets no Google identity.
   published:
@@ -84,5 +98,5 @@ jobs:
 
       - name: The published site works in a real browser
         run: |
-          npm install --no-save playwright-core@1.65.1
+          npm ci
           npm run smoke -- https://sistemaguarda.com

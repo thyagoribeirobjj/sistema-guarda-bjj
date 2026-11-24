@@ -5,6 +5,7 @@
       "firebase.json",
       "firestore.rules",
       "package.json",
+      "package-lock.json",
       "README.md",
       "CLAUDE.md",
       "AGENTS.md",
@@ -21,7 +22,20 @@
         "headers": [
           { "key": "X-Content-Type-Options", "value": "nosniff" },
           { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-          { "key": "Content-Security-Policy", "value": "frame-ancestors 'none'" }
+          { "key": "Content-Security-Policy", "value": "frame-ancestors 'none'" },
+          { "key": "X-Robots-Tag", "value": "noai, noimageai" }
+        ]
+      },
+      {
+        "source": "/data/**",
+        "headers": [
+          { "key": "X-Robots-Tag", "value": "noindex, noai, noimageai" }
+        ]
+      },
+      {
+        "source": "/admin.html",
+        "headers": [
+          { "key": "X-Robots-Tag", "value": "noindex, noai, noimageai" }
         ]
       },
       {
@@ -37,6 +51,7 @@
   },
   "emulators": {
     "firestore": { "port": 8080 },
+    "auth": { "port": 9099 },
     "ui": { "enabled": false },
     "singleProjectMode": true
   }

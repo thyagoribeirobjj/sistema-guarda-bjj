@@ -1,7 +1,10 @@
 // Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
-// the back button, the phone's bottom bar and part switcher, both languages, the admin page. A page that fails to load fails here.
-//   npm run smoke -- http://localhost:8000      (needs: npm install --no-save playwright-core)
+// previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and
+// "Clear this browser", a prepared next week taking over on its date,
+// the back button, the phone's bottom bar and part switcher, both languages, the admin page, robots.txt and the "noai"
+// tags. A page that fails to load fails here.
+//   npm run smoke -- http://localhost:8000      (needs: npm ci)
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
 
@@ -154,6 +157,8 @@ if (published) {
     await page.locator('#account').waitFor({ state: 'visible', timeout: 20000 });
     await page.locator('#account').click();
     await page.locator('#accountMenu #signIn').waitFor();
+    assert.match(await page.locator('#accountMenu .menu-hint').textContent(), /coaches see your progress/);
+    await page.locator('#accountMenu a[href="#privacy"]').waitFor();
     await page.keyboard.press('Escape');
     assert.equal(await page.locator('#account').getAttribute('aria-expanded'), 'false');
   });
@@ -264,6 +269,196 @@ await step('on a phone: Back returns to the first page, Search, closing the part
   assert.equal((await phone.locator('#bottomBar .navcount').textContent()).trim(), '1');
 });
 
+await step('next and previous move through the part; Back still closes the technique in one press', async () => {
+  const visit = await open('/#top', 'en-US');
+  await visit.locator('main .tech').first().waitFor();
+  const part = visit.url();
+  const list = await visit.locator('main [data-technique]').evaluateAll((chips) => [...new Set(chips.map((chip) => chip.dataset.technique))]);
+  const showing = () => visit.locator('#panel [data-favorite]').getAttribute('data-favorite');
+  await visit.locator('main .tech').first().click();
+  assert.equal(await showing(), list[0]);
+  assert.ok(await visit.locator('#panel [data-step="-1"]').isDisabled(), 'no previous on the first technique');
+  await visit.locator('#panel [data-step="1"]').click();
+  assert.equal(await showing(), list[1]);
+  await visit.keyboard.press('ArrowRight');
+  assert.equal(await showing(), list[2]);
+  await visit.keyboard.press('ArrowLeft');
+  assert.equal(await showing(), list[1]);
+  assert.equal((await visit.locator('#panel .step-count').textContent()).trim(), `2 / ${list.length}`);
+  await visit.goBack();
+  await visit.locator('#panel').waitFor({ state: 'hidden' });
+  assert.equal(visit.url(), part);
+});
+
+await step('on a phone: swiping an open technique moves to the next one and back, and Back closes it', async () => {
+  const phone = await open('/#top', 'en-US', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const part = phone.url();
+  await phone.locator('main .tech').first().tap();
+  const first = await phone.locator('#panel [data-favorite]').getAttribute('data-favorite');
+  // Real touches, through the browser itself, so the browser's own swipe-to-go-back gets its chance too.
+  const touchscreen = await phone.context().newCDPSession(phone);
+  const title = await phone.locator('#panelTitle').boundingBox();
+  const swipe = async (fromX, toX) => {
+    const y = title.y + title.height / 2;
+    await touchscreen.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: fromX, y }] });
+    for (let i = 1; i <= 8; i++) await touchscreen.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: fromX + ((toX - fromX) * i) / 8, y }] });
+    await touchscreen.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await phone.waitForTimeout(400);
+  };
+  const position = async () => (await phone.locator('#panel .step-count').textContent()).trim().split(' ')[0];
+  await swipe(330, 80);
+  assert.notEqual(await phone.locator('#panel [data-favorite]').getAttribute('data-favorite'), first);
+  assert.equal(await position(), '2');
+  await swipe(150, 330);
+  assert.ok(await phone.locator('#panel').isVisible(), 'swiping back keeps the technique open');
+  assert.equal(await position(), '1');
+  assert.equal(new URL(phone.url()).hash, `#t-${first}`);
+  await phone.goBack();
+  await phone.locator('#panel').waitFor({ state: 'hidden' });
+  assert.equal(phone.url(), part);
+});
+
+await step('a note on a technique stays in this browser while signed out', async () => {
+  const visit = await open('/#top', 'en-US');
+  await visit.locator('main .tech').first().click();
+  const noted = await visit.locator('#noteBox').getAttribute('data-note');
+  await visit.fill('#noteBox', 'Hips low, elbows in');
+  await visit.locator('#panelClose').click();
+  await visit.reload();
+  await visit.locator(`main [data-technique="${noted}"]`).first().click();
+  assert.equal(await visit.locator('#noteBox').inputValue(), 'Hips low, elbows in');
+  assert.match(await visit.locator('#noteStatus').textContent(), /this device/);
+});
+
+await step('a new class gets a dot on This week until it is opened; a first visit has none', async () => {
+  const visit = await open('/#curriculum', 'en-US');
+  await visit.locator('main .part-card').first().waitFor();
+  const keepWeek = (title) => visit.evaluate((value) => localStorage.setItem('sg-site-week', JSON.stringify({ at: Date.now(), value })),
+    { weekOf: '2026-11-23', title: { pt: title, en: title }, note: {}, techniques: ['top-base'] });
+  const dot = visit.locator('#sidebar a[href="#semana"] .newdot');
+  await keepWeek('Posture');
+  await visit.reload();
+  await visit.locator('#sidebar a[href="#semana"]').waitFor();
+  assert.equal(await dot.count(), 0, 'no dot on the first visit');
+  await keepWeek('Passing');
+  await visit.reload();
+  await dot.waitFor();
+  await visit.locator('#sidebar a[href="#semana"]').click();
+  await visit.locator('main .week-title', { hasText: 'Passing' }).waitFor();
+  assert.equal(await dot.count(), 0, 'the dot goes once This week is open');
+  const seen = await visit.evaluate(() => JSON.parse(localStorage.getItem('sg-settings')).seenWeek);
+  assert.match(seen, /^2026-11-23:[0-9a-z]+$/, 'kept with the settings, short enough for the account');
+  await visit.locator('#sidebar a[href="#curriculum"]').click();
+  await visit.reload();
+  await visit.locator('#sidebar a[href="#semana"]').waitFor();
+  assert.equal(await dot.count(), 0, 'and stays gone');
+});
+
+await step('a minimum belt an admin set shows on its technique, and "up to my belt" hides it; Everything shows all again', async () => {
+  const visit = await open('/#top', 'en-US');
+  await visit.locator('main .tech').first().waitFor();
+  assert.equal(await visit.locator('main .tech .belt').count(), 0, 'no minimum belt set: no belt marks');
+  assert.equal(await visit.locator('main .belt-hint, main .belt-filter').count(), 0, 'and no belt filter');
+  // What site/media would hold after an admin set two minimum belts (kept in this browser like the real copy).
+  await visit.evaluate(() => localStorage.setItem('sg-site-media', JSON.stringify({ at: Date.now(), value: {
+    techniques: { 'top-biceps-grips': { minBelt: 'blue' }, 'top-break-the-grip': { minBelt: 'white' } } } })));
+  await visit.reload();
+  await visit.locator('main .tech').first().waitFor();
+  const all = await visit.locator('main .tech').count();
+  assert.equal(await visit.locator('main .tech .belt').count(), 2, 'only the techniques with a minimum are marked');
+  assert.equal(await visit.locator('main [data-technique="top-biceps-grips"] .belt').getAttribute('aria-label'), 'Minimum belt: Blue belt');
+  assert.ok(await visit.locator('main .belt-hint').isVisible(), 'a hint to pick a belt');
+  assert.match(await visit.locator('main .belt-hint').textContent(), /menu at the top right/, 'signed out there is no photo to point at');
+  await visit.locator('main [data-technique="top-biceps-grips"]').click();
+  await visit.locator('#panel .from', { hasText: 'Minimum belt: Blue belt' }).waitFor();
+  await visit.locator('#panelClose').click();
+  await visit.locator('#account').click();
+  await visit.locator('[data-belt-choice="white"]').click();
+  assert.equal(await visit.locator('[data-belt-choice="white"]').getAttribute('aria-checked'), 'true');
+  assert.equal(await visit.locator('[data-belt-choice="blue"]').getAttribute('aria-checked'), 'false', 'a screen reader hears the others as not chosen');
+  await visit.keyboard.press('Escape');
+  await visit.locator('main [data-belt-filter="mine"][aria-pressed="true"]').waitFor();
+  assert.equal(await visit.locator('main [data-belt-filter="all"]').getAttribute('aria-pressed'), 'false');
+  assert.equal(await visit.locator('main .tech').count(), all - 1, 'only the blue-belt technique is hidden');
+  assert.equal(await visit.locator('main [data-technique="top-biceps-grips"]').count(), 0);
+  assert.equal(await visit.locator('main [data-technique="top-break-the-grip"]').count(), 1, 'a white-belt minimum stays');
+  await visit.locator('main [data-belt-filter="all"]').click();
+  assert.equal(await visit.locator('main .tech').count(), all);
+  await visit.reload();
+  await visit.locator('main [data-belt-filter="mine"][aria-pressed="true"]').waitFor();
+});
+
+await step('the privacy page opens from the sidebar and the account menu, and says coaches see progress, not notes', async () => {
+  const visit = await open('/#curriculum', 'en-US');
+  await visit.locator('#sidebar a[href="#privacy"]').click();
+  await visit.locator('main h2', { hasText: 'Privacy and your data' }).waitFor();
+  assert.equal(await visit.locator('#sidebar a[href="#privacy"]').getAttribute('aria-current'), 'page');
+  const words = await visit.locator('main').textContent();
+  assert.match(words, /coaches and the site's administrators can see/i);
+  assert.match(words, /except your notes/);
+  assert.match(words, /no tracking/i);
+  assert.match(words, /may not be collected to train AI systems/);
+  await visit.locator('#sidebar a[href="#curriculum"]').click();
+  await visit.locator('main .part-card').first().waitFor();
+  await visit.locator('#account').click();
+  await visit.locator('#accountMenu a[href="#privacy"]').click();
+  await visit.locator('main h2', { hasText: 'Privacy and your data' }).waitFor();
+  assert.equal(await visit.locator('#accountMenu').isVisible(), false);
+});
+
+await step('signed out, "Clear this browser" asks first, then clears the tree, progress, belt and notes', async () => {
+  const visit = await open('/#top', 'en-US');
+  await visit.locator('main .tech').first().click();
+  const marked = await visit.locator('#panel [data-favorite]').getAttribute('data-favorite');
+  await visit.locator('#panel [data-favorite]').click();
+  await visit.locator(`[data-progress="${marked}:done"]`).click();
+  await visit.fill('#noteBox', 'Keep the elbows in');
+  await visit.locator('#panelClose').click();
+  await visit.goto(`${address}/#privacy`);
+  await visit.locator('[data-delete-data="ask"]').click();
+  await visit.locator('[data-delete-data="no"]').click();
+  assert.equal((await visit.locator('#sidebar .navcount').textContent()).trim(), '1', 'cancel keeps everything');
+  await visit.locator('[data-delete-data="ask"]').click();
+  await visit.locator('[data-delete-data="yes"]').click();
+  await visit.locator('#deleteStatus', { hasText: 'no longer keeps' }).waitFor();
+  assert.equal((await visit.locator('#sidebar .navcount').textContent()).trim(), '');
+  await visit.reload();
+  await visit.goto(`${address}/#t-${marked}`);
+  await visit.locator('#panel #noteBox').waitFor();
+  assert.equal(await visit.locator('#noteBox').inputValue(), '');
+  assert.notEqual(await visit.locator(`[data-progress="${marked}:done"]`).getAttribute('aria-pressed'), 'true');
+});
+
+await step('a prepared next week takes over on its start date, not before', async () => {
+  const visit = await open('/#curriculum', 'en-US');
+  await visit.locator('main .part-card').first().waitFor();
+  const keepWeek = (startsOn) => visit.evaluate(([date]) => localStorage.setItem('sg-site-week', JSON.stringify({ at: Date.now(), value: {
+    weekOf: '2026-11-23', title: { pt: 'Postura', en: 'Posture' }, note: {}, techniques: ['top-base'],
+    next: { weekOf: date, title: { pt: 'Raspagens', en: 'Sweeps' }, note: {}, techniques: ['top-base'] },
+  } })), [startsOn]);
+  await keepWeek('2999-12-27');
+  await visit.goto(`${address}/#semana`);
+  await visit.reload();
+  await visit.locator('main .week-title').waitFor();
+  assert.equal((await visit.locator('main .week-title').textContent()).trim(), 'Posture', 'before the date: this week');
+  await keepWeek('2000-01-03');
+  await visit.reload();
+  await visit.locator('main .week-title').waitFor();
+  assert.equal((await visit.locator('main .week-title').textContent()).trim(), 'Sweeps', 'on or after the date: the prepared week');
+  const today = await visit.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; });
+  await keepWeek(today);
+  await visit.reload();
+  await visit.locator('main .week-title').waitFor();
+  assert.equal((await visit.locator('main .week-title').textContent()).trim(), 'Sweeps', 'on the start date itself');
+});
+
+await step('a Portuguese browser gets Portuguese, the privacy page too', async () => {
+  const visit = await open('/#privacy', 'pt-BR');
+  await visit.locator('main h2', { hasText: 'Privacidade e seus dados' }).waitFor();
+  assert.match(await visit.locator('main').textContent(), /menos as anotações/);
+  assert.equal(await visit.locator('[data-delete-data="ask"]').textContent(), 'Apagar deste navegador');
+});
+
 await step('a Portuguese browser gets Portuguese', async () => {
   const portuguese = await open('/', 'pt-BR');
   await portuguese.locator('#sidebar a').first().waitFor();
@@ -275,6 +470,29 @@ await step('a Portuguese browser gets Portuguese', async () => {
 await step('the admin page loads', async () => {
   const admin = await open('/admin.html', 'en-US');
   await admin.locator('main :is(p, form, h2)').first().waitFor();
+});
+
+await step('AI crawlers are asked to stay out; search engines may list the pages', async () => {
+  const response = await fetch(`${address}/robots.txt`);
+  assert.equal(response.status, 200, 'robots.txt is published');
+  const robots = (await response.text()).replace(/\r\n/g, '\n');
+  for (const bot of ['GPTBot', 'ClaudeBot', 'CCBot', 'Google-Extended', 'PerplexityBot', 'Bytespider', 'Applebot-Extended', 'Meta-ExternalAgent']) {
+    assert.match(robots, new RegExp(`^User-agent: ${bot}$`, 'm'), bot);
+  }
+  assert.doesNotMatch(robots, /^User-agent: (Googlebot|Bingbot|DuckDuckBot|Applebot)$/im, 'search engines are not refused');
+  assert.match(robots, /^Content-Signal: search=yes, ai-train=no, ai-input=no$/m);
+  assert.match(robots, /User-agent: \*\n(?:.*\n)*?Disallow: \/data\/\nDisallow: \/admin\.html\nAllow: \/\n/);
+  for (const [path, words] of [['/', 'noai, noimageai'], ['/admin.html', 'noindex, noai, noimageai']]) {
+    const html = await (await fetch(address + path)).text();
+    assert.ok(html.includes(`<meta name="robots" content="${words}">`), `${path} asks for ${words}`);
+  }
+  // The headers come from firebase.json, so only the published site sends them.
+  if (published) {
+    const tag = async (path) => (await fetch(address + path)).headers.get('x-robots-tag');
+    assert.equal(await tag('/'), 'noai, noimageai');
+    assert.equal(await tag('/admin.html'), 'noindex, noai, noimageai');
+    assert.equal(await tag('/data/content.json'), 'noindex, noai, noimageai');
+  }
 });
 
 await browser.close();

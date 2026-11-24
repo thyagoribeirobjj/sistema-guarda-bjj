@@ -15,8 +15,11 @@ service cloud.firestore {
     }
     function validSettings() {
       let data = request.resource.data;
-      return data.keys().hasOnly(['email', 'language', 'theme', 'favorites', 'progress', 'lesson', 'updatedAt'])
+      return data.keys().hasOnly(['email', 'name', 'language', 'theme', 'belt', 'seenWeek', 'favorites', 'progress', 'lesson', 'updatedAt'])
         && data.email == request.auth.token.email
+        && (!('name' in data) || (data.name is string && data.name.size() <= 100))
+        && (!('belt' in data) || data.belt in ['', 'white', 'blue', 'purple', 'brown', 'black'])
+        && (!('seenWeek' in data) || (data.seenWeek is string && data.seenWeek.size() <= 100))
         && data.language in ['pt', 'en']
         && data.theme in ['', 'light', 'dark', 'orange', 'gold', 'royal', 'emerald']
         && data.favorites is list && data.favorites.size() <= 500
@@ -24,6 +27,21 @@ service cloud.firestore {
         && (!('lesson' in data) || (data.lesson is map && data.lesson.keys().hasOnly(['mod', 'dur', 'items', 'game'])
           && (!('items' in data.lesson) || (data.lesson.items is list && data.lesson.items.size() <= 200))))
         && data.updatedAt == request.time;
+    }
+    // Notes are saved one technique at a time: each save names the note it changes (changed), and only that
+    // note may differ from what was stored. A note is short text.
+    function validNotes() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['notes', 'changed', 'updatedAt'])
+        && data.notes is map && data.notes.size() <= 500
+        && onlyNamedNoteChanged(data, resource == null ? {} : resource.data.notes)
+        && data.updatedAt == request.time;
+    }
+    function onlyNamedNoteChanged(data, before) {
+      let changed = data.notes.diff(before).affectedKeys();
+      return changed.size() == 0
+        || (data.changed is string && changed.hasOnly([data.changed])
+          && (!(data.changed in data.notes) || (data.notes[data.changed] is string && data.notes[data.changed].size() <= 2000)));
     }
 
     // What the whole site shows: the week (site/week), past weeks (site/weeks), each move's video and
@@ -50,10 +68,21 @@ service cloud.firestore {
       allow read: if signedIn() && email == request.auth.token.email.lower();
     }
 
-    // Each person's language, theme, favorites, progress and lesson plan. Only they can see or change them.
+    // Each person's name, language, theme, belt, the class they last looked at, favorites, progress and lesson plan. Only they can change them;
+    // coaches (admins) can see them, to follow their students.
     match /users/{uid} {
-      allow read, delete: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
+      allow delete: if isOwner(uid);
       allow create, update: if isOwner(uid) && validSettings();
+    }
+
+    // A person's notes on techniques. Only they can see them: not even coaches.
+    // They can be started only while the person's settings exist, so a device still signed in after "Delete my data"
+    // can't start them again. Ordinary saves are updates and cost no extra read.
+    match /users/{uid}/private/notes {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid) && validNotes() && exists(/databases/$(database)/documents/users/$(uid));
+      allow update: if isOwner(uid) && validNotes();
     }
   }
 }

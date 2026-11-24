@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { upToBelt } from '../js/content.js';
 
 const read = (name) => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url), 'utf8'));
 const content = read('content.json');
@@ -39,4 +40,15 @@ test('every technique has a name in Portuguese and English, and a level', () => 
     assert.ok(item.n?.pt && item.n?.en, `name: ${item.id}`);
     assert.ok(['b', 'a'].includes(item.lv), `level: ${item.id}`);
   }
+});
+
+test('"up to my belt" keeps techniques with no minimum and those at my belt or below; no belt keeps everything', () => {
+  assert.ok(upToBelt('', 'white'), 'no minimum belt: for everyone');
+  assert.ok(upToBelt(undefined, 'white'));
+  assert.ok(upToBelt('red', 'white'), 'an unknown minimum is ignored');
+  assert.ok(upToBelt('white', 'white'));
+  assert.ok(!upToBelt('blue', 'white'));
+  assert.ok(upToBelt('blue', 'purple'));
+  assert.ok(!upToBelt('black', 'brown'));
+  assert.ok(upToBelt('black', ''));
 });

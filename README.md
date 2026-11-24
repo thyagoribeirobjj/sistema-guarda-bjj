@@ -70,8 +70,11 @@ id (favorites, the week's class and the "where to go" links point at it); give n
 ## Run it on your computer
 
 ```bash
+npm ci             # once: the test tools
 npm start          # http://localhost:8000
 npm test           # needs Node 22 and Java 21
+npm run smoke -- http://localhost:8000   # uses the site in Chrome (while npm start runs)
+npm run signed-in  # uses it signed in, against local copies of sign-in and the database
 ```
 
 Locally there is no sign-in or database, so "Esta semana" and the admin page only work on the live site.

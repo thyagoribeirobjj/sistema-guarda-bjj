@@ -1,5 +1,6 @@
 import { html } from './html.js';
-import { content, findTechnique, searchTechniques } from './content.js';
+import { content, findTechnique, searchTechniques, belts, upToBelt } from './content.js';
+import { pastWeeksShown } from './week.js';
 import { settings, isFavorite, progressOf } from './settings.js';
 import { state } from './state.js';
 import { t, text } from './strings.js';
@@ -10,13 +11,29 @@ export const progressMarks = { learning: '◐', done: '✓' };
 
 // ---- pieces used by several pages ----
 
+// "White belt", "Blue belt"…
+export function beltName(belt) {
+  return t(`belt${belt.charAt(0).toUpperCase()}${belt.slice(1)}`);
+}
+
+// The minimum belt an admin set for a technique, or '' (for everyone).
+export function minBeltOf(id) {
+  const belt = state.media[id]?.minBelt;
+  return belts.includes(belt) ? belt : '';
+}
+
+// With label, the mark on a technique: its minimum belt.
+export const beltMark = (belt, label = false) => (label
+  ? html`<i class="belt" data-belt="${belt}" role="img" aria-label="${t('minBelt')}: ${beltName(belt)}" title="${t('minBelt')}: ${beltName(belt)}"></i>`
+  : html`<i class="belt" data-belt="${belt}" aria-hidden="true"></i>`);
+
 export function techniqueChip(id) {
   const place = findTechnique(id);
   if (!place) return '';
   const technique = place.technique;
   const favorite = isFavorite(id);
   const progress = progressOf(id);
-  return html`<button type="button" class="tech b${favorite ? ' on' : ''}" data-technique="${id}">${text(technique.n)}${
+  return html`<button type="button" class="tech b${favorite ? ' on' : ''}" data-technique="${id}">${text(technique.n)}${minBeltOf(id) ? html` ${beltMark(minBeltOf(id), true)}` : ''}${
     progress ? html` <span class="ptag" aria-label="${t(progress)}">${progressMarks[progress]}</span>` : ''}${
     technique.mine ? html` <span class="mine">★</span>` : ''}${
     technique.g ? html` <span class="gtag">G</span>` : ''}${
@@ -24,8 +41,9 @@ export function techniqueChip(id) {
     favorite ? html` <span class="heart" aria-label="${t('inTree')}">♥</span>` : ''}</button>`;
 }
 
-function legend() {
-  return html`<div class="legend"><span><b class="mine">★</b> ${t('mine')}</span><span><b class="gtag">G</b> ${t('bookTag')}</span><span><b class="vtag">▶</b> ${t('video')}</span><span><b class="heart">♥</b> ${t('inTree')}</span><span><b class="ptag">◐</b> ${t('learning')}</span><span><b class="ptag">✓</b> ${t('done')}</span></div>`;
+function legend(withBelts) {
+  return html`<div class="legend"><span><b class="mine">★</b> ${t('mine')}</span><span><b class="gtag">G</b> ${t('bookTag')}</span><span><b class="vtag">▶</b> ${t('video')}</span><span><b class="heart">♥</b> ${t('inTree')}</span><span><b class="ptag">◐</b> ${t('learning')}</span><span><b class="ptag">✓</b> ${t('done')}</span>${
+    withBelts ? html`<span>${beltMark('white')}${beltMark('blue')} ${t('minBelt')}</span>` : ''}</div>`;
 }
 
 // eyebrow: a small line above the title, such as "Coach" on the coach's pages.
@@ -58,14 +76,34 @@ export function curriculumView() {
   return html`${intro(t('curriculum'), t('curriculumLead'))}<div class="grid parts">${cards}</div>`;
 }
 
+// With a belt picked, a part shows "up to my belt" unless the student asks for everything.
+function beltFilterOn() {
+  return Boolean(settings.belt) && state.beltFilter !== 'all';
+}
+
+function beltFilter() {
+  if (!settings.belt) return html`<p class="note belt-hint">${t('pickBeltHint')}</p>`;
+  const on = beltFilterOn();
+  return html`<div class="filters belt-filter" role="group" aria-label="${t('myBelt')}"><button type="button" class="chipbtn" data-belt-filter="mine" aria-pressed="${on}">${t('upToMyBelt')} (${beltName(settings.belt)})</button><button type="button" class="chipbtn" data-belt-filter="all" aria-pressed="${!on}">${t('everything')}</button></div>`;
+}
+
+function stageTechniques(stage) {
+  const ids = stage.items.map((technique) => technique.id);
+  const shown = beltFilterOn() ? ids.filter((id) => upToBelt(minBeltOf(id), settings.belt)) : ids;
+  if (!shown.length) return html`<p class="note">${t('nothingAtMyBelt')}</p>`;
+  return html`<div class="techs">${shown.map(techniqueChip)}</div>`;
+}
+
 export function moduleView(key) {
   const module = content.modules[key];
-  const stages = module.stages.map((stage, i) => stageBlock(i + 1, text(stage.name), text(stage.goal), html`<div class="techs">${stage.items.map((technique) => techniqueChip(technique.id))}</div>`));
+  const stages = module.stages.map((stage, i) => stageBlock(i + 1, text(stage.name), text(stage.goal), stageTechniques(stage)));
   const games = module.games?.length
     ? html`<section class="games"><h3 class="sect-title">${t('games')}</h3><p class="sect-sub">${t('gamesLead')}</p><div class="grid">${module.games.map(gameCard)}</div></section>`
     : '';
   const ids = techniqueIds(module);
-  return html`${intro(text(module.title), `${text(module.intro)} ${t('tapHint')}`, progressBar(ids))}${legend()}<div class="spine">${stages}</div>${games}`;
+  // The belt filter and the legend's belt mark only where an admin set a minimum belt on something in this part.
+  const withBelts = ids.some(minBeltOf);
+  return html`${intro(text(module.title), `${text(module.intro)} ${t('tapHint')}`, progressBar(ids))}${withBelts ? beltFilter() : ''}${legend(withBelts)}<div class="spine">${stages}</div>${games}`;
 }
 
 // "Got it: 3 of 24", shown once the visitor has marked something in this part.
@@ -95,7 +133,7 @@ function weekDate(weekOf) {
 function weekCard(week, past = false) {
   const date = weekDate(week.weekOf);
   const title = past ? html`<h4 class="week-title">${text(week.title)}</h4>` : html`<h3 class="week-title">${text(week.title)}</h3>`;
-  return html`<section class="week">${date ? html`<p class="week-date">${date}</p>` : ''}${title}
+  return html`<section class="week" data-list>${date ? html`<p class="week-date">${date}</p>` : ''}${title}
     <div class="techs">${(week.techniques || []).map(techniqueChip)}</div>
     ${text(week.note) ? html`<p class="note">${text(week.note)}</p>` : ''}</section>`;
 }
@@ -109,7 +147,7 @@ function pastWeeks() {
     return html`<div class="actions"><button type="button" class="chipbtn" data-past-weeks>${t('pastWeeks')}</button>${
       state.pastWeeksStatus === 'failed' ? html`<span class="status" role="status">${t('pastWeeksFailed')}</span>` : ''}</div>`;
   }
-  const weeks = state.pastWeeks.filter((week) => week.weekOf !== state.week.weekOf);
+  const weeks = pastWeeksShown(state.pastWeeks, state.week, state.weekBefore);
   return html`<h3 class="sect-title">${t('pastWeeks')}</h3>${
     weeks.length ? html`<div class="results">${weeks.map((week) => weekCard(week, true))}</div>` : html`<p class="note">${t('noPastWeeks')}</p>`}`;
 }

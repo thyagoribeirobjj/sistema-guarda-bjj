@@ -42,6 +42,15 @@ export function findTechnique(id) {
   return { ...place, module, stage: module.stages[place.stageIndex] };
 }
 
+// Belts in order. A technique has a minimum belt only where an admin set one (site/media, techniques.<id>.minBelt);
+// without one it is for everyone.
+export const belts = ['white', 'blue', 'purple', 'brown', 'black'];
+
+// "Up to my belt": techniques with no minimum, and those whose minimum is my belt or below. No belt keeps everything.
+export function upToBelt(minBelt, belt) {
+  return !belts.includes(belt) || !belts.includes(minBelt) || belts.indexOf(minBelt) <= belts.indexOf(belt);
+}
+
 export function isModule(key) {
   return content.order.includes(key);
 }

@@ -1,17 +1,20 @@
 import { loadContent, findTechnique, isModule } from './content.js';
-import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadPastWeeks, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram } from './firebase.js';
+import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadPastWeeks, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram, saveMinBelt } from './firebase.js';
 import { settings, applyTheme, useAccount, changeSettings, toggleFavorite, markProgress } from './settings.js';
 import { state, readHash } from './state.js';
 import { t, text } from './strings.js';
 import { moduleView, curriculumView, weekView, treeView, methodView, searchView } from './views.js';
 import { accountButton, accountMenu } from './account.js';
-import { bottomBar, sidebar, partSwitcher, toggleParts, openMenu, closeMenus, openedMenu, moveInMenu } from './nav.js';
-import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram } from './panel.js';
+import { bottomBar, sidebar, partSwitcher, toggleParts, openMenu, closeMenus, openedMenu, moveInMenu, noteWeekSeen } from './nav.js';
+import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram, stepPanel, techniquesIn, typing } from './panel.js';
+import { changeNote, sendWaiting } from './notes.js';
 import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
+import { privacyView, privacyActions } from './privacy.js';
+import { weekOn, localDate } from './week.js';
 
 const $ = (id) => document.getElementById(id);
-const pages = { curriculum: curriculumView, semana: weekView, meu: treeView, lesson: lessonView, method: methodView };
+const pages = { curriculum: curriculumView, semana: weekView, meu: treeView, lesson: lessonView, method: methodView, privacy: privacyView };
 
 function isPage(view) {
   return isModule(view) || (view in pages && (view !== 'semana' || state.week));
@@ -46,6 +49,7 @@ function mainView() {
 }
 
 function render() {
+  noteWeekSeen();
   renderHeader();
   renderNavigation();
   $('main').innerHTML = mainView();
@@ -167,7 +171,14 @@ const clickActions = [
   }],
   ['[data-past-weeks]', showPastWeeks],
   ['[data-share]', (el) => shareTechnique(el.dataset.share)],
-  ['[data-technique]', (el) => openPanel(el.dataset.technique)],
+  ['[data-step]', (el) => stepPanel(Number(el.dataset.step))],
+  // A technique opened from the page moves, with next and previous, through the others there (or in its week).
+  ['[data-technique]', (el) => openPanel(el.dataset.technique, el.closest('#panel') ? {} : { list: techniquesIn(el.closest('[data-list]') || $('main')) })],
+  ['[data-belt-filter]', (el) => {
+    state.beltFilter = el.dataset.beltFilter;
+    render();
+    $('main').querySelector(`[data-belt-filter="${el.dataset.beltFilter}"]`)?.focus();
+  }],
   ['[role="menu"] a', () => { closeMenus(); if (state.search) search(''); }],
   ['nav a, .results a, a.part-card', () => { if (state.search) search(''); }],
   ['[data-search-button]', () => { window.scrollTo(0, 0); $('search').focus(); }],
@@ -189,9 +200,19 @@ const clickActions = [
     renderHeader();
     $('accountMenu').querySelector(`[data-theme-choice="${el.dataset.themeChoice}"]`)?.focus();
   }],
+  ['[data-belt-choice]', (el) => {
+    const belt = el.dataset.beltChoice;
+    changeSettings({ belt: settings.belt === belt ? '' : belt });
+    state.beltFilter = '';
+    render();
+    redrawPanel('#panelClose');
+    if (!$('accountMenu').hidden) $('accountMenu').querySelector(`[data-belt-choice="${belt}"]`)?.focus();
+  }],
   ['[aria-haspopup="menu"]', (el) => (el.getAttribute('aria-expanded') === 'true' ? closeMenus() : openMenu(el))],
   ['#signIn', () => { closeMenus(); signIn().catch(() => alert(t('signInFailed'))); }],
-  ['#signOut', () => { closeMenus(true); signOut(); }],
+  // A note typed just now is saved to the account before signing out clears it from this device.
+  ['#signOut', async () => { closeMenus(true); await sendWaiting(); signOut(); }],
+  ...privacyActions(() => render()),
   ['#copyPlan', () => navigator.clipboard.writeText(planText()).then(
     () => { $('copyStatus').textContent = t('copied'); },
     () => { $('copyStatus').textContent = t('copyFailed'); },
@@ -227,6 +248,11 @@ document.addEventListener('change', (event) => {
     changeMedia(id, 'diagram', async () => { await saveDiagram(id, await shrinkImage(event.target.files[0])); return true; });
     return;
   }
+  const minBeltId = event.target.dataset?.minBelt;
+  if (minBeltId) {
+    changeMedia(minBeltId, 'minBelt', async () => { await saveMinBelt(minBeltId, event.target.value); return event.target.value || null; });
+    return;
+  }
   const redraw = changeLesson(event.target);
   if (redraw === true) render();
   else if (redraw === false) redrawPlan();
@@ -234,6 +260,12 @@ document.addEventListener('change', (event) => {
 
 document.addEventListener('input', (event) => {
   if (event.target.id === 'search') search(event.target.value);
+  if (event.target.dataset.note) changeNote(event.target.dataset.note, event.target.value);
+});
+
+document.addEventListener('note-not-saved', (event) => {
+  const box = $('noteBox');
+  if (box?.dataset.note === event.detail) $('noteStatus').textContent = t('noteNotSaved');
 });
 
 document.addEventListener('keydown', (event) => {
@@ -241,6 +273,11 @@ document.addEventListener('keydown', (event) => {
   if (menuOpen && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
     event.preventDefault();
     moveInMenu(event.key === 'ArrowDown' ? 1 : -1);
+    return;
+  }
+  if (!menuOpen && panelOpen() && (event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !typing(event.target)) {
+    event.preventDefault();
+    stepPanel(event.key === 'ArrowRight' ? 1 : -1);
     return;
   }
   if (event.key !== 'Escape') return;
@@ -267,6 +304,11 @@ async function accountChanged(user) {
   redrawPanel();
 }
 
+// site/week as stored: a prepared next week becomes this week on its start date, by this browser's own date.
+function useWeek(stored) {
+  ({ week: state.week, previous: state.weekBefore } = weekOn(stored, localDate()));
+}
+
 async function start() {
   applyTheme();
   try {
@@ -276,7 +318,7 @@ async function start() {
     throw error;
   }
   // The last copy this browser saw shows at once; a newer one replaces it below.
-  state.week = lastSeen('week');
+  useWeek(lastSeen('week'));
   state.media = lastSeen('media')?.techniques || {};
   route();
 
@@ -284,7 +326,9 @@ async function start() {
   if (!state.online) return;
   renderHeader();
   onAccountChange(accountChanged);
-  [state.week, state.media] = await Promise.all([loadWeek().catch(() => null), loadMedia()]);
+  const [week, media] = await Promise.all([loadWeek().catch(() => null), loadMedia()]);
+  useWeek(week);
+  state.media = media;
   if (state.week && (!location.hash || location.hash === '#semana')) state.view = 'semana';
   if (!isPage(state.view)) state.view = 'curriculum';
   render();

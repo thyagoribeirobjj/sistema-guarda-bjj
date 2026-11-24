@@ -13,6 +13,13 @@ function show(value) {
   return String(value).replace(/[&<>"']/g, (c) => escapes[c]);
 }
 
+// false shows nothing (${open && html`…`}), except as a whole attribute value: aria-pressed="${on}" must say "false".
+const attributeValue = /="$/;
+
 export function html(strings, ...values) {
-  return new Html(strings.reduce((out, part, i) => out + part + (i < values.length ? show(values[i]) : ''), ''));
+  return new Html(strings.reduce((out, part, i) => {
+    if (i >= values.length) return out + part;
+    const value = values[i] === false && attributeValue.test(part) && strings[i + 1].startsWith('"') ? 'false' : values[i];
+    return out + part + show(value);
+  }, ''));
 }
