@@ -21,30 +21,32 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/nav.css">
 <script>try { var saved = JSON.parse(localStorage.getItem('sg-settings')); if (saved && saved.theme) document.documentElement.dataset.theme = saved.theme; } catch (e) {}</script>
 <script type="module" src="js/app.js"></script>
 </head>
 <body>
-<div class="top">
-<header>
-  <div class="wrap">
+<header class="site-header">
+  <div class="wrap wide">
     <div class="bar">
       <div class="brand"><img class="logo" src="img/logo.svg" alt="" width="30" height="30"><h1 id="appTitle">Sistema Guarda</h1></div>
       <input type="search" class="search" id="search" placeholder="Buscar técnica" aria-label="Buscar técnica" autocomplete="off" enterkeyhint="search">
       <div class="tools">
         <div class="lang" role="group" aria-label="Idioma / Language"><button type="button" data-lang="pt">PT</button><button type="button" data-lang="en">EN</button></div>
-        <span id="headerTheme"></span>
         <div class="account-wrap">
-          <button type="button" class="avatar" id="account" aria-haspopup="menu" aria-expanded="false" aria-controls="accountMenu" hidden></button>
+          <button type="button" class="avatar" id="account" aria-haspopup="menu" aria-expanded="false" aria-controls="accountMenu" aria-label="Menu"></button>
           <div class="menu" id="accountMenu" role="menu" aria-labelledby="account" hidden></div>
         </div>
       </div>
     </div>
   </div>
 </header>
-<div class="tabs"><div class="wrap"><nav id="nav" aria-label="Módulos"></nav></div></div>
+<nav class="switcher" id="switcher" hidden></nav>
+<div class="layout wrap wide">
+  <nav class="sidebar" id="sidebar" aria-label="Navegação"></nav>
+  <main id="main"></main>
 </div>
-<main class="wrap" id="main"></main>
+<nav class="bottombar" id="bottomBar" aria-label="Navegação"></nav>
 <div class="scrim" id="scrim" hidden></div>
 <aside class="panel" id="panel" hidden role="dialog" aria-modal="true" aria-labelledby="panelTitle"></aside>
 </body>

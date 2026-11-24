@@ -2,6 +2,7 @@ import { html } from './html.js';
 import { content } from './content.js';
 import { settings, changeSettings } from './settings.js';
 import { t, text } from './strings.js';
+import { intro } from './views.js';
 
 // The coach's lesson builder: any part of the fight, one level for everyone. The choices are saved with the
 // person's other settings (settings.lesson), in this browser and in their account once signed in.
@@ -47,7 +48,7 @@ export function lessonView() {
     const key = `${si}-${ii}`;
     return html`<label><input type="checkbox" value="${key}" ${pick.items.includes(key) ? 'checked' : ''}><i class="dot b"></i>${text(item.n)}</label>`;
   })}`);
-  return html`<div class="intro"><div><h2>${t('lesson')}</h2><p>${t('lessonIntro')}</p></div></div>
+  return html`${intro(t('lesson'), t('lessonIntro'), '', t('coach'))}
     <div class="builder"><div class="card">
       <div class="field"><label for="selMod">${t('partOfFight')}</label><select id="selMod">${content.order.map((key) => option(key, text(content.modules[key].title), pick.mod === key))}</select></div>
       <div class="field"><label for="selDur">${t('length')}</label><select id="selDur">${option('60', '60 min', pick.dur === '60')}${option('90', '90 min', pick.dur === '90')}</select></div>

@@ -1,66 +1,53 @@
-import { content, loadContent, findTechnique, isModule } from './content.js';
+import { loadContent, findTechnique, isModule } from './content.js';
 import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadPastWeeks, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram } from './firebase.js';
-import { settings, themes, applyTheme, currentTheme, useAccount, changeSettings, toggleFavorite, markProgress } from './settings.js';
+import { settings, applyTheme, useAccount, changeSettings, toggleFavorite, markProgress } from './settings.js';
 import { state, readHash } from './state.js';
 import { t, text } from './strings.js';
-import { navigation, moduleView, weekView, treeView, methodView, searchView } from './views.js';
-import { themeButton, accountButton, accountMenu, openAccountMenu, closeAccountMenu, moveInMenu } from './account.js';
+import { moduleView, curriculumView, weekView, treeView, methodView, searchView } from './views.js';
+import { accountButton, accountMenu } from './account.js';
+import { bottomBar, sidebar, partSwitcher, toggleParts, openMenu, closeMenus, openedMenu, moveInMenu } from './nav.js';
 import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram } from './panel.js';
 import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
 
 const $ = (id) => document.getElementById(id);
-const tabs = { semana: weekView, meu: treeView, lesson: lessonView, method: methodView };
+const pages = { curriculum: curriculumView, semana: weekView, meu: treeView, lesson: lessonView, method: methodView };
 
-function isTab(view) {
-  return isModule(view) || (view in tabs && (view !== 'semana' || state.week));
+function isPage(view) {
+  return isModule(view) || (view in pages && (view !== 'semana' || state.week));
 }
 
 function renderHeader() {
   document.documentElement.lang = settings.language === 'pt' ? 'pt-BR' : 'en';
   $('appTitle').textContent = t('title');
   document.querySelectorAll('[data-lang]').forEach((button) => button.setAttribute('aria-pressed', button.dataset.lang === settings.language));
-  $('headerTheme').innerHTML = state.online ? '' : themeButton();
-  $('headerTheme').hidden = state.online;
-  $('account').parentElement.hidden = !state.online;
-  $('account').hidden = !state.online;
   $('account').innerHTML = accountButton();
   const who = state.account ? state.account.displayName || state.account.email : t('signIn');
-  $('account').setAttribute('aria-label', `${t('account')}: ${who}`);
+  $('account').setAttribute('aria-label', state.online ? `${t('account')}: ${who}` : t('menu'));
   $('account').title = $('account').getAttribute('aria-label');
   $('accountMenu').innerHTML = accountMenu();
   $('search').placeholder = t('search');
   $('search').setAttribute('aria-label', t('search'));
-  $('nav').setAttribute('aria-label', t('modules'));
-  $('nav').innerHTML = navigation();
-  showCurrentTab();
 }
 
-// The tab strip scrolls sideways on phones: keep the current tab in view and fade the edges that hide more tabs.
-function showCurrentTab() {
-  const nav = $('nav');
-  const current = nav.querySelector('[aria-current]');
-  if (current) {
-    const navBox = nav.getBoundingClientRect();
-    const tabBox = current.getBoundingClientRect();
-    if (tabBox.left < navBox.left || tabBox.right > navBox.right) nav.scrollLeft += tabBox.left - navBox.left - (navBox.width - tabBox.width) / 2;
-  }
-  fadeHiddenTabs();
-}
-
-function fadeHiddenTabs() {
-  const nav = $('nav');
-  nav.classList.toggle('more-before', nav.scrollLeft > 2);
-  nav.classList.toggle('more-after', nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 2);
+function renderNavigation() {
+  $('sidebar').setAttribute('aria-label', t('navigation'));
+  $('sidebar').innerHTML = sidebar();
+  $('bottomBar').setAttribute('aria-label', t('navigation'));
+  $('bottomBar').innerHTML = bottomBar();
+  $('switcher').setAttribute('aria-label', t('partsOfFight'));
+  $('switcher').innerHTML = partSwitcher();
+  $('switcher').hidden = !$('switcher').innerHTML;
 }
 
 function mainView() {
   if (state.search) return searchView();
-  return isModule(state.view) ? moduleView(state.view) : tabs[state.view]();
+  return isModule(state.view) ? moduleView(state.view) : pages[state.view]();
 }
 
 function render() {
   renderHeader();
+  renderNavigation();
   $('main').innerHTML = mainView();
 }
 
@@ -75,25 +62,26 @@ function route() {
   const target = readHash();
   const place = target.technique && findTechnique(target.technique);
   if (place) {
-    if (!isModule(state.view) && state.view !== 'meu' && state.view !== 'semana') state.view = place.moduleKey;
+    // A shared link to a technique: its part of the fight shows behind it.
+    if (!isPage(state.view)) state.view = place.moduleKey;
     render();
     if (state.panel.current !== target.technique) openPanel(target.technique, { remember: false });
     return;
   }
-  // The back button, or a link to a tab, closes an open technique. History has already moved, so don't move it again.
+  // The back button, or a link to a page, closes an open technique. History has already moved, so don't move it again.
   if (panelOpen()) closePanel({ fromHistory: true });
-  if (isTab(target.view)) {
-    const newTab = target.view !== state.view;
+  if (isPage(target.view)) {
+    const newPage = target.view !== state.view;
     state.view = target.view;
-    if (newTab) {
+    if (newPage) {
       state.search = '';
       $('search').value = '';
     }
     render();
-    if (newTab) window.scrollTo(0, 0);
+    if (newPage) window.scrollTo(0, 0);
     return;
   }
-  if (!isTab(state.view)) state.view = state.week ? 'semana' : content.order[0];
+  if (!isPage(state.view)) state.view = state.week ? 'semana' : 'curriculum';
   render();
 }
 
@@ -178,7 +166,10 @@ const clickActions = [
   ['[data-past-weeks]', showPastWeeks],
   ['[data-share]', (el) => shareTechnique(el.dataset.share)],
   ['[data-technique]', (el) => openPanel(el.dataset.technique)],
-  ['nav a, .results a', () => { if (state.search) search(''); }],
+  ['[role="menu"] a', () => { closeMenus(); if (state.search) search(''); }],
+  ['nav a, .results a, a.part-card', () => { if (state.search) search(''); }],
+  ['[data-search-button]', () => { window.scrollTo(0, 0); $('search').focus(); }],
+  ['#partsToggle', () => { toggleParts(); renderNavigation(); $('partsToggle').focus(); }],
   ['[data-play]', (el) => { el.outerHTML = videoPlayer(el.dataset.play); }],
   ['[data-save-video]', (el) => changeMedia(el.dataset.saveVideo, 'video', async () => {
     const videoId = youtubeId($('videoLink').value);
@@ -190,21 +181,15 @@ const clickActions = [
   ['[data-remove-diagram]', (el) => changeMedia(el.dataset.removeDiagram, 'diagram', async () => { await removeDiagram(el.dataset.removeDiagram); return null; })],
   ['#panelBack', panelBack],
   ['#panelClose, #scrim', () => closePanel()],
-  ['#theme', () => {
-    changeSettings({ theme: themes[(themes.indexOf(currentTheme()) + 1) % themes.length] });
-    renderHeader();
-    $('theme').focus();
-  }],
   // The menu stays open so several themes can be tried.
   ['[data-theme-choice]', (el) => {
     changeSettings({ theme: el.dataset.themeChoice });
     renderHeader();
     $('accountMenu').querySelector(`[data-theme-choice="${el.dataset.themeChoice}"]`)?.focus();
   }],
-  ['#account', () => ($('accountMenu').hidden ? openAccountMenu() : closeAccountMenu())],
-  ['#signIn', () => { closeAccountMenu(); signIn().catch(() => alert(t('signInFailed'))); }],
-  ['#signOut', () => { closeAccountMenu(true); signOut(); }],
-  ['#adminLink', () => closeAccountMenu()],
+  ['[aria-haspopup="menu"]', (el) => (el.getAttribute('aria-expanded') === 'true' ? closeMenus() : openMenu(el))],
+  ['#signIn', () => { closeMenus(); signIn().catch(() => alert(t('signInFailed'))); }],
+  ['#signOut', () => { closeMenus(true); signOut(); }],
   ['#copyPlan', () => navigator.clipboard.writeText(planText()).then(
     () => { $('copyStatus').textContent = t('copied'); },
     () => { $('copyStatus').textContent = t('copyFailed'); },
@@ -212,7 +197,7 @@ const clickActions = [
 ];
 
 document.addEventListener('click', (event) => {
-  if (!event.target.closest('#accountMenu, #account')) closeAccountMenu();
+  if (!event.target.closest('[role="menu"], [aria-haspopup="menu"]')) closeMenus();
   for (const [selector, action] of clickActions) {
     const element = event.target.closest(selector);
     if (element) { action(element); return; }
@@ -235,28 +220,27 @@ document.addEventListener('input', (event) => {
 });
 
 document.addEventListener('keydown', (event) => {
-  const menuOpen = !$('accountMenu').hidden;
+  const menuOpen = Boolean(openedMenu());
   if (menuOpen && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
     event.preventDefault();
     moveInMenu(event.key === 'ArrowDown' ? 1 : -1);
     return;
   }
   if (event.key !== 'Escape') return;
-  if (menuOpen) closeAccountMenu(true);
+  if (menuOpen) closeMenus(true);
   else if (panelOpen()) closePanel();
   else if (state.search) search('');
 });
 
-// Tabbing out of the account menu closes it.
-$('accountMenu').addEventListener('focusout', (event) => {
+// Tabbing out of a menu closes it.
+document.addEventListener('focusout', (event) => {
+  const menu = event.target.closest?.('[role="menu"]');
   const to = event.relatedTarget;
-  if (to && !$('accountMenu').contains(to) && to !== $('account')) closeAccountMenu();
+  if (menu && to && !menu.contains(to) && to.getAttribute('aria-controls') !== menu.id) closeMenus();
 });
 window.addEventListener('hashchange', route);
 // A Google photo that doesn't load leaves the letter under it showing.
 document.addEventListener('error', (event) => { if (event.target.matches?.('#account img')) event.target.remove(); }, true);
-$('nav').addEventListener('scroll', fadeHiddenTabs, { passive: true });
-window.addEventListener('resize', fadeHiddenTabs);
 
 async function accountChanged(user) {
   state.account = user;
@@ -285,7 +269,7 @@ async function start() {
   onAccountChange(accountChanged);
   [state.week, state.media] = await Promise.all([loadWeek().catch(() => null), loadMedia()]);
   if (state.week && (!location.hash || location.hash === '#semana')) state.view = 'semana';
-  if (!isTab(state.view)) state.view = content.order[0];
+  if (!isPage(state.view)) state.view = 'curriculum';
   render();
   if (panelOpen()) redrawPanel('#panelClose');
 }

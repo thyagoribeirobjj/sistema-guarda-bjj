@@ -14,7 +14,7 @@ export const state = {
   panel: { current: null, history: [] },
 };
 
-// Tabs: #fund, #top… (modules), #semana, #meu (my tree), #lesson, #method. A technique: #t-<id>.
+// Pages: #curriculum, #fund, #top… (the parts of the fight), #semana, #meu (my tree), #lesson, #method. A technique: #t-<id>.
 export function readHash() {
   const hash = location.hash.replace(/^#/, '');
   const technique = /^t-(.+)$/.exec(hash);

@@ -41,13 +41,15 @@ never "fix" a conflict by replacing a whole file with your copy.
 
 | Path | What it is |
 |---|---|
-| `index.html`, `admin.html` | Markup only, plus the icon and share-preview tags. The header is the logo, title, search, PT/EN and the account button; the tab strip sits below it. On phones only the tab strip stays at the top. |
+| `index.html`, `admin.html` | Markup only, plus the icon and share-preview tags. The header is the logo, title, search, PT/EN and the account button. `index.html` has empty slots the navigation fills (`#sidebar`, `#bottomBar`, `#switcher`); `admin.html` keeps its own two-link tab strip ("← Site", "Admin"). |
 | `img/` | `logo.svg` (the logo and browser icon), `icon-180.png` (phone home screen), `share.png` (the 1200×630 picture shown when a link is shared). |
 | `css/theme.css` | Every color and font: dark (the default), light, and four more themes people pick in the account menu. A new theme is one block here plus its name in `themes` (`js/settings.js`), its label in `js/strings.js` and its name in `firestore.rules`. **The only file with color values**, apart from the logo and the `theme-color` tag's first-paint default (`applyTheme()` sets it from `--surface`). |
-| `css/app.css` | Layout and components. Uses the theme's variables (`var(--ink)`) only. On touch screens (`pointer: coarse`) everything people tap is at least 44px tall, and inputs are 16px so phones don't zoom in. |
-| `js/app.js` | Starts the site: header, search box, tabs, links (`#top`, `#t-top-base`), clicks, sign-in. |
-| `js/account.js` | The header's account button (`#account`, the person's Google photo) and its menu (`#accountMenu`): sign in or out, Admin for admins, light/dark (`#theme`). Without Firebase (a local preview) there is no account button and `#theme` sits in the header. |
-| `js/views.js` | The tabs: this week (and past weeks), each module, my tree (favorites), method; and the search results. |
+| `css/app.css` | Components (and the admin page's tab strip). Uses the theme's variables (`var(--ink)`) only. On touch screens (`pointer: coarse`) everything people tap is at least 44px tall, and inputs are 16px so phones don't zoom in. |
+| `css/nav.css` | The site's navigation and page layout (`index.html` only): the bottom bar and part switcher under 900px, the sidebar from 900px. |
+| `js/app.js` | Starts the site: header, search box, navigation, links (`#curriculum`, `#top`, `#t-top-base`), clicks, sign-in. |
+| `js/nav.js` | The navigation, described once (see Navigation below), and the menus (the account menu and the part switcher). |
+| `js/account.js` | The header's account button (`#account`, the person's Google photo) and its menu (`#accountMenu`): sign in or out, the Coach section, the theme picker. The button always shows; without Firebase (a local preview) the menu has no sign-in. |
+| `js/views.js` | The pages: Curriculum home, this week (and past weeks), each part of the fight, my tree (favorites), method; and the search results. |
 | `js/panel.js` | The technique panel: details, share, video, diagram, "where to go" links, next stage; admins attach media here. Opening it adds one step to the browser history, so a phone's back button closes it. |
 | `js/media.js` | YouTube links and player, and shrinking a diagram before it's saved. |
 | `js/lesson.js` | The lesson builder. Its choices are saved in `settings.lesson`. |
@@ -55,13 +57,31 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/strings.js` | Every button and label, in PT and EN. |
 | `js/settings.js` | Each person's language, theme, favorites, progress ("Drilling" / "Got it" per move) and lesson builder choices. |
 | `js/firebase.js` | Sign-in and **every** database call. Nothing else talks to Firebase. |
-| `js/content.js`, `js/state.js` | Loads the curriculum and searches it (names first, then descriptions, key points, drills and steps); tracks which tab and technique are showing. |
+| `js/content.js`, `js/state.js` | Loads the curriculum and searches it (names first, then descriptions, key points, drills and steps); tracks which page and technique are showing. |
 | `data/content.json` | The guard modules (top, bottom), drills and the method. |
-| `data/curriculum.json` | The other parts of the fight, the tab order (`moduleOrder`) and the "where to go" links (`nx`). |
+| `data/curriculum.json` | The other parts of the fight, their order (`moduleOrder`) and the "where to go" links (`nx`). |
 | `firestore.rules` | Who can read and change what in the database. |
 | `js/translation.js` | Decides, on the admin page, which fields to translate, keep or ask about (see Translation). |
 | `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `rules.test.js` checks the database rules; `smoke.mjs` uses the site in a real browser; `nightly.mjs` checks the published site every night. |
 | `docs/translator.gs` | A copy of the translator that runs in the site's Google account (see Translation). |
+
+## Navigation
+
+Four groups: **This week** (`#semana`, only when there is a week), **Curriculum** (`#curriculum`, a card per part of
+the fight, and each part: `#fund`, `#top`…), **My tree** (`#meu`) and **Coach** (`#lesson`, `#method`, and Admin for
+admins). Coach tools are open to everyone; they just live in a quieter place. Without a week the site opens on Curriculum.
+
+- **One description.** `students` and `coach` in `js/nav.js` list the entries. The bottom bar, the sidebar and the
+  account menu's Coach section are all drawn from them; never write a navigation link by hand.
+- **Phones and tablets (under 900px):** a bar fixed to the bottom (This week, Curriculum, My tree, Search). Inside a
+  part, a slim bar stuck to the top: "‹ Curriculum" and the part's name, which opens a menu of every part. Coach tools
+  are in the account menu. `main` has bottom padding so nothing sits under the bar; the technique panel covers it.
+- **Desktop (900px and wider):** a sidebar left of the page, the parts listed under Curriculum (folding them away is
+  remembered in this browser, `sg-nav-parts`), Coach at the bottom. The account menu has the Coach section too.
+- **A new part of the fight** is only content (see below): Curriculum, the sidebar and the switcher list `content.order`.
+- **A new coach tool:** one entry in `coach` (`js/nav.js`), its page function in `pages` (`js/app.js`), its label in
+  `js/strings.js`, and `intro(title, lead, '', t('coach'))` so the page shows the "Coach" line above its title.
+- Every page has its own link (`#<view>`); old links keep working, so never rename a view.
 
 ## Text
 
@@ -74,17 +94,18 @@ never "fix" a conflict by replacing a whole file with your copy.
 - Every technique and game has an `id` made from its module and English name: `top-standing-pass`,
   `top-game-posture-keeper`. **Never change an existing id.** People's favorites, the week's lesson and the
   "where to go" links point at ids, so a changed id silently breaks them. A new technique gets a new, unique id.
-- A technique that belongs in two tabs is written once; the other tab lists `{ "ref": "<id>" }` in its place.
+- A technique that belongs in two parts is written once; the other part lists `{ "ref": "<id>" }` in its place.
 - "Where to go" links live in `curriculum.json` → `nx`: `"<from id>": [["<to id>", "next" | "chain" | "combo" | "counter"]]`.
-- A new tab is a new module in either file, added to `moduleOrder`.
+- A new part of the fight is a new module in either file, added to `moduleOrder`. It shows up in Curriculum, the
+  sidebar and the part switcher by itself.
 - Keep the files formatted with 2-space indents, and never paste data into the HTML. `npm test` checks ids,
-  references, links, tab order, names and levels.
+  references, links, the order of the parts, names and levels.
 
 ## The database (Firestore)
 
 | Document | Holds | Who can read | Who can change |
 |---|---|---|---|
-| `site/week` | This week's class (the "Esta semana" tab): `weekOf`, `title`, `note`, `techniques` (ids), `from` (the language the admin wrote in) and `handFixed` (`'title'` and/or `'note'`: translations the admin corrected by hand; missing means none) | everyone | admins |
+| `site/week` | This week's class (the "Esta semana" page): `weekOf`, `title`, `note`, `techniques` (ids), `from` (the language the admin wrote in) and `handFixed` (`'title'` and/or `'note'`: translations the admin corrected by hand; missing means none) | everyone | admins |
 | `site/weeks` | Past weeks, newest first, at most 52: `weeks: [{ weekOf, title, note, techniques }]`. Saving a new week on the admin page adds the previous one. Read only when someone taps "Past weeks". | everyone | admins |
 | `admins/{email}` | One document per admin, named by their lowercase email | that person | nobody from the site; add in the Firebase console |
 | `site/media` | Each move's video (a YouTube id) and whether it has a diagram: `techniques.<id>.video`, `.diagram` | everyone | admins |
@@ -121,9 +142,10 @@ never "fix" a conflict by replacing a whole file with your copy.
 ## Checking and publishing
 
 - `npm test` runs every test (it needs Node 22 and Java 21). `npm start` serves the site at http://localhost:8000.
-  Locally there is no sign-in or database: every tab works except "Esta semana" and the admin page.
-- Every pull request runs the tests, then opens the site in Chrome and uses it (`tests/smoke.mjs`: tabs, a
-  technique, search, progress, the tree, sharing, the lesson builder, both languages, the admin page). Once a pull request is merged, `main`
+  Locally there is no sign-in or database: every page works except "Esta semana" and the admin page.
+- Every pull request runs the tests, then opens the site in Chrome and uses it (`tests/smoke.mjs`: the sidebar,
+  Curriculum home, a technique, search, progress, the tree, sharing, the coach's tools from the account menu, the
+  phone's bottom bar and part switcher, both languages, the admin page). Once a pull request is merged, `main`
   publishes the site **and** `firestore.rules` about a minute later, then runs the same browser check on the
   published site. When you add a feature people click, add a step for it to `tests/smoke.mjs`.
 - Every night `.github/workflows/nightly.yml` checks the published site (`tests/nightly.mjs`): up, safe, still
@@ -134,7 +156,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 - Signing out clears the tree and progress from that device (they stay in the account), so a shared tablet
   never mixes two students' marks.
 - Before you open or update a pull request: run `npm test`, open the changed pages locally in both languages and
-  both themes, and check a phone-width window.
+  a dark and a light theme, and check a phone-width window and a desktop-width one.
 
 ## Never
 

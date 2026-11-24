@@ -1,5 +1,6 @@
-/* Layout: sticky header with tabs; each module is a vertical spine of stages with technique chips;
-   a technique opens in a side panel (a bottom sheet on phones). Colors come from theme.css. */
+/* Components: each part of the fight is a vertical spine of stages with technique chips; a technique opens in a
+   side panel (a bottom sheet on phones). The site's navigation and page layout are in nav.css; the admin page's
+   small tab strip is here. Colors come from theme.css. */
 *{box-sizing:border-box}
 /* keeps the page from shifting sideways when a technique opens and the scrollbar goes away */
 html{scrollbar-gutter:stable}
@@ -16,15 +17,10 @@ h1{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.02e
 .lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex:none}
 .lang button{border:0;background:transparent;color:var(--muted);font:600 13px var(--body);padding:6px 12px;cursor:pointer}
 .lang button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
-nav{display:flex;gap:4px;overflow-x:auto;padding-block:8px 0;scrollbar-width:none}
-nav a{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:6px 12px 10px;border-bottom:3px solid transparent;white-space:nowrap}
-nav a[aria-current="page"]{color:var(--ink);border-color:var(--accent)}
-/* a fade on the side where more tabs are hidden; only the gradient's opacity matters, not its color */
-nav.more-after{mask-image:linear-gradient(to right,var(--ink) calc(100% - 48px),transparent)}
-nav.more-before{mask-image:linear-gradient(to left,var(--ink) calc(100% - 48px),transparent)}
-nav.more-before.more-after{mask-image:linear-gradient(to right,transparent,var(--ink) 48px,var(--ink) calc(100% - 48px),transparent)}
-/* wider screens: every tab shows, on a second row if needed (a mouse wheel can't scroll the strip sideways) */
-@media (min-width:641px){nav{flex-wrap:wrap;overflow:visible}nav.more-before,nav.more-after{mask-image:none}}
+/* admin.html's tab strip */
+.tabs nav{display:flex;gap:4px;overflow-x:auto;padding-block:8px 0;scrollbar-width:none}
+.tabs nav a{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:6px 12px 10px;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs nav a[aria-current="page"]{color:var(--ink);border-color:var(--accent)}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 main{padding-block:24px 64px}
 .intro{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:end;justify-content:space-between;margin-bottom:20px}
@@ -169,7 +165,6 @@ select{width:100%;font:500 14px var(--body);padding:8px 10px;border:1px solid va
 .pill{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:transparent;color:var(--ink);font:600 13px var(--body);padding:0 12px;min-height:34px;min-width:34px;border-radius:999px;cursor:pointer;text-decoration:none}
 .pill svg{width:17px;height:17px}
 .pill[hidden]{display:none}
-.icon-only{padding:0}
 .account-wrap{position:relative}
 .avatar{position:relative;display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--surface-2);color:var(--ink);font:600 16px var(--body);cursor:pointer;overflow:hidden}
 .avatar[hidden]{display:none}
@@ -228,7 +223,7 @@ a.primary{text-decoration:none;display:inline-block}
 .progress b{color:var(--ink)}
 .week-date{margin:0 0 2px;font-size:13px;color:var(--muted)}
 .past-weeks{margin-top:18px}
-/* phones: only the tab strip stays at the top; the title row and search scroll away */
+/* admin.html on phones: only the tab strip stays at the top; the title row scrolls away */
 @media (max-width:640px){
   .top{display:contents}
   header{position:relative;z-index:6}
@@ -245,7 +240,7 @@ a.primary{text-decoration:none;display:inline-block}
   .avatar{width:44px;height:44px}
   .ibtn,.close{width:44px;height:44px}
   .techs .chipx .ibtn{width:44px}
-  nav a{display:flex;align-items:center;min-height:44px;padding-block:6px 7px}
+  .tabs nav a{display:flex;align-items:center;min-height:44px;padding-block:6px 7px}
   .picks label{min-height:44px;padding-block:8px}
   .linkbtn{min-height:44px;padding-inline:4px}
   .panel-top{min-height:44px}
@@ -260,3 +255,17 @@ a.primary{text-decoration:none;display:inline-block}
 .swatch i{width:14px;height:14px;border-radius:50%;background:var(--accent)}
 .swatch[aria-checked="true"]{outline:2px solid var(--ink);outline-offset:2px}
 @media (pointer:coarse){.swatch{width:44px;height:44px}}
+.menu-section{padding:6px 0 4px}
+.menu-section .menu-label{padding:4px 10px 0;margin-bottom:4px}
+/* a small line above a page's title, such as "Coach" */
+.eyebrow{margin:0 0 6px;font:600 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.intro .eyebrow{margin:0 0 6px;color:var(--accent)}
+/* curriculum home: one card per part of the fight */
+.part-card{display:flex;flex-direction:column;gap:6px;color:var(--ink);text-decoration:none;border-top:3px solid var(--accent)}
+.part-card:hover,.part-card:focus-visible{border-color:var(--accent);background:var(--surface-2)}
+.part-card h3{font-family:var(--display);font-size:26px;line-height:1.05;margin:0;text-transform:uppercase;letter-spacing:.02em}
+.part-card p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
+.part-n{font-family:var(--display);font-weight:700;font-size:22px;line-height:1;color:var(--accent)}
+.part-count{margin-top:auto;padding-top:4px;font-size:13px;color:var(--muted)}
+.part-card .progress{min-width:0}
+.menu-themes:last-child{border-bottom:0;margin-bottom:0}
