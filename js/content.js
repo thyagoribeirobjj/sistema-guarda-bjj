@@ -64,7 +64,7 @@ function textOf(technique) {
 }
 
 // Techniques where every word typed is in the name (in either language) or in the rest of the text.
-// Names that start with the first word come first, then other name matches, then the rest.
+// Names with every word that start with the first word come first, then other name matches, then the rest.
 // Each result is what findTechnique() returns.
 export function searchTechniques(query) {
   const words = plain(query).split(/\s+/).filter(Boolean);
@@ -75,8 +75,7 @@ export function searchTechniques(query) {
     const inName = (word) => names.some((name) => name.includes(word));
     if (!words.every((word) => inName(word) || textOf(technique).includes(word))) continue;
     let rank = 2;
-    if (names.some((name) => name.startsWith(words[0]))) rank = 0;
-    else if (words.every(inName)) rank = 1;
+    if (words.every(inName)) rank = names.some((name) => name.startsWith(words[0])) ? 0 : 1;
     found.push({ id, rank });
   }
   return found.sort((a, b) => a.rank - b.rank).map(({ id }) => findTechnique(id));

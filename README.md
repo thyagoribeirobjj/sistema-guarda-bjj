@@ -10,11 +10,14 @@ Live site: <https://sistemaguarda.com>
 | | Anyone | Signed in with Google | Admin |
 |---|---|---|---|
 | Browse every tab: the parts of the fight, the lesson builder, the method | ✓ | ✓ | ✓ |
-| See this week's class ("Esta semana") | ✓ | ✓ | ✓ |
+| See this week's class ("Esta semana") and past weeks | ✓ | ✓ | ✓ |
+| Share a technique (the phone's share sheet, or the link is copied) | ✓ | ✓ | ✓ |
+| Search techniques by name or by a word in their description | ✓ | ✓ | ✓ |
 | Switch language (PT / EN) and dark / light mode | ✓ in this browser | ✓ on every device | ✓ |
 | Build "Minha árvore" (♥ favorite techniques, in their own order) | ✓ in this browser | ✓ on every device | ✓ |
+| Plan a class in the lesson builder | ✓ in this browser | ✓ on every device | ✓ |
 | Watch a move's video and see its diagram | ✓ | ✓ | ✓ |
-| Change this week's class (`admin.html`) | | | ✓ |
+| Change this week's class (`admin.html`); the previous week moves into past weeks | | | ✓ |
 | Attach a video or diagram to a move (from the move's panel) | | | ✓ |
 
 When someone signs in for the first time, the settings and favorites from their browser are saved to their account.
@@ -36,13 +39,14 @@ sistemaguarda.com (static files on Firebase Hosting)
   ├─ data/content.json        guard modules (top, bottom), drills, method
   ├─ data/curriculum.json     the other parts of the fight, tab order, "where to go" links
   ├─ Firebase Authentication  "Sign in with Google"
-  └─ Firestore database       site/week · admins/{email} · users/{uid}
+  └─ Firestore database       site/week · site/weeks · admins/{email} · users/{uid}
                               firestore.rules decides who reads and writes what
 ```
 
 | Path | What it is |
 |---|---|
-| `index.html`, `admin.html` | Markup only |
+| `index.html`, `admin.html` | Markup, plus the icon and share-preview tags |
+| `img/` | The logo (also the browser icon), the phone home-screen icon and the picture shown when a link is shared |
 | `css/theme.css` | Colors and fonts for dark and light mode. Change the look here. |
 | `css/app.css` | Layout and components |
 | `js/` | The site's code, one file per job (see `CLAUDE.md`) |
@@ -88,4 +92,4 @@ published and live at <https://sistemaguarda.com> about a minute later.
 ## Later
 
 - An admin page for editing the curriculum itself, so changes don't need a code change.
-- Past weeks ("Missed a class?") and separate weeks for beginner and advanced classes.
+- Separate weeks for beginner and advanced classes.

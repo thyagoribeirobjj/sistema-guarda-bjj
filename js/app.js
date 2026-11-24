@@ -21,6 +21,8 @@ function renderHeader() {
   $('appTitle').textContent = t('title');
   document.querySelectorAll('[data-lang]').forEach((button) => button.setAttribute('aria-pressed', button.dataset.lang === settings.language));
   $('headerTheme').innerHTML = state.online ? '' : themeButton(false);
+  $('headerTheme').hidden = state.online;
+  $('account').parentElement.hidden = !state.online;
   $('account').hidden = !state.online;
   $('account').innerHTML = accountButton();
   const who = state.account ? state.account.displayName || state.account.email : t('signIn');
@@ -113,16 +115,17 @@ async function changeMedia(id, field, save) {
   }
 }
 
-// The phone's share sheet where there is one; otherwise the link is copied.
+// The phone's share sheet where there is one; otherwise, or when it fails, the link is copied.
 async function shareTechnique(id) {
   const url = `${location.origin}/#t-${id}`;
   if (navigator.share) {
     try {
       await navigator.share({ title: text(findTechnique(id).technique.n), url });
+      return;
     } catch (error) {
-      if (error.name !== 'AbortError') console.error(error);
+      if (error.name === 'AbortError') return;
+      console.error(error);
     }
-    return;
   }
   try {
     await navigator.clipboard.writeText(url);
@@ -240,6 +243,11 @@ document.addEventListener('keydown', (event) => {
   else if (state.search) search('');
 });
 
+// Tabbing out of the account menu closes it.
+$('accountMenu').addEventListener('focusout', (event) => {
+  const to = event.relatedTarget;
+  if (to && !$('accountMenu').contains(to) && to !== $('account')) closeAccountMenu();
+});
 window.addEventListener('hashchange', route);
 // A Google photo that doesn't load leaves the letter under it showing.
 document.addEventListener('error', (event) => { if (event.target.matches?.('#account img')) event.target.remove(); }, true);

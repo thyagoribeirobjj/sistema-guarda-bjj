@@ -21,7 +21,8 @@ service cloud.firestore {
         && data.theme in ['', 'light', 'dark']
         && data.favorites is list && data.favorites.size() <= 500
         && (!('progress' in data) || (data.progress is map && data.progress.size() <= 1000))
-        && (!('lesson' in data) || (data.lesson is map && data.lesson.size() <= 10))
+        && (!('lesson' in data) || (data.lesson is map && data.lesson.keys().hasOnly(['mod', 'dur', 'items', 'game'])
+          && (!('items' in data.lesson) || (data.lesson.items is list && data.lesson.items.size() <= 200))))
         && data.updatedAt == request.time;
     }
 

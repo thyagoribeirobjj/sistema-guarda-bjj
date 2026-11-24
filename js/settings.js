@@ -28,7 +28,7 @@ function merge(from, keep = false) {
   if (typeof from.theme === 'string') settings.theme = from.theme;
   if (Array.isArray(from.favorites)) settings.favorites = keep ? [...new Set([...from.favorites, ...settings.favorites])] : from.favorites;
   if (from.progress && typeof from.progress === 'object') settings.progress = keep ? { ...from.progress, ...settings.progress } : from.progress;
-  if (isLesson(from.lesson) && !(keep && settings.lesson)) settings.lesson = from.lesson;
+  if (isLesson(from.lesson)) settings.lesson = from.lesson;
 }
 
 function isLesson(value) {
@@ -65,6 +65,8 @@ export function applyTheme() {
   const root = document.documentElement;
   if (settings.theme) root.dataset.theme = settings.theme;
   else delete root.dataset.theme;
+  // The phone's browser bar takes the header's color.
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', getComputedStyle(root).getPropertyValue('--surface').trim());
 }
 
 export function currentTheme() {

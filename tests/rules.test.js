@@ -127,8 +127,9 @@ test('settings must have the expected shape', async () => {
   const lesson = { mod: 'top', dur: '60', items: ['0-0', '1-0'], game: 'top:0' };
   assert.equal(await save({ ...settings('student@example.com'), lesson }), 'allowed');
   assert.equal(await save({ ...settings('student@example.com'), lesson: 'top' }), 'denied');
-  const bigLesson = Object.fromEntries(Array.from({ length: 11 }, (_, i) => [`key-${i}`, 'x']));
-  assert.equal(await save({ ...settings('student@example.com'), lesson: bigLesson }), 'denied');
+  assert.equal(await save({ ...settings('student@example.com'), lesson: { ...lesson, other: 'x' } }), 'denied');
+  const longLesson = { ...lesson, items: Array.from({ length: 201 }, (_, i) => `0-${i}`) };
+  assert.equal(await save({ ...settings('student@example.com'), lesson: longLesson }), 'denied');
   const tooMany = Object.fromEntries(Array.from({ length: 1001 }, (_, i) => [`move-${i}`, 'done']));
   assert.equal(await save({ ...settings('student@example.com'), progress: tooMany }), 'denied');
 });

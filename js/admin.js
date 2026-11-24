@@ -92,11 +92,15 @@ async function fillTranslations(draft) {
   }
 }
 
-// A new week moves the one saved before it into "Past weeks". Saving the new week goes ahead even if that fails.
+// A new week moves the live one into "Past weeks". It is read fresh, since another admin may have saved since this
+// page opened; if that read fails, nothing is saved. Saving goes ahead if only the archiving fails.
+// The same class with a corrected date is not a new week.
 async function archivePrevious(draft) {
-  const previous = saved;
+  const previous = (await loadWeek({ fresh: true })) || {};
   const hasContent = previous.techniques?.length || previous.title?.pt || previous.title?.en;
-  if (!previous.weekOf || previous.weekOf === draft.weekOf || !hasContent) return true;
+  const sameClass = JSON.stringify(previous.techniques || []) === JSON.stringify(draft.techniques)
+    && previous.title?.pt === draft.title.pt && previous.title?.en === draft.title.en;
+  if (!previous.weekOf || previous.weekOf === draft.weekOf || !hasContent || sameClass) return true;
   try {
     await archiveWeek(previous);
     return true;

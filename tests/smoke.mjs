@@ -1,5 +1,5 @@
 // Opens the site in a real browser and uses it the way a visitor would: tabs, a technique, search,
-// progress, the tree, sharing, the lesson builder, the account menu and theme, the back button, both languages, the admin page. A page that fails to load fails here.
+// progress, the tree, sharing, the lesson builder, the account menu, past weeks and theme, the back button, both languages, the admin page. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm install --no-save playwright-core)
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
@@ -67,6 +67,8 @@ await step('marking "Got it" shows on the technique and survives a reload', asyn
   await page.locator(`[data-progress="${id}:done"]`).click();
   assert.equal(await page.locator(`[data-progress="${id}:done"]`).getAttribute('aria-pressed'), 'true');
   await page.locator('#panelClose').click();
+  await page.locator('#panel').waitFor({ state: 'hidden' });
+  await page.waitForFunction(() => !location.hash.startsWith('#t-'));
   await page.locator(`main [data-technique="${id}"] .ptag`).first().waitFor();
   await page.locator('main .progress').waitFor();
   await page.reload();
@@ -127,6 +129,16 @@ if (published) {
     await page.locator('#accountMenu #signIn').waitFor();
     await page.keyboard.press('Escape');
     assert.equal(await page.locator('#account').getAttribute('aria-expanded'), 'false');
+  });
+
+  await step('past weeks open on demand', async () => {
+    const weekTab = page.locator('nav a[href="#semana"]');
+    await weekTab.waitFor({ timeout: 10000 }).catch(() => {});
+    if (!(await weekTab.count())) return;
+    await weekTab.click();
+    await page.locator('[data-past-weeks]').click();
+    await page.locator('.past-weeks :is(h3, .note)').first().waitFor();
+    assert.equal(await page.locator('.past-weeks .status').count(), 0);
   });
 }
 
