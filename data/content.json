@@ -1,114 +1,6 @@
 {
   "version": 1,
   "title": "Sistema Guarda BJJ",
-  "ui": {
-    "title": {
-      "pt": "Sistema Guarda",
-      "en": "Guard System"
-    },
-    "nav": {
-      "top": {
-        "pt": "Por cima",
-        "en": "Top"
-      },
-      "bottom": {
-        "pt": "Por baixo",
-        "en": "Bottom"
-      },
-      "lesson": {
-        "pt": "Montar aula",
-        "en": "Lesson builder"
-      },
-      "method": {
-        "pt": "Método",
-        "en": "Method"
-      }
-    },
-    "all": {
-      "pt": "Todos",
-      "en": "All"
-    },
-    "b": {
-      "pt": "Iniciante",
-      "en": "Beginner"
-    },
-    "a": {
-      "pt": "Avançado",
-      "en": "Advanced"
-    },
-    "bBelt": {
-      "pt": "Iniciante · faixa branca e azul",
-      "en": "Beginner · white and blue belt"
-    },
-    "aBelt": {
-      "pt": "Avançado · faixa roxa em diante",
-      "en": "Advanced · purple belt and up"
-    },
-    "mine": {
-      "pt": "Seu sistema",
-      "en": "Your system"
-    },
-    "tapHint": {
-      "pt": "Toque numa técnica para ver detalhes.",
-      "en": "Tap a technique for details."
-    },
-    "what": {
-      "pt": "O que é",
-      "en": "What it is"
-    },
-    "tip": {
-      "pt": "Ponto-chave",
-      "en": "Key point"
-    },
-    "drill": {
-      "pt": "Como treinar",
-      "en": "How to drill"
-    },
-    "nextTo": {
-      "pt": "Próximas opções",
-      "en": "Next options"
-    },
-    "stage": {
-      "pt": "Etapa",
-      "en": "Stage"
-    },
-    "games": {
-      "pt": "Jogos de treino",
-      "en": "Training games"
-    },
-    "gamesSub": {
-      "pt": "Jogos com regras e objetivos claros. Mude o ponto de partida, o tempo ou a resistência para ajustar o nível.",
-      "en": "Games with clear rules and goals. Change the start position, time or resistance to adjust the level."
-    },
-    "top": {
-      "pt": "Quem",
-      "en": "Who"
-    },
-    "win": {
-      "pt": "Vence",
-      "en": "Wins"
-    },
-    "time": {
-      "pt": "Tempo",
-      "en": "Time"
-    },
-    "close": {
-      "pt": "Fechar",
-      "en": "Close"
-    },
-    "steps": {
-      "pt": "Passo a passo",
-      "en": "Step by step"
-    },
-    "ref": {
-      "pt": "Referência: Helio Gracie, livro Gracie Jiu-Jitsu.",
-      "en": "Reference: Helio Gracie, Gracie Jiu-Jitsu (book)."
-    },
-    "gTag": {
-      "pt": "Do livro Gracie Jiu-Jitsu",
-      "en": "From the Gracie Jiu-Jitsu book"
-    }
-  },
   "drill": {
     "b": {
       "pt": "10 repetições por lado sem resistência, depois 2 min com 30–50% de resistência.",
@@ -156,7 +48,7 @@
                 "pt": "Pés na posição \"dez para as duas\". Esteja sempre consciente da sua base.",
                 "en": "Feet at \"ten to two\". Always be aware of your base."
               },
-              "id": "top-0-0"
+              "id": "top-base"
             },
             {
               "lv": "b",
@@ -173,7 +65,7 @@
                 "pt": "Cabeça alta: olhe para frente, não para baixo.",
                 "en": "Head up: look forward, not down."
               },
-              "id": "top-0-1"
+              "id": "top-closed-guard-posture"
             },
             {
               "lv": "b",
@@ -190,7 +82,7 @@
                 "pt": "Sem o polegar, a pegada solta rápido quando você precisa.",
                 "en": "A thumbless grip releases fast when you need it to."
               },
-              "id": "top-0-2"
+              "id": "top-biceps-grips"
             },
             {
               "lv": "b",
@@ -207,7 +99,7 @@
                 "pt": "Tira um braço do jogo e deixa você levantar.",
                 "en": "It takes one arm out of the game and lets you stand."
               },
-              "id": "top-0-3"
+              "id": "top-pin-the-hand-to-his-belly"
             },
             {
               "lv": "b",
@@ -224,7 +116,7 @@
                 "pt": "Os dois braços dentro ou os dois fora das pernas dele: um dentro e outro fora abre o triângulo.",
                 "en": "Both arms inside or both outside his legs: one in and one out opens the triangle."
               },
-              "id": "top-0-4"
+              "id": "top-block-the-opposite-hand"
             },
             {
               "lv": "b",
@@ -241,7 +133,7 @@
                 "pt": "Primeiro as mãos, depois as pernas.",
                 "en": "Hands first, legs second."
               },
-              "id": "top-0-5"
+              "id": "top-break-the-grip"
             },
             {
               "lv": "b",
@@ -258,7 +150,67 @@
                 "pt": "Atacar o pescoço daqui abre triângulo e armlock.",
                 "en": "Reaching for the neck here opens triangles and armbars."
               },
-              "id": "top-0-6"
+              "id": "top-recover-posture"
+            },
+            {
+              "lv": "b",
+              "n": {
+                "pt": "Como abrir a guarda fechada por cima, de joelhos",
+                "en": "How to open the closed guard from the knees"
+              },
+              "d": {
+                "pt": "Como abrir a guarda fechada por cima, de joelhos: postura, mãos no quadril ou na barriga, um joelho no cóccix dele e o outro para trás, cotovelo na coxa até as pernas abrirem.",
+                "en": "How to open the closed guard from the knees: posture, hands on his hips or belly, one knee at his tailbone and the other back, elbow on his thigh until the legs open."
+              },
+              "s": [
+                [
+                  "Postura",
+                  "Posture"
+                ],
+                [
+                  "Mãos no quadril ou na barriga",
+                  "Hands on his hips or belly"
+                ],
+                [
+                  "Um joelho no cóccix dele e o outro para trás",
+                  "One knee at his tailbone and the other back"
+                ],
+                [
+                  "Cotovelo na coxa até as pernas abrirem",
+                  "Elbow on his thigh until the legs open"
+                ]
+              ],
+              "t": {
+                "pt": "Cotovelos colados contra o armlock.",
+                "en": "Elbows tight against the armbar."
+              },
+              "id": "top-how-to-open-the-closed-guard-from-the-knees"
+            },
+            {
+              "lv": "b",
+              "n": {
+                "pt": "\"Apertar o pão\" para ganhar postura na passagem",
+                "en": "\"Squeeze the bread\" to gain posture while passing"
+              },
+              "d": {
+                "pt": "\"Apertar o pão\" para ganhar postura na passagem: com as mãos na barriga ou no peito dele, aperte e empurre para baixo enquanto endireita as costas e sobe a cabeça.",
+                "en": "\"Squeeze the bread\" to gain posture while passing: with your hands on his belly or chest, squeeze and press down as you straighten your back and lift your head."
+              },
+              "s": [
+                [
+                  "Com as mãos na barriga ou no peito dele",
+                  "With your hands on his belly or chest"
+                ],
+                [
+                  "Aperte e empurre para baixo enquanto endireita as costas e sobe a cabeça",
+                  "Squeeze and press down as you straighten your back and lift your head"
+                ]
+              ],
+              "t": {
+                "pt": "Quadril para frente, cabeça alta.",
+                "en": "Hips forward, head up."
+              },
+              "id": "top-squeeze-the-bread-to-gain-posture-while-passing"
             }
           ]
         },
@@ -310,7 +262,7 @@
                 "pt": "Joelho e cotovelo juntos prendem a perna dele; a gola é o seu apoio para não cair para trás.",
                 "en": "Knee and elbow together trap his leg; the collar grip is your anchor so you don't fall back."
               },
-              "id": "top-1-0"
+              "id": "top-standing-pass"
             },
             {
               "lv": "b",
@@ -349,7 +301,7 @@
                 "pt": "Deixe a mão plantada no mesmo lugar enquanto recua.",
                 "en": "Keep the posted hand in the same spot as you back up."
               },
-              "id": "top-1-1"
+              "id": "top-kneeling-pass"
             }
           ]
         },
@@ -377,7 +329,7 @@
                 "pt": "Troque de lado se ele acompanhar.",
                 "en": "Switch sides if he follows."
               },
-              "id": "top-2-0"
+              "id": "top-toreando-bullfighter"
             },
             {
               "lv": "b",
@@ -393,7 +345,7 @@
                 "pt": "Controle o braço de baixo para ele não pegar as costas.",
                 "en": "Control his far arm so he can't take your back."
               },
-              "id": "top-2-1"
+              "id": "top-knee-cut"
             },
             {
               "lv": "b",
@@ -409,7 +361,7 @@
                 "pt": "Cabeça colada na barriga dele contra o triângulo.",
                 "en": "Head tight to his belly to avoid triangles."
               },
-              "id": "top-2-2"
+              "id": "top-double-under-pass"
             },
             {
               "lv": "a",
@@ -425,7 +377,7 @@
                 "pt": "Quadril dele virado = guarda sem força.",
                 "en": "His hips turned away = a guard with no power."
               },
-              "id": "top-2-3"
+              "id": "top-leg-drag"
             },
             {
               "lv": "a",
@@ -441,7 +393,7 @@
                 "pt": "Bom contra guardas abertas com pés no quadril.",
                 "en": "Good against open guards with feet on the hips."
               },
-              "id": "top-2-4"
+              "id": "top-x-pass"
             },
             {
               "lv": "a",
@@ -457,7 +409,7 @@
                 "pt": "Paciência: pressão primeiro, passagem depois.",
                 "en": "Patience: pressure first, pass second."
               },
-              "id": "top-2-5"
+              "id": "top-over-under"
             },
             {
               "lv": "a",
@@ -473,7 +425,7 @@
                 "pt": "Muito usado no sem kimono.",
                 "en": "Very common in no-gi."
               },
-              "id": "top-2-6"
+              "id": "top-body-lock"
             },
             {
               "lv": "a",
@@ -489,7 +441,110 @@
                 "pt": "Ganhe o underhook antes dele.",
                 "en": "Win the underhook before he does."
               },
-              "id": "top-2-7"
+              "id": "top-half-guard-smash-pass"
+            },
+            {
+              "lv": "b",
+              "n": {
+                "pt": "Estrangulamentos por cima da meia-guarda",
+                "en": "Chokes from top half guard"
+              },
+              "d": {
+                "pt": "Estrangulamentos por cima da meia-guarda: com o peso no peito dele e o underhook, use a gola (dele ou a sua) para estrangular enquanto ele protege a meia-guarda.",
+                "en": "Chokes from top half guard: with chest weight and the underhook, use the lapel (his or yours) to choke while he is busy protecting the half guard."
+              },
+              "s": [
+                [
+                  "Com o peso no peito dele e o underhook",
+                  "With chest weight and the underhook"
+                ],
+                [
+                  "Use a gola (dele ou a sua) para estrangular enquanto ele protege a meia-guarda",
+                  "Use the lapel (his or yours) to choke while he is busy protecting the half guard"
+                ]
+              ],
+              "t": {
+                "pt": "Ganhe o underhook e a cabeça dele antes de atacar.",
+                "en": "Win the underhook and his head before you attack."
+              },
+              "rec": 1,
+              "id": "top-chokes-from-top-half-guard"
+            },
+            {
+              "lv": "b",
+              "n": {
+                "pt": "Passagem prendendo as pernas para baixo",
+                "en": "Pass pinning the legs down"
+              },
+              "d": {
+                "pt": "Passagem prendendo as pernas para baixo: segure as calças nos joelhos, empurre as duas pernas contra o chão e passe por cima com o peso, chegando ao side control.",
+                "en": "Pass pinning the legs down: grab the pants at the knees, press both legs to the mat and walk over them with your weight into side control."
+              },
+              "t": {
+                "pt": "Peso nas mãos enquanto as pernas dele estão presas.",
+                "en": "Weight on your hands while his legs are pinned."
+              },
+              "id": "top-pass-pinning-the-legs-down"
+            },
+            {
+              "lv": "b",
+              "n": {
+                "pt": "Passagem prendendo as pernas de lado",
+                "en": "Pass pinning the legs to the side"
+              },
+              "d": {
+                "pt": "Passagem prendendo as pernas de lado: empurre as duas pernas para um lado, prenda-as com o joelho ou o quadril e passe para o outro lado.",
+                "en": "Pass pinning the legs to the side: push both legs to one side, pin them with your knee or hips and pass to the other side."
+              },
+              "s": [
+                [
+                  "Empurre as duas pernas para um lado",
+                  "Push both legs to one side"
+                ],
+                [
+                  "Prenda-as com o joelho ou o quadril e passe para o outro lado",
+                  "Pin them with your knee or hips and pass to the other side"
+                ]
+              ],
+              "t": {
+                "pt": "Quadril dele virado é guarda sem força.",
+                "en": "His hips turned away means a guard with no power."
+              },
+              "id": "top-pass-pinning-the-legs-to-the-side"
+            },
+            {
+              "lv": "b",
+              "n": {
+                "pt": "Drills de passagem",
+                "en": "Guard passing drills"
+              },
+              "d": {
+                "pt": "Drills de passagem: sequências repetidas de passar a guarda e chegar às posições (side control, montada, costas) com as finalizações, sem parar.",
+                "en": "Guard passing drills: repeated sequences of passing and moving through positions (side control, mount, back) with the finishes, without stopping."
+              },
+              "s": [
+                [
+                  "Sequências repetidas de passar a guarda e chegar às posições (side control",
+                  "Repeated sequences of passing and moving through positions (side control"
+                ],
+                [
+                  "Montada",
+                  "Mount"
+                ],
+                [
+                  "Costas) com as finalizações",
+                  "Back) with the finishes"
+                ],
+                [
+                  "Sem parar",
+                  "Without stopping"
+                ]
+              ],
+              "t": {
+                "pt": "Estabilize 3 segundos em cada posição.",
+                "en": "Stabilize for 3 seconds in each position."
+              },
+              "id": "top-guard-passing-drills"
             }
           ]
         },
@@ -507,86 +562,86 @@
               "lv": "b",
               "mine": 1,
               "n": {
-                "pt": "Side control 1 · básico",
-                "en": "Side control 1 · basic"
+                "pt": "Yoko shiho gatame",
+                "en": "Yoko shiho gatame (side four-quarter hold)"
               },
               "d": {
-                "pt": "Braço esquerdo controla a cabeça por cima do corpo, braço direito por baixo da perna.",
-                "en": "Left arm controls the head over the body, right arm under his leg."
+                "pt": "Yoko shiho gatame: de lado, um braço controla a cabeça por cima do corpo dele e o outro passa por baixo da perna; peito pesando.",
+                "en": "Yoko shiho gatame: from the side, one arm controls his head over his body and the other goes under his leg; chest heavy."
               },
               "t": {
-                "pt": "Primeira posição depois de passar.",
-                "en": "First position after the pass."
+                "pt": "A primeira posição depois de passar.",
+                "en": "The first position after the pass."
               },
-              "id": "top-3-0"
+              "id": "top-yoko-shiho-gatame-side-four-quarter-hold"
             },
             {
               "lv": "b",
               "mine": 1,
               "n": {
-                "pt": "Side control 2 · peito com peito",
-                "en": "Side control 2 · chest to chest"
+                "pt": "Mune gatame (peito com peito)",
+                "en": "Mune gatame (chest hold)"
               },
               "d": {
-                "pt": "Os dois braços do outro lado do corpo dele, joelhos apertando, peito no peito.",
-                "en": "Both arms to the far side, knees pinching, chest on chest."
+                "pt": "Mune gatame: os dois braços do outro lado do corpo dele, joelhos apertando o quadril, peito no peito.",
+                "en": "Mune gatame: both arms on the far side of his body, knees squeezing his hip, chest to chest."
               },
               "t": {
-                "pt": "Base de retorno quando ele reage. Relaxe o peso: corpo relaxado pesa mais.",
-                "en": "Home base when he reacts. Relax your weight: a relaxed body feels heavier."
+                "pt": "Posição de retorno quando ele reage. Corpo relaxado pesa mais.",
+                "en": "Your fallback when he reacts. A relaxed body weighs more."
               },
-              "id": "top-3-1"
+              "id": "top-mune-gatame-chest-hold"
             },
             {
               "lv": "a",
               "mine": 1,
               "n": {
-                "pt": "Side control 3 · headlock",
-                "en": "Side control 3 · headlock"
+                "pt": "Side control com cabeça e braço",
+                "en": "Head-and-arm side control"
               },
               "d": {
-                "pt": "Braço sob a cabeça como travesseiro, braço sob a axila, joelho trava o quadril, perna em sprawl e pressão de ombro.",
-                "en": "Arm under the head like a pillow, arm under the armpit, knee locks the hip, leg sprawled, shoulder pressure."
+                "pt": "Side control com cabeça e braço: braço sob a cabeça dele como travesseiro, o outro sob a axila, joelho trava o quadril, pernas em sprawl e pressão do ombro.",
+                "en": "Head-and-arm side control: one arm under his head like a pillow, the other under his armpit, knee blocks the hip, legs in a sprawl and shoulder pressure."
               },
               "t": {
-                "pt": "Ombro pressiona o queixo dele.",
-                "en": "Shoulder presses into his jaw."
+                "pt": "O ombro pressiona o queixo dele.",
+                "en": "Your shoulder presses his chin."
               },
-              "id": "top-3-2"
+              "id": "top-head-and-arm-side-control"
             },
             {
               "lv": "a",
               "mine": 1,
               "n": {
-                "pt": "Side control 4 · kesa \"home\"",
-                "en": "Side control 4 · \"home\" kesa"
+                "pt": "Ushiro kesa gatame (kesa invertido)",
+                "en": "Ushiro kesa gatame (reverse scarf hold)"
               },
               "d": {
-                "pt": "Variação de kesa gatame do seu sistema. Anote o detalhe que a diferencia da nº 5.",
-                "en": "Kesa gatame variation in your system. Note the detail that sets it apart from No. 5."
+                "pt": "Ushiro kesa gatame: sentado ao lado dele, virado para as pernas, o braço dele preso sob a sua axila e o quadril baixo.",
+                "en": "Ushiro kesa gatame: sitting beside him facing his legs, his arm trapped under your armpit and your hips low."
               },
               "t": {
-                "pt": "Combine com o aluno qual é a diferença.",
-                "en": "Agree with your student on the difference."
+                "pt": "Peso no peito dele, pernas abertas para a base.",
+                "en": "Weight on his chest, legs wide for base."
               },
-              "id": "top-3-3"
+              "id": "top-ushiro-kesa-gatame-reverse-scarf-hold"
             },
             {
               "lv": "a",
               "mine": 1,
               "n": {
-                "pt": "Side control 5 · kesa gatame",
-                "en": "Side control 5 · scarf hold"
+                "pt": "Hon kesa gatame",
+                "en": "Hon kesa gatame (scarf hold)"
               },
               "d": {
-                "pt": "Sentado de lado, braço dele preso e cabeça controlada.",
-                "en": "Sitting sideways, his arm trapped and head controlled."
+                "pt": "Hon kesa gatame: sentado de lado junto a ele, virado para a cabeça, braço dele preso e cabeça controlada.",
+                "en": "Hon kesa gatame: sitting beside him facing his head, his arm trapped and his head controlled."
               },
               "t": {
-                "pt": "Ele reage? Passe a perna sobre a cabeça e volte ao 2.",
-                "en": "He reacts? Step over the head and go back to No. 2."
+                "pt": "Se ele reagir, passe a perna sobre a cabeça e volte ao mune gatame.",
+                "en": "If he reacts, step over his head and go back to mune gatame."
               },
-              "id": "top-3-4"
+              "id": "top-hon-kesa-gatame-scarf-hold"
             },
             {
               "lv": "a",
@@ -602,7 +657,7 @@
                 "pt": "Vá para a montada quando ele empurrar.",
                 "en": "Go to mount when he pushes."
               },
-              "id": "top-3-5"
+              "id": "top-knee-on-belly"
             },
             {
               "lv": "a",
@@ -618,7 +673,7 @@
                 "pt": "Abre kimura e armlock norte-sul.",
                 "en": "Opens the north-south kimura and armbar."
               },
-              "id": "top-3-6"
+              "id": "top-north-south"
             }
           ]
         },
@@ -666,7 +721,7 @@
                 "pt": "O pé na cabeça é o apoio para a torção.",
                 "en": "The foot on his head is the brace for the rotation."
               },
-              "id": "top-4-0"
+              "id": "top-kimura"
             },
             {
               "lv": "b",
@@ -701,7 +756,7 @@
                 "pt": "A mão dele fica sempre no chão, arrastada como um pincel.",
                 "en": "His hand stays on the mat the whole time, dragged like a paintbrush."
               },
-              "id": "top-4-1"
+              "id": "top-americana"
             },
             {
               "lv": "b",
@@ -718,14 +773,14 @@
                 "pt": "Mantenha o braço dele esticado.",
                 "en": "Keep his arm straight."
               },
-              "id": "top-4-2"
+              "id": "top-elbow-lock"
             },
             {
               "lv": "b",
               "g": 1,
               "n": {
-                "pt": "Armlock (perna sobre a cabeça)",
-                "en": "Armbar (leg over the head)"
+                "pt": "Armlock do side control (perna sobre a cabeça)",
+                "en": "Armbar from side control (leg over the head)"
               },
               "d": {
                 "pt": "Segure o cotovelo, prenda o antebraço dele na axila, passe a perna sobre a cabeça e encaixe o calcanhar no pescoço; empurre o quadril para a frente e curve para trás.",
@@ -735,7 +790,7 @@
                 "pt": "Segure firme o cotovelo para imobilizar.",
                 "en": "Hold the elbow firmly to immobilize it."
               },
-              "id": "top-4-3"
+              "id": "top-armbar-from-side-control-leg-over-the-head"
             },
             {
               "lv": "a",
@@ -752,7 +807,7 @@
                 "pt": "Antebraço exatamente embaixo do cotovelo dele.",
                 "en": "Your forearm directly under his elbow."
               },
-              "id": "top-4-4"
+              "id": "top-armbar-from-knee-on-belly"
             },
             {
               "lv": "a",
@@ -769,7 +824,7 @@
                 "pt": "Ao levantar a perna, escore o outro joelho nas costas dele.",
                 "en": "When you raise a leg, brace the other knee against his back."
               },
-              "id": "top-4-5"
+              "id": "top-north-south-kimura"
             },
             {
               "lv": "a",
@@ -786,7 +841,7 @@
                 "pt": "Use o joelho para escorar as costas dele.",
                 "en": "Use your knee to brace his back."
               },
-              "id": "top-4-6"
+              "id": "top-north-south-armbar"
             },
             {
               "lv": "a",
@@ -803,14 +858,14 @@
                 "pt": "O começo é igual ao do armlock: a reação dele decide o ataque.",
                 "en": "It starts like the armbar: his reaction decides the attack."
               },
-              "id": "top-4-7"
+              "id": "top-side-control-collar-choke"
             },
             {
               "lv": "a",
               "g": 1,
               "n": {
-                "pt": "Guilhotina",
-                "en": "Guillotine"
+                "pt": "Guilhotina do side control",
+                "en": "Guillotine from side control"
               },
               "d": {
                 "pt": "Quando ele levanta a cabeça, envolva o pescoço, passe a gola para a outra mão, vire sobre o ombro e curve para trás empurrando o quadril.",
@@ -820,7 +875,7 @@
                 "pt": "Gola bem funda, sem folga; a força vem do peso relaxado.",
                 "en": "Grip the collar deep with no slack; the power comes from relaxed weight."
               },
-              "id": "top-4-8"
+              "id": "top-guillotine-from-side-control"
             },
             {
               "lv": "a",
@@ -837,7 +892,7 @@
                 "pt": "Sai do side control 2.",
                 "en": "Comes from side control 2."
               },
-              "id": "top-4-9"
+              "id": "top-double-armbar"
             }
           ]
         },
@@ -865,7 +920,7 @@
                 "pt": "Joelhos abertos, quadril para a frente e calcanhares enganchados sob ele.",
                 "en": "Knees wide, hips forward and heels hooked under him."
               },
-              "id": "top-5-0"
+              "id": "top-mount"
             },
             {
               "lv": "b",
@@ -882,7 +937,7 @@
                 "pt": "Suba quando ele empurrar seu peito.",
                 "en": "Climb when he pushes your chest."
               },
-              "id": "top-5-1"
+              "id": "top-high-mount"
             },
             {
               "lv": "b",
@@ -899,7 +954,7 @@
                 "pt": "Quanto mais relaxado, mais pesado você fica.",
                 "en": "The more relaxed you are, the heavier you feel."
               },
-              "id": "top-5-2"
+              "id": "top-vs-push-on-the-chest"
             },
             {
               "lv": "b",
@@ -916,7 +971,7 @@
                 "pt": "Joelhos abertos, quadril para a frente, calcanhares enganchados.",
                 "en": "Knees wide, hips forward, heels hooked."
               },
-              "id": "top-5-3"
+              "id": "top-vs-push-on-the-belly"
             },
             {
               "lv": "b",
@@ -933,7 +988,7 @@
                 "pt": "Repita do outro lado se precisar.",
                 "en": "Repeat on the other side if needed."
               },
-              "id": "top-5-4"
+              "id": "top-vs-push-on-the-knee"
             },
             {
               "lv": "b",
@@ -950,7 +1005,7 @@
                 "pt": "Peso relaxado funciona melhor que força.",
                 "en": "Relaxed weight works better than strength."
               },
-              "id": "top-5-5"
+              "id": "top-vs-sitting-up"
             }
           ]
         },
@@ -998,7 +1053,7 @@
                 "pt": "Mantenha o peso no peito dele até a perna passar. Na montada alta fica mais fácil.",
                 "en": "Keep your weight on his chest until the leg is over. High mount makes it easier."
               },
-              "id": "top-6-0"
+              "id": "top-armbar-from-mount"
             },
             {
               "lv": "a",
@@ -1015,7 +1070,7 @@
                 "pt": "Escore o cotovelo no chão e encaixe a perna firme no pescoço.",
                 "en": "Brace your elbow on the mat and set the leg firmly against his neck."
               },
-              "id": "top-6-1"
+              "id": "top-armbar-when-pushed-off"
             },
             {
               "lv": "a",
@@ -1032,14 +1087,14 @@
                 "pt": "Todo o peso sobre a cabeça dele.",
                 "en": "All your weight on his head."
               },
-              "id": "top-6-2"
+              "id": "top-armbar-when-he-turns"
             },
             {
               "lv": "b",
               "g": 1,
               "n": {
-                "pt": "Estrangulamento cruzado",
-                "en": "Cross collar choke"
+                "pt": "Estrangulamento cruzado da montada",
+                "en": "Cross collar choke from mount"
               },
               "d": {
                 "pt": "Duas mãos fundas na gola, cruzadas atrás do pescoço; deite o peso e leve ombros e cotovelos para trás.",
@@ -1063,7 +1118,7 @@
                 "pt": "Mão relaxada desliza melhor na gola.",
                 "en": "A relaxed hand slides deeper into the collar."
               },
-              "id": "top-6-3"
+              "id": "top-cross-collar-choke-from-mount"
             },
             {
               "lv": "b",
@@ -1080,7 +1135,7 @@
                 "pt": "O movimento do cotovelo é igual ao de uma guilhotina.",
                 "en": "The elbow motion is the same as a guillotine."
               },
-              "id": "top-6-4"
+              "id": "top-thumb-in-choke"
             },
             {
               "lv": "a",
@@ -1097,7 +1152,7 @@
                 "pt": "Também funciona de dentro da guarda.",
                 "en": "Also works from inside the guard."
               },
-              "id": "top-6-5"
+              "id": "top-bread-cutter-choke"
             },
             {
               "lv": "a",
@@ -1114,7 +1169,7 @@
                 "pt": "Pés enganchados sob as pernas dele para manter a base.",
                 "en": "Hook your feet under his legs to keep your base."
               },
-              "id": "top-6-6"
+              "id": "top-knuckle-choke"
             },
             {
               "lv": "a",
@@ -1131,7 +1186,7 @@
                 "pt": "Relaxe o peso e ache uma base confortável.",
                 "en": "Relax your weight and find a comfortable base."
               },
-              "id": "top-6-7"
+              "id": "top-choke-when-he-turns"
             },
             {
               "lv": "a",
@@ -1147,7 +1202,7 @@
                 "pt": "Saia da montada para o lado oposto ao braço.",
                 "en": "Step off mount to the side away from the arm."
               },
-              "id": "top-6-8"
+              "id": "top-arm-triangle"
             }
           ]
         },
@@ -1175,7 +1230,7 @@
                 "pt": "Não tenha pressa: controle primeiro.",
                 "en": "No rush: control first."
               },
-              "id": "top-7-0"
+              "id": "top-take-the-back"
             },
             {
               "lv": "b",
@@ -1192,7 +1247,7 @@
                 "pt": "Antecipe a levantada dele.",
                 "en": "Anticipate him getting up."
               },
-              "id": "top-7-1"
+              "id": "top-inserting-the-hooks"
             },
             {
               "lv": "b",
@@ -1227,7 +1282,7 @@
                 "pt": "Um abraço relaxado: braços duros tiram o aperto.",
                 "en": "A relaxed hug: stiff arms take away the squeeze."
               },
-              "id": "top-7-2"
+              "id": "top-rear-naked-choke"
             }
           ]
         }
@@ -1251,7 +1306,7 @@
             "en": "Top: 30 s of posture with both his hands controlled"
           },
           "time": "30 s × 6",
-          "id": "top-g0"
+          "id": "top-game-posture-keeper"
         },
         {
           "n": {
@@ -1271,7 +1326,7 @@
             "en": "Top: side control for 3 s. Bottom: sweep, submit or re-close guard twice"
           },
           "time": "2 min",
-          "id": "top-g1"
+          "id": "top-game-open-and-pass"
         },
         {
           "n": {
@@ -1292,7 +1347,7 @@
             "en": "Top: complete the cycle. Bottom (50%): recover guard"
           },
           "time": "1 min",
-          "id": "top-g2"
+          "id": "top-game-cycle-1-to-5"
         },
         {
           "n": {
@@ -1312,7 +1367,7 @@
             "en": "Top: 30 s in mount. Bottom: reach guard"
           },
           "time": "30 s × 4",
-          "id": "top-g3"
+          "id": "top-game-hold-the-mount"
         },
         {
           "n": {
@@ -1336,7 +1391,7 @@
             "pt": "3 movimentos cada",
             "en": "3 moves each"
           },
-          "id": "top-g4"
+          "id": "top-game-bjj-chess"
         }
       ]
     },
@@ -1376,7 +1431,7 @@
                 "pt": "Dá para vencer só com as mãos, mas dá muito mais trabalho.",
                 "en": "You can win with hands alone, but it takes much more work."
               },
-              "id": "bottom-0-0"
+              "id": "bottom-the-sights-concept"
             },
             {
               "lv": "b",
@@ -1393,7 +1448,7 @@
                 "pt": "Tire as pegadas dele antes de pegar as suas: quem tem o controle interno dita a luta.",
                 "en": "Strip his grips before you take yours: whoever has inside control runs the fight."
               },
-              "id": "bottom-0-1"
+              "id": "bottom-sleeve-grips"
             },
             {
               "lv": "b",
@@ -1410,7 +1465,7 @@
                 "pt": "Controlar o cotovelo atrapalha a passagem dele.",
                 "en": "Controlling his elbow disrupts his pass."
               },
-              "id": "bottom-0-2"
+              "id": "bottom-classic-position"
             },
             {
               "lv": "b",
@@ -1426,7 +1481,7 @@
                 "pt": "Joelhos para o peito, não só os braços.",
                 "en": "Knees to chest, not just arms."
               },
-              "id": "bottom-0-3"
+              "id": "bottom-break-posture"
             },
             {
               "lv": "b",
@@ -1442,7 +1497,7 @@
                 "pt": "Quadril parado no chão = guarda morta.",
                 "en": "Flat hips = dead guard."
               },
-              "id": "bottom-0-4"
+              "id": "bottom-hip-angle"
             },
             {
               "lv": "b",
@@ -1458,7 +1513,7 @@
                 "pt": "Quebre a postura com as mãos antes de subir as pernas.",
                 "en": "Break posture with your hands before climbing your legs."
               },
-              "id": "bottom-0-5"
+              "id": "bottom-high-guard"
             },
             {
               "lv": "b",
@@ -1474,7 +1529,8 @@
               "t": {
                 "pt": "Puxe as mangas para cima e para perto, não para os lados.",
                 "en": "Pull the sleeves up and close, not out to the sides."
-              }
+              },
+              "id": "bottom-his-arms-above-your-head"
             }
           ]
         },
@@ -1503,7 +1559,7 @@
                 "pt": "Pendente: anotar qual perna e qual mão fazem o quê e em qual pegada começa.",
                 "en": "To do: note which leg and hand do what and which grip it starts from."
               },
-              "id": "bottom-1-0"
+              "id": "bottom-windmill-sweep"
             },
             {
               "lv": "b",
@@ -1538,7 +1594,7 @@
                 "pt": "Prenda os calcanhares no mesmo instante em que empurra. Empurre com os joelhos, não com as panturrilhas.",
                 "en": "Grab the heels the instant you push. Push with your knees, not your calves."
               },
-              "id": "bottom-1-1"
+              "id": "bottom-heel-trap-sweep"
             },
             {
               "lv": "b",
@@ -1573,7 +1629,7 @@
                 "pt": "Quadril no chão (levantado é erro) e sua cabeça fora da frente.",
                 "en": "Hips on the mat (lifted is a mistake) and your head out of the way."
               },
-              "id": "bottom-1-2"
+              "id": "bottom-overhead-sweep"
             },
             {
               "lv": "b",
@@ -1608,7 +1664,7 @@
                 "pt": "Balance o quadril como uma rede.",
                 "en": "Swing your hips like a hammock."
               },
-              "id": "bottom-1-3"
+              "id": "bottom-scissor-sweep"
             },
             {
               "lv": "b",
@@ -1648,7 +1704,7 @@
                 "pt": "Tire o quadril do chão para recuar com mais facilidade.",
                 "en": "Lift your hips off the mat to shift back more easily."
               },
-              "id": "bottom-1-4"
+              "id": "bottom-hook-sweep"
             },
             {
               "lv": "b",
@@ -1683,7 +1739,7 @@
                 "pt": "Pé de apoio esticado durante a rolagem.",
                 "en": "Keep your base foot extended as you roll him."
               },
-              "id": "bottom-1-5"
+              "id": "bottom-sit-up-sweep"
             }
           ]
         },
@@ -1711,7 +1767,7 @@
                 "pt": "Combina com o armlock.",
                 "en": "Pairs with the armbar."
               },
-              "id": "bottom-2-0"
+              "id": "bottom-flower-sweep"
             },
             {
               "lv": "b",
@@ -1727,7 +1783,7 @@
                 "pt": "Prenda o braço do lado da queda.",
                 "en": "Trap the arm on the falling side."
               },
-              "id": "bottom-2-1"
+              "id": "bottom-butterfly-sweep"
             },
             {
               "lv": "b",
@@ -1743,7 +1799,7 @@
                 "pt": "Cabeça na axila dele.",
                 "en": "Head in his armpit."
               },
-              "id": "bottom-2-2"
+              "id": "bottom-old-school-sweep"
             },
             {
               "lv": "a",
@@ -1759,7 +1815,7 @@
                 "pt": "Exige mobilidade e treino lento.",
                 "en": "Needs mobility and slow drilling."
               },
-              "id": "bottom-2-3"
+              "id": "bottom-berimbolo"
             },
             {
               "lv": "a",
@@ -1775,7 +1831,71 @@
                 "pt": "Levante junto quando ele cair.",
                 "en": "Come up as he falls."
               },
-              "id": "bottom-2-4"
+              "id": "bottom-x-guard-sweep"
+            },
+            {
+              "lv": "b",
+              "n": {
+                "pt": "Raspagem dos dois tornozelos",
+                "en": "Double ankle sweep"
+              },
+              "d": {
+                "pt": "Raspagem dos dois tornozelos: quando ele levanta dentro da guarda, segure os dois calcanhares, coloque os pés no quadril dele e empurre para ele cair sentado; suba junto.",
+                "en": "Double ankle sweep: when he stands in your guard, grab both heels, put your feet on his hips and push so he falls on his backside; come up with him."
+              },
+              "s": [
+                [
+                  "Quando ele levanta dentro da guarda",
+                  "When he stands in your guard"
+                ],
+                [
+                  "Segure os dois calcanhares",
+                  "Grab both heels"
+                ],
+                [
+                  "Coloque os pés no quadril dele e empurre para ele cair sentado",
+                  "Put your feet on his hips and push so he falls on his backside"
+                ],
+                [
+                  "Suba junto",
+                  "Come up with him"
+                ]
+              ],
+              "t": {
+                "pt": "Puxe os calcanhares e empurre o quadril ao mesmo tempo.",
+                "en": "Pull the heels and push the hips at the same time."
+              },
+              "id": "bottom-double-ankle-sweep"
+            },
+            {
+              "lv": "b",
+              "n": {
+                "pt": "Raspagem tripé",
+                "en": "Tripod sweep"
+              },
+              "d": {
+                "pt": "Raspagem tripé: um pé no quadril dele, a mão segura o tornozelo do mesmo lado e o outro pé engancha atrás do outro joelho; empurre o quadril e puxe o tornozelo para ele cair para trás.",
+                "en": "Tripod sweep: one foot on his hip, a hand on the same-side ankle and the other foot hooked behind his other knee; push the hip and pull the ankle so he falls backward."
+              },
+              "s": [
+                [
+                  "Um pé no quadril dele",
+                  "One foot on his hip"
+                ],
+                [
+                  "A mão segura o tornozelo do mesmo lado e o outro pé engancha atrás do outro joelho",
+                  "A hand on the same-side ankle and the other foot hooked behind his other knee"
+                ],
+                [
+                  "Empurre o quadril e puxe o tornozelo para ele cair para trás",
+                  "Push the hip and pull the ankle so he falls backward"
+                ]
+              ],
+              "t": {
+                "pt": "Suba rápido para não ficar preso nas pernas dele.",
+                "en": "Come up fast so you don't get tangled in his legs."
+              },
+              "id": "bottom-tripod-sweep"
             }
           ]
         },
@@ -1826,14 +1946,14 @@
                 "pt": "Treine o giro de 90° isolado: é a parte mais difícil. Daqui também saem triângulo, kimura e raspagens.",
                 "en": "Drill the 90° pivot on its own: it is the hardest part. Triangle, kimura and sweeps also come from here."
               },
-              "id": "bottom-3-0"
+              "id": "bottom-armbar-with-hip-pivot"
             },
             {
               "lv": "b",
               "g": 1,
               "n": {
-                "pt": "Armlock (perna sobre a cabeça)",
-                "en": "Armbar (leg over the head)"
+                "pt": "Armlock da guarda (perna sobre a cabeça)",
+                "en": "Armbar from guard (leg over the head)"
               },
               "d": {
                 "pt": "Quando ele ajoelha para entrar com o ombro sob seu joelho, plante o pé, recue o quadril, passe a perna sobre a cabeça dele e estenda o braço.",
@@ -1861,7 +1981,7 @@
                 "pt": "Recuar o tronco abre espaço para a perna passar.",
                 "en": "Leaning back makes room for the leg to pass."
               },
-              "id": "bottom-3-1"
+              "id": "bottom-armbar-from-guard-leg-over-the-head"
             },
             {
               "lv": "b",
@@ -1900,7 +2020,7 @@
                 "pt": "Abrace a cintura para ele não rolar para a frente.",
                 "en": "Hug his waist so he can't roll forward."
               },
-              "id": "bottom-3-2"
+              "id": "bottom-omoplata"
             },
             {
               "lv": "b",
@@ -1940,7 +2060,7 @@
                 "pt": "Ao sentar, recue o quadril e não caia sobre o próprio braço.",
                 "en": "As you sit up, shift your hips back and don't fall on your own arm."
               },
-              "id": "bottom-3-3"
+              "id": "bottom-kimura-from-guard"
             },
             {
               "lv": "b",
@@ -1976,7 +2096,7 @@
                 "pt": "Fique perpendicular a ele. Um braço dentro e outro fora das suas pernas; para apertar, puxe a cabeça, aperte os joelhos e aproxime o quadril. Se ele resistir, a kimura vira alça para raspar (hip bump).",
                 "en": "Get perpendicular to him. One arm inside and one outside your legs; to tighten, pull the head, squeeze your knees and bring your hips closer. If he resists, the kimura becomes a handle to sweep (hip bump)."
               },
-              "id": "bottom-3-4"
+              "id": "bottom-triangle"
             },
             {
               "lv": "a",
@@ -2011,14 +2131,14 @@
                 "pt": "Pernas soltas no giro, sem encostar nele.",
                 "en": "Keep your legs loose during the spin so you don't bump him."
               },
-              "id": "bottom-3-5"
+              "id": "bottom-spinning-armbar"
             },
             {
               "lv": "b",
               "g": 1,
               "n": {
-                "pt": "Guilhotina",
-                "en": "Guillotine"
+                "pt": "Guilhotina da guarda",
+                "en": "Guillotine from guard"
               },
               "d": {
                 "pt": "Quando ele abaixa a cabeça, envolva o pescoço com a lâmina do antebraço na garganta e segure o pulso desse braço com a outra mão; cruze os pés, puxe o braço e estique as pernas.",
@@ -2028,7 +2148,7 @@
                 "pt": "Queixo dele preso na dobra do seu braço.",
                 "en": "Keep his chin trapped in the crook of your arm."
               },
-              "id": "bottom-3-6"
+              "id": "bottom-guillotine-from-guard"
             },
             {
               "lv": "a",
@@ -2045,13 +2165,13 @@
                 "pt": "O nó do dedo mínimo pressiona a carótida.",
                 "en": "The knuckle of your little finger presses the carotid."
               },
-              "id": "bottom-3-7"
+              "id": "bottom-bread-cutter-from-guard"
             },
             {
               "lv": "b",
               "n": {
-                "pt": "Estrangulamento cruzado",
-                "en": "Cross collar choke"
+                "pt": "Estrangulamento cruzado da guarda",
+                "en": "Cross collar choke from guard"
               },
               "d": {
                 "pt": "Duas mãos fundas na gola, puxe e abra os cotovelos.",
@@ -2061,7 +2181,7 @@
                 "pt": "A primeira mão bem funda.",
                 "en": "Get the first hand very deep."
               },
-              "id": "bottom-3-8"
+              "id": "bottom-cross-collar-choke-from-guard"
             }
           ]
         },
@@ -2090,7 +2210,7 @@
                 "pt": "Pé dele bem ajustado; use a perna para mantê-lo à distância.",
                 "en": "Keep his foot snug; use your leg to keep him at a distance."
               },
-              "id": "bottom-4-0"
+              "id": "bottom-straight-ankle-lock"
             },
             {
               "lv": "a",
@@ -2107,7 +2227,7 @@
                 "pt": "Muito perigosa: lesiona o joelho antes de doer. Só com supervisão e conforme as regras da faixa.",
                 "en": "Very dangerous: it injures the knee before it hurts. Only with supervision and per belt rules."
               },
-              "id": "bottom-4-1"
+              "id": "bottom-heel-hook"
             },
             {
               "lv": "a",
@@ -2124,7 +2244,7 @@
                 "pt": "Funciona de várias posições.",
                 "en": "Works from many positions."
               },
-              "id": "bottom-4-2"
+              "id": "bottom-toe-hold"
             }
           ]
         },
@@ -2171,7 +2291,7 @@
                 "pt": "Mantenha o braço dele preso durante toda a rolagem.",
                 "en": "Keep his arm trapped through the whole roll."
               },
-              "id": "bottom-5-0"
+              "id": "bottom-upa-bridge-and-roll"
             },
             {
               "lv": "b",
@@ -2210,7 +2330,7 @@
                 "pt": "Peso no pé e no ombro oposto para mover o quadril.",
                 "en": "Weight on your foot and opposite shoulder to move your hips."
               },
-              "id": "bottom-5-1"
+              "id": "bottom-elbow-escape"
             },
             {
               "lv": "b",
@@ -2227,7 +2347,7 @@
                 "pt": "Levante o quadril e balance como uma rede.",
                 "en": "Lift your hips and swing them like a hammock."
               },
-              "id": "bottom-5-2"
+              "id": "bottom-elbow-escape-drill"
             },
             {
               "lv": "a",
@@ -2262,7 +2382,7 @@
                 "pt": "Ao rolar para trás, vire um pouco sobre o ombro para proteger o pescoço.",
                 "en": "As you roll back, turn slightly onto your shoulder to protect your neck."
               },
-              "id": "bottom-5-3"
+              "id": "bottom-back-door-escape"
             }
           ]
         },
@@ -2291,7 +2411,7 @@
                 "pt": "O tempo certo é quando o peso dele ainda está atrás.",
                 "en": "The timing is when his weight is still behind him."
               },
-              "id": "bottom-6-0"
+              "id": "bottom-upa-from-side-control"
             },
             {
               "lv": "b",
@@ -2308,7 +2428,7 @@
                 "pt": "Entre com o joelho quando ele troca o peso de lado. Não tente levantar o quadril.",
                 "en": "Slide your knee in as he shifts his weight. Don't try to lift your hips."
               },
-              "id": "bottom-6-1"
+              "id": "bottom-elbow-escape-from-side-control"
             },
             {
               "lv": "b",
@@ -2325,7 +2445,7 @@
                 "pt": "Aperte o pescoço, não a cabeça.",
                 "en": "Squeeze the neck, not the head."
               },
-              "id": "bottom-6-2"
+              "id": "bottom-side-headlock-arm-frame"
             },
             {
               "lv": "b",
@@ -2342,7 +2462,7 @@
                 "pt": "Use o ombro como apoio para ajoelhar e tirar o braço de baixo.",
                 "en": "Use your shoulder as a post to get to your knees and free your bottom arm."
               },
-              "id": "bottom-6-3"
+              "id": "bottom-side-headlock-head-down"
             },
             {
               "lv": "a",
@@ -2359,7 +2479,7 @@
                 "pt": "Levante com as costas, não com o braço; tire a sua perna do caminho ao rolar.",
                 "en": "Lift with your back, not your arm; move your leg out of the way as you roll him."
               },
-              "id": "bottom-6-4"
+              "id": "bottom-side-headlock-legs-tucked"
             },
             {
               "lv": "b",
@@ -2376,7 +2496,7 @@
                 "pt": "Faça a ponte apoiado nas costas, não na cabeça.",
                 "en": "Bridge off your upper back, not your head."
               },
-              "id": "bottom-6-5"
+              "id": "bottom-upa-vs-headlock-in-mount"
             },
             {
               "lv": "a",
@@ -2393,7 +2513,7 @@
                 "pt": "Crie folga quantas vezes for preciso até ele reajustar.",
                 "en": "Make slack as many times as needed until he readjusts."
               },
-              "id": "bottom-6-6"
+              "id": "bottom-side-headlock-arm-trapped"
             },
             {
               "lv": "a",
@@ -2410,7 +2530,7 @@
                 "pt": "Recue o quadril para convidar ele a mover o braço.",
                 "en": "Shift your hips to invite him to move his arm."
               },
-              "id": "bottom-6-7"
+              "id": "bottom-leg-choke-from-bottom"
             },
             {
               "lv": "b",
@@ -2426,7 +2546,7 @@
                 "pt": "O movimento mais importante do jiu-jitsu.",
                 "en": "The most important movement in jiu-jitsu."
               },
-              "id": "bottom-6-8"
+              "id": "bottom-hip-escape-shrimp"
             },
             {
               "lv": "b",
@@ -2442,7 +2562,7 @@
                 "pt": "Empurre com estrutura, não com força.",
                 "en": "Push with structure, not strength."
               },
-              "id": "bottom-6-9"
+              "id": "bottom-frame-and-recover-guard"
             }
           ]
         },
@@ -2493,7 +2613,7 @@
                 "pt": "Caia para o lado oposto ao do braço que tenta estrangular.",
                 "en": "Fall to the side opposite the choking arm."
               },
-              "id": "bottom-7-0"
+              "id": "bottom-back-mount-escape"
             },
             {
               "lv": "b",
@@ -2510,7 +2630,7 @@
                 "pt": "Quando alguém pegar suas costas, espere que ele cruze os pés.",
                 "en": "When someone takes your back, expect him to cross his feet."
               },
-              "id": "bottom-7-1"
+              "id": "bottom-crossed-feet-lock"
             },
             {
               "lv": "b",
@@ -2526,7 +2646,7 @@
                 "pt": "Treine o hábito em todo rola.",
                 "en": "Build the habit in every roll."
               },
-              "id": "bottom-7-2"
+              "id": "bottom-chin-down"
             }
           ]
         },
@@ -2554,7 +2674,7 @@
                 "pt": "Segura a distância contra a pressão.",
                 "en": "Holds distance against pressure."
               },
-              "id": "bottom-8-0"
+              "id": "bottom-knee-shield-half-guard"
             },
             {
               "lv": "b",
@@ -2570,7 +2690,7 @@
                 "pt": "Sem underhook, ele esmaga.",
                 "en": "No underhook, he smashes you."
               },
-              "id": "bottom-8-1"
+              "id": "bottom-underhook-half-guard"
             },
             {
               "lv": "a",
@@ -2586,7 +2706,7 @@
                 "pt": "Raspagens para trás e para o lado.",
                 "en": "Back and side sweeps."
               },
-              "id": "bottom-8-2"
+              "id": "bottom-deep-half-guard"
             },
             {
               "lv": "b",
@@ -2602,7 +2722,7 @@
                 "pt": "Pernas funcionam como molas.",
                 "en": "Legs work like springs."
               },
-              "id": "bottom-8-3"
+              "id": "bottom-feet-on-hips"
             },
             {
               "lv": "b",
@@ -2618,7 +2738,7 @@
                 "pt": "Ótima para levantar e raspar.",
                 "en": "Great for elevating and sweeping."
               },
-              "id": "bottom-8-4"
+              "id": "bottom-butterfly"
             },
             {
               "lv": "b",
@@ -2634,7 +2754,7 @@
                 "pt": "Bom ponto de partida para levantar ou entrar na borboleta.",
                 "en": "A good starting point to stand up or enter butterfly."
               },
-              "id": "bottom-8-5"
+              "id": "bottom-seated-guard"
             },
             {
               "lv": "a",
@@ -2650,7 +2770,7 @@
                 "pt": "Abre triângulo e omoplata.",
                 "en": "Opens triangle and omoplata."
               },
-              "id": "bottom-8-6",
+              "id": "bottom-spider",
               "mine": 1
             },
             {
@@ -2667,7 +2787,7 @@
                 "pt": "Difícil de passar e cansa o braço dele.",
                 "en": "Hard to pass and tires his arm."
               },
-              "id": "bottom-8-7"
+              "id": "bottom-lasso"
             },
             {
               "lv": "a",
@@ -2683,7 +2803,7 @@
                 "pt": "Leva ao berimbolo e às costas.",
                 "en": "Leads to the berimbolo and the back."
               },
-              "id": "bottom-8-8"
+              "id": "bottom-de-la-riva"
             },
             {
               "lv": "a",
@@ -2699,7 +2819,7 @@
                 "pt": "Entrada para inversões e para as costas.",
                 "en": "Entry to inversions and the back."
               },
-              "id": "bottom-8-9"
+              "id": "bottom-reverse-de-la-riva"
             },
             {
               "lv": "a",
@@ -2715,7 +2835,7 @@
                 "pt": "Raspagens de queda e entradas de pé.",
                 "en": "Dump sweeps and leg lock entries."
               },
-              "id": "bottom-8-10"
+              "id": "bottom-x-guard-and-single-leg-x"
             },
             {
               "lv": "a",
@@ -2731,7 +2851,7 @@
                 "pt": "Comum para raspagens e chaves de pé; as regras mudam por faixa.",
                 "en": "Common for sweeps and leg locks; rules vary by belt."
               },
-              "id": "bottom-8-11"
+              "id": "bottom-50-50"
             },
             {
               "lv": "a",
@@ -2747,7 +2867,7 @@
                 "pt": "Só com boa mobilidade de ombros e pescoço.",
                 "en": "Only with good shoulder and neck mobility."
               },
-              "id": "bottom-8-12"
+              "id": "bottom-inverted-guard"
             },
             {
               "lv": "a",
@@ -2763,7 +2883,7 @@
                 "pt": "Só com kimono.",
                 "en": "Gi only."
               },
-              "id": "bottom-8-13",
+              "id": "bottom-lapel-worm-guard",
               "mine": 1
             },
             {
@@ -2780,7 +2900,8 @@
               "t": {
                 "pt": "Pé dentro da linha do corpo dele = guarda passada.",
                 "en": "A foot inside his body line = a passed guard."
-              }
+              },
+              "id": "bottom-leg-reach"
             },
             {
               "lv": "b",
@@ -2796,7 +2917,8 @@
               "t": {
                 "pt": "Para descansar, puxe ele de volta para a guarda fechada.",
                 "en": "To rest, pull him back into closed guard."
-              }
+              },
+              "id": "bottom-push-and-pull-guard"
             }
           ]
         }
@@ -2820,7 +2942,7 @@
             "en": "Bottom: break posture 3 times or submit"
           },
           "time": "1 min",
-          "id": "bottom-g0"
+          "id": "bottom-game-break-and-attack"
         },
         {
           "n": {
@@ -2841,7 +2963,7 @@
             "en": "Bottom: keep him in the sights for 1 min or submit. Top: escape the guard"
           },
           "time": "1 min × 2",
-          "id": "bottom-g1"
+          "id": "bottom-game-sights-game"
         },
         {
           "n": {
@@ -2861,7 +2983,7 @@
             "en": "Bottom: sweep into mount. Top: side control 3 s"
           },
           "time": "2 min",
-          "id": "bottom-g2"
+          "id": "bottom-game-he-stands-i-sweep"
         },
         {
           "n": {
@@ -2881,7 +3003,7 @@
             "en": "Bottom: reach guard or end on top. Top: 30 s in mount"
           },
           "time": "30 s × 6",
-          "id": "bottom-g3"
+          "id": "bottom-game-upa-or-elbow"
         },
         {
           "n": {
@@ -2901,7 +3023,7 @@
             "en": "Bottom: 1 point per recovery. Top: side control for 3 s"
           },
           "time": "1 min",
-          "id": "bottom-g4"
+          "id": "bottom-game-don-t-get-passed"
         },
         {
           "n": {
@@ -2925,7 +3047,7 @@
             "pt": "3 movimentos cada",
             "en": "3 moves each"
           },
-          "id": "bottom-g5"
+          "id": "bottom-game-bjj-chess"
         },
         {
           "n": {
@@ -2948,7 +3070,8 @@
           "time": {
             "pt": "3 min + 1min30 de descanso, × 2",
             "en": "3 min + 1:30 rest, × 2"
-          }
+          },
+          "id": "bottom-game-progressive-passing"
         },
         {
           "n": {
@@ -2968,7 +3091,8 @@
             "pt": "Finalizar ou terminar na melhor posição",
             "en": "Submit or finish in the better position"
           },
-          "time": "5 min"
+          "time": "5 min",
+          "id": "bottom-game-timed-bjj-chess"
         }
       ]
     }
