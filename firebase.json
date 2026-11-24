@@ -5,6 +5,7 @@
       "firebase.json",
       "firestore.rules",
       "package.json",
+      "package-lock.json",
       "README.md",
       "CLAUDE.md",
       "AGENTS.md",
@@ -37,6 +38,7 @@
   },
   "emulators": {
     "firestore": { "port": 8080 },
+    "auth": { "port": 9099 },
     "ui": { "enabled": false },
     "singleProjectMode": true
   }

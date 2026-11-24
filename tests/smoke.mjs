@@ -3,7 +3,7 @@
 // previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and
 // "Clear this browser", a prepared next week taking over on its date,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page. A page that fails to load fails here.
-//   npm run smoke -- http://localhost:8000      (needs: npm install --no-save playwright-core)
+//   npm run smoke -- http://localhost:8000      (needs: npm ci)
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
 

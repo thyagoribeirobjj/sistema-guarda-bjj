@@ -68,7 +68,7 @@ jobs:
       - name: The published site works in a real browser
         id: run
         run: |
-          npm install --no-save playwright-core@1.65.1
+          npm ci
           set -o pipefail
           node tests/smoke.mjs https://sistemaguarda.com 2>&1 | tee browser.txt || status=$?
           { echo 'failed<<END_OF_CHECKS'; grep -E '^(FAIL|- )' browser.txt || true; echo 'END_OF_CHECKS'; } >> "$GITHUB_OUTPUT"

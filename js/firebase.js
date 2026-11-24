@@ -1,6 +1,12 @@
 // Sign-in and every database call. Nothing else in the site talks to Firebase directly.
 // Who may read or change what is decided by firestore.rules, not by this file.
+import { pastEntry } from './week.js';
+
 const sdk = 'https://www.gstatic.com/firebasejs/13.2.0/';
+
+// Only for tests/signed-in.mjs: a page on this computer opened with ?emulators=<made-up person> uses the local
+// emulators (firebase.json) and signs that person in. The published site never matches, so nothing changes there.
+const testPerson = ['localhost', '127.0.0.1'].includes(location.hostname) ? new URLSearchParams(location.search).get('emulators') : null;
 
 let auth = null;
 let db = null;
@@ -10,9 +16,9 @@ export async function startFirebase() {
   try {
     // Firebase Hosting serves this project's public settings here. A local preview has none,
     // so the site still works there, just without sign-in or the database.
-    const response = await fetch('/__/firebase/init.json');
-    if (!response.ok) return false;
-    const config = await response.json();
+    const response = testPerson ? null : await fetch('/__/firebase/init.json');
+    if (response && !response.ok) return false;
+    const config = testPerson ? { apiKey: 'test', projectId: 'demo-sistema-guarda' } : await response.json();
     config.authDomain = location.host;
 
     const [app, authSdk, store] = await Promise.all(
@@ -22,6 +28,10 @@ export async function startFirebase() {
     const firebaseApp = app.initializeApp(config);
     auth = authSdk.getAuth(firebaseApp);
     db = store.getFirestore(firebaseApp);
+    if (testPerson) {
+      authSdk.connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+      store.connectFirestoreEmulator(db, '127.0.0.1', 8080);
+    }
     return true;
   } catch (error) {
     console.error(error);
@@ -36,6 +46,7 @@ export function onAccountChange(callback) {
 
 export async function signIn() {
   const provider = new fb.GoogleAuthProvider();
+  if (testPerson) return fb.signInWithCredential(auth, fb.GoogleAuthProvider.credential(testPerson));
   try {
     await fb.signInWithPopup(auth, provider);
   } catch (error) {

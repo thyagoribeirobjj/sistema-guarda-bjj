@@ -60,13 +60,13 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/privacy.js` | The privacy page (`#privacy`) and "Delete my data". Its words must stay true to the code and `firestore.rules`. |
 | `js/strings.js` | Every button and label, in PT and EN. |
 | `js/settings.js` | Each person's language, theme, belt, favorites, progress ("Drilling" / "Got it" per move) and lesson builder choices. |
-| `js/firebase.js` | Sign-in and **every** database call. Nothing else talks to Firebase. |
+| `js/firebase.js` | Sign-in and **every** database call. Nothing else talks to Firebase. For `tests/signed-in.mjs` only, a page opened from this computer with `?emulators=<made-up person>` uses the local emulators and signs that person in; the published site never does. |
 | `js/content.js`, `js/state.js` | Loads the curriculum and searches it (names first, then descriptions, key points, drills and steps); tracks which page and technique are showing. |
 | `data/content.json` | The guard modules (top, bottom), drills and the method. |
 | `data/curriculum.json` | The other parts of the fight, their order (`moduleOrder`) and the "where to go" links (`nx`). |
 | `firestore.rules` | Who can read and change what in the database. |
 | `js/translation.js` | Decides, on the admin page, which fields to translate, keep or ask about (see Translation). |
-| `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `week.test.js` and `roster.test.js` check next week and the students list; `rules.test.js` checks the database rules; `smoke.mjs` uses the site in a real browser; `nightly.mjs` checks the published site every night. |
+| `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `week.test.js` and `roster.test.js` check next week and the students list; `rules.test.js` checks the database rules; `smoke.mjs` uses the site in a real browser; `signed-in.mjs` uses it signed in, as made-up students and a coach, against local copies of sign-in and the database; `nightly.mjs` checks the published site every night. |
 | `docs/translator.gs` | A copy of the translator that runs in the site's Google account (see Translation). |
 
 ## Navigation
@@ -163,12 +163,18 @@ whether it was translated automatically or corrected by hand (nothing when that 
 
 ## Checking and publishing
 
-- `npm test` runs every test (it needs Node 22 and Java 21). `npm start` serves the site at http://localhost:8000.
-  Locally there is no sign-in or database: every page works except "Esta semana" and the admin page.
+- Run `npm ci` once (it installs the test tools at the versions in `package-lock.json`). `npm test` runs every test
+  (it needs Node 22 and Java 21). `npm start` serves the site at http://localhost:8000; then `npm run smoke` uses it in
+  Chrome. Locally there is no sign-in or database: every page works except "Esta semana" and the admin page.
+- `npm run signed-in` (Java too) starts local copies of sign-in and the database, serves the site itself and uses it
+  signed in: a student's settings, marks and notes following them, signing out, "Delete my data", another student
+  being refused, and the coach saving a week, next week taking over, starting from a past week and the Students list.
+  The people are made up and the translator is answered by the test, never called. When you change something people
+  do signed in, add a step there.
 - Every pull request runs the tests, then opens the site in Chrome and uses it (`tests/smoke.mjs`: the sidebar,
   Curriculum home, a technique, search, progress, the tree, sharing, the coach's tools from the account menu, the
   phone's bottom bar and part switcher, previous / next in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and "Clear this
-  browser", a prepared next week taking over on its date, both languages, the admin page). Once a pull request is merged, `main`
+  browser", a prepared next week taking over on its date, both languages, the admin page). It then does the same signed in (`tests/signed-in.mjs`). Once a pull request is merged, `main`
   publishes the site **and** `firestore.rules` about a minute later, then runs the same browser check on the
   published site. When you add a feature people click, add a step for it to `tests/smoke.mjs`.
 - Every night `.github/workflows/nightly.yml` checks the published site (`tests/nightly.mjs`): up, safe, still

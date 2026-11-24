@@ -5,6 +5,11 @@
   "scripts": {
     "start": "python3 -m http.server 8000",
     "smoke": "node tests/smoke.mjs",
-    "test": "npx --yes firebase-tools@15.35.0 emulators:exec --only firestore --project demo-sistema-guarda \"node --test tests/*.test.js\""
+    "test": "firebase emulators:exec --only firestore --project demo-sistema-guarda \"node --test tests/*.test.js\"",
+    "signed-in": "firebase emulators:exec --only auth,firestore --project demo-sistema-guarda \"node tests/signed-in.mjs\""
+  },
+  "devDependencies": {
+    "firebase-tools": "15.35.0",
+    "playwright-core": "1.65.1"
   }
 }
