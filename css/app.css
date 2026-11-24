@@ -201,8 +201,12 @@ a.primary{text-decoration:none;display:inline-block}
 /* admin form */
 .form input[type=text],.form input[type=date],.form textarea{width:100%;font:500 15px var(--body);padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
 .form textarea{min-height:72px;resize:vertical}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
-@media (max-width:520px){.two{grid-template-columns:1fr}}
+.form .field:has(+ .translation, + .translation-edit){margin-bottom:6px}
+.translation{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;margin:0 0 14px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.translation b{color:var(--ink);font-weight:600}
+.translation-edit{margin-bottom:14px;padding-left:12px;border-left:2px solid var(--line)}
+.translation-edit .field{margin-bottom:4px}
+.linkbtn{border:0;padding:0;background:none;color:var(--ink);font:500 13px var(--body);text-decoration:underline;cursor:pointer}
 /* video and diagram in the technique panel */
 .video{position:relative;display:block;width:100%;aspect-ratio:16/9;margin:10px 0 4px;border:0;padding:0;border-radius:10px;overflow:hidden;background:var(--surface-2);cursor:pointer}
 .video img,.video iframe{width:100%;height:100%;object-fit:cover;border:0;display:block}
@@ -212,9 +216,6 @@ a.primary{text-decoration:none;display:inline-block}
 .media-admin{margin-top:22px;padding-top:6px;border-top:1px dashed var(--line)}
 .media-admin .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .media-admin input[type=url]{flex:1;min-width:180px;font:500 14px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-/* admin: writing language */
-.auto label{color:var(--muted)}
-.auto input,.auto textarea{border-style:dashed}
 /* search box: beside the title on wide screens, its own row on phones */
 .search{flex:1 1 200px;max-width:320px;min-width:0;min-height:34px;font:500 14px var(--body);padding:0 14px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--ink)}
 .search::placeholder{color:var(--muted)}
@@ -246,6 +247,7 @@ a.primary{text-decoration:none;display:inline-block}
   .techs .chipx .ibtn{width:44px}
   nav a{display:flex;align-items:center;min-height:44px;padding-block:6px 7px}
   .picks label{min-height:44px;padding-block:8px}
+  .linkbtn{min-height:44px;padding-inline:4px}
   .panel-top{min-height:44px}
   main>p.note>a{display:inline-flex;align-items:center;min-height:44px}
   select,.search,.form input[type=text],.form input[type=date],.media-admin input[type=url]{min-height:44px;font-size:16px}

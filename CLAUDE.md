@@ -59,7 +59,8 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `data/content.json` | The guard modules (top, bottom), drills and the method. |
 | `data/curriculum.json` | The other parts of the fight, the tab order (`moduleOrder`) and the "where to go" links (`nx`). |
 | `firestore.rules` | Who can read and change what in the database. |
-| `tests/` | `content.test.js` checks the curriculum; `rules.test.js` checks the database rules; `smoke.mjs` uses the site in a real browser; `nightly.mjs` checks the published site every night. |
+| `js/translation.js` | Decides, on the admin page, which fields to translate, keep or ask about (see Translation). |
+| `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `rules.test.js` checks the database rules; `smoke.mjs` uses the site in a real browser; `nightly.mjs` checks the published site every night. |
 | `docs/translator.gs` | A copy of the translator that runs in the site's Google account (see Translation). |
 
 ## Text
@@ -83,7 +84,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 
 | Document | Holds | Who can read | Who can change |
 |---|---|---|---|
-| `site/week` | This week's class (the "Esta semana" tab): `weekOf`, `title`, `note`, `techniques` (ids) | everyone | admins |
+| `site/week` | This week's class (the "Esta semana" tab): `weekOf`, `title`, `note`, `techniques` (ids), `from` (the language the admin wrote in) and `handFixed` (`'title'` and/or `'note'`: translations the admin corrected by hand; missing means none) | everyone | admins |
 | `site/weeks` | Past weeks, newest first, at most 52: `weeks: [{ weekOf, title, note, techniques }]`. Saving a new week on the admin page adds the previous one. Read only when someone taps "Past weeks". | everyone | admins |
 | `admins/{email}` | One document per admin, named by their lowercase email | that person | nobody from the site; add in the Firebase console |
 | `site/media` | Each move's video (a YouTube id) and whether it has a diagram: `techniques.<id>.video`, `.diagram` | everyone | admins |
@@ -108,8 +109,12 @@ never "fix" a conflict by replacing a whole file with your copy.
   360 MB a day, and file storage needs billing.
 - **Diagrams** are uploaded from the move's panel too. The browser shrinks them and stores them in
   `diagrams/<id>`. Don't add big images to the repo either.
-- **Translation.** On the admin page, the admin picks the language they write in; the other is translated
-  automatically when they save (`translate()` in `js/firebase.js`) and they can correct it. The translator is
+- **Translation.** On the admin page, the admin picks the language they write in and sees only that language's
+  fields; the other is translated automatically when they save (`translate()` in `js/firebase.js`). The
+  translation shows as a quiet line under each field, with "Edit translation" to correct it by hand. A corrected
+  field is listed in `handFixed` and is never translated over silently: if its original text changes, the page
+  asks first. What happens to each field on save is decided in `js/translation.js` (tested in
+  `tests/translation.test.js`); `js/admin.js` carries it out. The translator is
   `docs/translator.gs`, running free in the site's own Google account (sistemaguarda@gmail.com); its address is
   in `site/config`. Changing it means redeploying it there, which is John's.
 
