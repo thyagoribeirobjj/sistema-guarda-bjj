@@ -70,9 +70,14 @@ Everything else works the same.
 
 ## Publishing
 
-Every push to `main` runs the tests (`.github/workflows/deploy.yml`). If they pass, the site and the database rules are
-published, and they're live at <https://sistemaguarda.com> about a minute later. Pull requests run the same tests without
-publishing.
+Changes reach `main` through pull requests. Each pull request runs the tests (`.github/workflows/deploy.yml`), and
+GitHub only allows the merge once they pass on a branch that's up to date with `main`. That way, everything that goes
+live was tested together with everyone else's latest work. After a merge, the site and the database rules are
+published and live at <https://sistemaguarda.com> about a minute later.
+
+- **The rule on `main`** lives in `docs/main-ruleset.json`. The repo owner applies it once (Settings → Rules, or
+  `gh api -X POST repos/thyagoribeirobjj/sistema-guarda-bjj/rulesets --input docs/main-ruleset.json`). To change it,
+  edit the file and update the ruleset the same way.
 
 - **Undo a bad publish:** revert the commit, or Firebase console → Hosting → Release history → Roll back.
 - **No keys in this repo:** GitHub signs in to Google with a short-lived token that only works for `main` of this
