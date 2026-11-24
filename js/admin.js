@@ -13,8 +13,8 @@ let saved = { weekOf: '', title: {}, note: {}, techniques: [], handFixed: [] };
 let week = saved;
 let writingIn = 'pt';
 const editing = new Set(); // translation editors open now
-const edited = new Set(); // translation editors opened since the last save
 let asking = null; // the fields the admin is being asked about
+let saving = false;
 const otherLanguage = () => (writingIn === 'pt' ? 'en' : 'pt');
 const fieldLabel = (name) => t(name === 'title' ? 'weekTitle' : 'note');
 
@@ -30,10 +30,10 @@ function accountLine(email) {
   return html`<p class="account">${t('signedInAs')} ${email} <button type="button" class="pill" id="signOut">${t('signOut')}</button></p>`;
 }
 
-function field(id, label, value, kind = 'text', className = 'field') {
+function field(id, label, value, kind = 'text') {
   return kind === 'textarea'
-    ? html`<div class="${className}"><label for="${id}">${label}</label><textarea id="${id}">${value}</textarea></div>`
-    : html`<div class="${className}"><label for="${id}">${label}</label><input type="${kind}" id="${id}" value="${value}"></div>`;
+    ? html`<div class="field"><label for="${id}">${label}</label><textarea id="${id}">${value}</textarea></div>`
+    : html`<div class="field"><label for="${id}">${label}</label><input type="${kind}" id="${id}" value="${value}"></div>`;
 }
 
 // The field in the language the admin writes in, with its translation underneath.
@@ -146,22 +146,34 @@ async function archivePrevious(draft) {
   }
 }
 
+// While a save runs the form is locked, so a second click or anything typed meanwhile can't be lost.
+function lockForm(locked) {
+  for (const control of document.getElementById('weekForm').elements) control.disabled = locked;
+}
+
+const focusSaveButton = () => document.querySelector('#weekForm [type="submit"]').focus();
+
 // answer is the admin's reply to the question ('translate' or 'keep'); a plain Save starts over without one.
 async function save(answer) {
+  if (saving) return;
   week = readForm();
   const draft = week;
   const from = writingIn;
   const to = otherLanguage();
   const handFixed = saved.handFixed || [];
-  const plan = translationPlan({ saved, draft, from, to, handFixed, edited: [...edited] });
+  const plan = translationPlan({ saved, draft, from, to, handFixed });
   const asks = translatedFields.filter((name) => plan[name] === 'ask');
   if (asks.length && !answer) {
     asking = asks;
-    return showForm(main.dataset.email);
+    showForm(main.dataset.email);
+    document.querySelector('[data-answer]').focus();
+    return;
   }
   asking = null;
   const steps = answerPlan(plan, answer);
   const status = document.getElementById('status');
+  saving = true;
+  lockForm(true);
   try {
     const translatedOk = await fillTranslations(draft, steps, from, to);
     status.textContent = t('saving');
@@ -171,13 +183,16 @@ async function save(answer) {
     saved = doc;
     week = doc;
     editing.clear();
-    edited.clear();
     const messages = [t(translatedOk ? 'saved' : 'translateFailed'), archivedOk ? '' : t('archiveFailed')];
     showForm(main.dataset.email, messages.filter(Boolean).join(' '));
   } catch (error) {
     console.error(error);
+    lockForm(false);
     document.getElementById('status').textContent = t('saveFailed');
+  } finally {
+    saving = false;
   }
+  focusSaveButton();
 }
 
 main.addEventListener('submit', (event) => {
@@ -197,16 +212,19 @@ main.addEventListener('click', (event) => {
   const edit = event.target.closest('[data-edit]');
   const done = event.target.closest('[data-done]');
   const answer = event.target.closest('[data-answer]');
-  if (writing) redraw(() => { writingIn = writing.dataset.writing; asking = null; });
+  if (writing) {
+    redraw(() => { writingIn = writing.dataset.writing; asking = null; });
+    document.querySelector(`[data-writing="${writingIn}"]`).focus();
+  }
   if (edit) {
     const name = edit.dataset.edit;
-    redraw(() => { editing.add(name); edited.add(name); });
+    redraw(() => editing.add(name));
     document.getElementById(`${name}-translation`).focus();
   }
   if (done) {
     const name = done.dataset.done;
     redraw(() => editing.delete(name));
-    document.querySelector(`[data-edit="${name}"]`)?.focus();
+    (document.querySelector(`[data-edit="${name}"]`) || document.getElementById(name)).focus();
   }
   if (answer) save(answer.dataset.answer);
   if (event.target.id === 'signIn') signIn().catch(() => alert(t('signInFailed')));

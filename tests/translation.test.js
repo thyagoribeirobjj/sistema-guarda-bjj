@@ -10,23 +10,36 @@ const saved = {
 const copy = (week) => JSON.parse(JSON.stringify(week));
 const plan = (draft, options = {}) => translationPlan({ saved, draft, from: 'pt', to: 'en', ...options });
 
-test('an empty original clears its translation', () => {
+test('an original the admin emptied clears its translation', () => {
   const draft = copy(saved);
   draft.note.pt = '';
-  assert.equal(plan(draft, { handFixed: ['note'], edited: ['note'] }).note, 'clear');
+  assert.equal(plan(draft, { handFixed: ['note'] }).note, 'clear');
 });
 
-test('a translation changed in the open editor is kept as typed', () => {
+test('text in only the other language is kept when the writing language is empty', () => {
+  const onlyPt = { from: 'pt', title: { pt: 'Raspagem', en: '' }, note: { pt: 'Tragam água', en: '' } };
+  const draft = copy(onlyPt);
+  assert.deepEqual(translationPlan({ saved: onlyPt, draft, from: 'en', to: 'pt' }), { title: 'keep', note: 'keep' });
+});
+
+test('a translation the admin changed is kept as typed', () => {
   const draft = copy(saved);
   draft.title.en = 'Standing guard pass';
   draft.title.pt = 'Passagem de guarda em pé';
-  assert.equal(plan(draft, { edited: ['title'] }).title, 'keepEdited');
+  assert.equal(plan(draft).title, 'keepEdited');
 });
 
-test('an editor opened but left unchanged does not count as a correction', () => {
+test('text typed before switching the writing language is kept, not translated over', () => {
+  const draft = copy(saved);
+  draft.title.pt = 'Passagem de guarda';
+  draft.title.en = 'Guard pass';
+  assert.equal(translationPlan({ saved, draft, from: 'en', to: 'pt' }).title, 'keepEdited');
+});
+
+test('a translation left as saved does not count as a correction', () => {
   const draft = copy(saved);
   draft.title.pt = 'Passagem de guarda em pé';
-  assert.equal(plan(draft, { edited: ['title'] }).title, 'translate');
+  assert.equal(plan(draft).title, 'translate');
 });
 
 test('nothing changed keeps the translation', () => {

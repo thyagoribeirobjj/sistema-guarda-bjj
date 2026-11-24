@@ -3,25 +3,27 @@
 //   draft:     the week as it is in the form now
 //   from, to:  the language the admin writes in, and the other one
 //   handFixed: the fields whose translation the admin corrected by hand
-//   edited:    the fields whose translation editor the admin opened since the last save
+// A translation in the draft that differs from the saved one was typed by the admin: in the translation editor,
+// or as the original before switching the writing language.
 // Each field gets one of:
-//   'clear'      no original text, so no translation either
+//   'clear'      the admin emptied the original (or both are empty), so no translation either
 //   'keepEdited' keep the translation the admin just typed
-//   'keep'       nothing changed, keep the translation
+//   'keep'       nothing changed (or only the other language has text), keep the translation
 //   'translate'  translate the original again
 //   'ask'        the original changed, but its translation was corrected by hand: ask before replacing it
 export const translatedFields = ['title', 'note'];
 
-export function translationPlan({ saved = {}, draft, from, to, handFixed = [], edited = [] }) {
+export function translationPlan({ saved = {}, draft, from, to, handFixed = [] }) {
   const plan = {};
   for (const name of translatedFields) {
     const source = draft[name]?.[from] || '';
     const translation = draft[name]?.[to] || '';
     const savedTranslation = saved[name]?.[to] || '';
-    const sourceChanged = source !== (saved[name]?.[from] || '');
-    if (!source) plan[name] = 'clear';
-    else if (edited.includes(name) && translation !== savedTranslation) plan[name] = 'keepEdited';
-    else if (!sourceChanged && translation) plan[name] = 'keep';
+    const savedSource = saved[name]?.[from] || '';
+    const typedTranslation = translation && translation !== savedTranslation;
+    if (!source && (savedSource || !translation)) plan[name] = 'clear';
+    else if (typedTranslation) plan[name] = 'keepEdited';
+    else if (!source || (source === savedSource && translation)) plan[name] = 'keep';
     else if (handFixed.includes(name) && translation) plan[name] = 'ask';
     else plan[name] = 'translate';
   }
