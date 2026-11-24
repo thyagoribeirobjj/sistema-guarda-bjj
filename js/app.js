@@ -199,6 +199,7 @@ async function start() {
   onAccountChange(accountChanged);
   [state.week, state.media] = await Promise.all([loadWeek().catch(() => null), loadMedia()]);
   if (state.week && (!location.hash || location.hash === '#semana')) state.view = 'semana';
+  if (!isTab(state.view)) state.view = content.order[0];
   render();
   if (panelOpen()) redrawPanel('#panelClose');
 }

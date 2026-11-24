@@ -116,6 +116,8 @@ test('settings must have the expected shape', async () => {
   assert.equal(await save({ ...settings('student@example.com'), favorites: 'top-base' }), 'denied');
   assert.equal(await save({ ...settings('student@example.com'), progress: { 'top-base': 'done' } }), 'allowed');
   assert.equal(await save({ ...settings('student@example.com'), progress: 'done' }), 'denied');
+  const tooMany = Object.fromEntries(Array.from({ length: 1001 }, (_, i) => [`move-${i}`, 'done']));
+  assert.equal(await save({ ...settings('student@example.com'), progress: tooMany }), 'denied');
 });
 
 const image = (size) => `data:image/webp;base64,${'A'.repeat(size)}`;

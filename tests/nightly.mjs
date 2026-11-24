@@ -89,9 +89,13 @@ await check('pages are sent with the safety headers', async () => {
 
 // ---- signed out, people can read the week and nothing private ----
 
-const { apiKey } = await (await fetch(`${site}/__/firebase/init.json`)).json();
+const apiKey = await fetch(`${site}/__/firebase/init.json`).then((response) => response.json()).then((config) => config.apiKey).catch(() => '');
 
-await check('signed out: the week can be read', async () => expected(await status(`${documents}/site/week?key=${apiKey}`), 200));
+await check('the site hands out its Firebase settings', async () => (apiKey ? '' : 'no settings at /__/firebase/init.json'));
+await check('signed out: the week can be read', async () => {
+  const answer = await status(`${documents}/site/week?key=${apiKey}`);
+  return answer === 200 || answer === 404 ? '' : `expected 200 (or 404 when no week is set), got ${answer}`;
+});
 await check('signed out: the admin list is refused', async () => expected(await status(`${documents}/admins/someone%40example.com?key=${apiKey}`), 403));
 await check('signed out: people\'s settings are refused', async () => expected(await status(`${documents}/users/someone?key=${apiKey}`), 403));
 

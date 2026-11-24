@@ -8,12 +8,22 @@ const storageKey = 'sg-settings';
 const browserLanguage = (navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en';
 
 // progress: { <technique id>: 'learning' | 'done' }
-export const settings = { language: browserLanguage, theme: '', favorites: [], progress: {}, ...readLocal() };
+export const settings = { language: browserLanguage, theme: '', favorites: [], progress: {} };
+merge(readLocal());
 
 let accountId = null;
 
 function readLocal() {
   try { return JSON.parse(localStorage.getItem(storageKey)) || {}; } catch { return {}; }
+}
+
+// Takes saved settings in. Language and theme are replaced; favorites and progress are added to what is
+// already here, so marks made before signing in are kept.
+function merge(from) {
+  if (from.language === 'pt' || from.language === 'en') settings.language = from.language;
+  if (typeof from.theme === 'string') settings.theme = from.theme;
+  if (Array.isArray(from.favorites)) settings.favorites = [...new Set([...from.favorites, ...settings.favorites])];
+  if (from.progress && typeof from.progress === 'object') settings.progress = { ...from.progress, ...settings.progress };
 }
 
 function saved() {
@@ -37,10 +47,11 @@ export function currentTheme() {
 }
 
 export async function useAccount(user) {
-  accountId = user ? user.uid : null;
+  accountId = null;
   if (!user) return;
   const fromDatabase = await loadUserSettings(user.uid).catch(() => null);
-  if (fromDatabase) Object.assign(settings, fromDatabase);
+  if (fromDatabase) merge(fromDatabase);
+  accountId = user.uid;
   store();
   applyTheme();
 }

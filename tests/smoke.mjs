@@ -8,14 +8,21 @@ const address = (process.argv[2] || 'http://localhost:8000').replace(/\/$/, '');
 const published = !/localhost|127\.0\.0\.1/.test(address);
 const browser = await chromium.launch({ channel: process.env.SMOKE_BROWSER || 'chrome' });
 const problems = [];
+// Not the site's fault: no icon file, no Firebase settings in a local preview, a video removed from YouTube.
+const expectedMisses = /favicon\.ico|\/__\/firebase\/|ytimg\.com/;
 
 async function open(path, locale) {
   const context = await browser.newContext({ locale });
   const page = await context.newPage();
   page.on('pageerror', (error) => problems.push(`${path}: ${error.message}`));
   page.on('console', (message) => {
-    // A local preview has no Firebase settings file; that one miss is expected.
-    if (message.type() === 'error' && !message.location().url.includes('/__/firebase/')) problems.push(`${path}: ${message.text()}`);
+    if (message.type() === 'error' && !message.text().startsWith('Failed to load resource')) problems.push(`${path}: ${message.text()}`);
+  });
+  page.on('response', (response) => {
+    if (response.status() >= 400 && !expectedMisses.test(response.url())) problems.push(`${path}: ${response.status()} ${response.url()}`);
+  });
+  page.on('requestfailed', (request) => {
+    if (!expectedMisses.test(request.url())) problems.push(`${path}: could not load ${request.url()}`);
   });
   await page.goto(address + path);
   return page;
@@ -39,6 +46,7 @@ let name = '';
 await step('the page loads with its tabs, in English for an English browser', async () => {
   await firstTab.waitFor();
   assert.equal(await page.getAttribute('html', 'lang'), 'en');
+  assert.equal(await page.locator('#appTitle').textContent(), 'Guard System');
   assert.ok(await page.locator('nav a').count() > 4, 'tabs');
 });
 
@@ -87,6 +95,8 @@ await step('a Portuguese browser gets Portuguese', async () => {
   const portuguese = await open('/', 'pt-BR');
   await portuguese.locator('nav a').first().waitFor();
   assert.equal(await portuguese.getAttribute('html', 'lang'), 'pt-BR');
+  assert.equal(await portuguese.locator('#search').getAttribute('placeholder'), 'Buscar técnica');
+  assert.equal(await portuguese.locator('#theme').getAttribute('title'), 'Modo claro');
 });
 
 await step('the admin page loads', async () => {
