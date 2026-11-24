@@ -68,6 +68,7 @@ export const strings = {
   yesEmpty: { pt: 'Sim, esvaziar', en: 'Yes, empty it' },
   cancel: { pt: 'Cancelar', en: 'Cancel' },
 
+  account: { pt: 'Conta', en: 'Account' },
   signIn: { pt: 'Entrar', en: 'Sign in' },
   signInWithGoogle: { pt: 'Entrar com Google', en: 'Sign in with Google' },
   signOut: { pt: 'Sair', en: 'Sign out' },

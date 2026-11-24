@@ -1,5 +1,5 @@
 // Opens the site in a real browser and uses it the way a visitor would: tabs, a technique, search,
-// progress, the tree, sharing, the lesson builder, both languages, the admin page. A page that fails to load fails here.
+// progress, the tree, sharing, the lesson builder, the account menu and theme, the back button, both languages, the admin page. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm install --no-save playwright-core)
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
@@ -121,10 +121,31 @@ await step('a lesson builder choice survives a reload', async () => {
 });
 
 if (published) {
-  await step('sign-in is available', async () => {
+  await step('the account menu offers sign-in', async () => {
     await page.locator('#account').waitFor({ state: 'visible', timeout: 20000 });
+    await page.locator('#account').click();
+    await page.locator('#accountMenu #signIn').waitFor();
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('#account').getAttribute('aria-expanded'), 'false');
   });
 }
+
+await step('the light/dark switch is reachable and changes the theme', async () => {
+  const before = await page.getAttribute('html', 'data-theme');
+  if (await page.locator('#account').isVisible()) await page.locator('#account').click();
+  await page.locator('#theme').click();
+  assert.notEqual(await page.getAttribute('html', 'data-theme'), before);
+});
+
+await step('the back button closes a technique and stays on the site', async () => {
+  await firstTab.click();
+  const tab = page.url();
+  await page.locator('main .tech').first().click();
+  await page.locator('#panel').waitFor();
+  await page.goBack();
+  await page.locator('#panel').waitFor({ state: 'hidden' });
+  assert.equal(page.url(), tab);
+});
 
 await step('a Portuguese browser gets Portuguese', async () => {
   const portuguese = await open('/', 'pt-BR');

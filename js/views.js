@@ -84,7 +84,7 @@ function weekDate(weekOf) {
 
 function weekCard(week) {
   const date = weekDate(week.weekOf);
-  return html`<section class="week">${date ? html`<p class="week-date">${date}</p>` : ''}<h3 class="sect-title">${text(week.title)}</h3>
+  return html`<section class="week">${date ? html`<p class="week-date">${date}</p>` : ''}<h3 class="week-title">${text(week.title)}</h3>
     <div class="techs">${(week.techniques || []).map(techniqueChip)}</div>
     ${text(week.note) ? html`<p class="note">${text(week.note)}</p>` : ''}</section>`;
 }
