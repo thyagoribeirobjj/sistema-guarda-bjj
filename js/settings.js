@@ -3,6 +3,7 @@ import { loadUserSettings, saveUserSettings } from './firebase.js';
 // Each visitor's language, theme, favorites and progress. Kept in this browser, and in the
 // database (users/{uid}) once they sign in, so they follow them to other devices.
 const storageKey = 'sg-settings';
+const accountKey = 'sg-account';
 
 // First visit: Portuguese for a browser set to Portuguese, English for everyone else.
 const browserLanguage = (navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en';
@@ -17,13 +18,16 @@ function readLocal() {
   try { return JSON.parse(localStorage.getItem(storageKey)) || {}; } catch { return {}; }
 }
 
-// Takes saved settings in. Language and theme are replaced; favorites and progress are added to what is
-// already here, so marks made before signing in are kept.
-function merge(from) {
+// Takes saved settings in. With keep, the favorites and progress already here are added to, not replaced.
+function merge(from, keep = false) {
   if (from.language === 'pt' || from.language === 'en') settings.language = from.language;
   if (typeof from.theme === 'string') settings.theme = from.theme;
-  if (Array.isArray(from.favorites)) settings.favorites = [...new Set([...from.favorites, ...settings.favorites])];
-  if (from.progress && typeof from.progress === 'object') settings.progress = { ...from.progress, ...settings.progress };
+  if (Array.isArray(from.favorites)) settings.favorites = keep ? [...new Set([...from.favorites, ...settings.favorites])] : from.favorites;
+  if (from.progress && typeof from.progress === 'object') settings.progress = keep ? { ...from.progress, ...settings.progress } : from.progress;
+}
+
+function lastAccount() {
+  try { return localStorage.getItem(accountKey); } catch { return null; }
 }
 
 function saved() {
@@ -50,8 +54,11 @@ export async function useAccount(user) {
   accountId = null;
   if (!user) return;
   const fromDatabase = await loadUserSettings(user.uid).catch(() => null);
-  if (fromDatabase) merge(fromDatabase);
+  // The first time this browser signs in to an account, what was marked here before is added to the account.
+  // After that the account is the truth, so removing a favorite on one device removes it on the others.
+  if (fromDatabase) merge(fromDatabase, lastAccount() !== user.uid);
   accountId = user.uid;
+  try { localStorage.setItem(accountKey, user.uid); } catch {}
   store();
   applyTheme();
 }
