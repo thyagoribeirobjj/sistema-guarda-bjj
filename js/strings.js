@@ -126,7 +126,15 @@ export const strings = {
   replaceDiagram: { pt: 'Trocar imagem', en: 'Replace image' },
 
   writingIn: { pt: 'Estou escrevendo em', en: "I'm writing in" },
-  autoTranslated: { pt: 'tradução automática, pode corrigir', en: 'translated automatically, you can fix it' },
+  translation: { pt: 'Tradução', en: 'Translation' },
+  translatedAutomatically: { pt: 'tradução automática', en: 'translated automatically' },
+  yourCorrection: { pt: 'sua correção', en: 'your correction' },
+  editTranslation: { pt: 'Editar tradução', en: 'Edit translation' },
+  doneEditing: { pt: 'Pronto', en: 'Done' },
+  handFixedChanged: { pt: 'Você corrigiu esta tradução à mão, e o texto original mudou.', en: 'You corrected this translation by hand, and the original text changed.' },
+  handFixedChangedBoth: { pt: 'Você corrigiu estas traduções à mão, e o texto original mudou.', en: 'You corrected these translations by hand, and the original text changed.' },
+  translateAgain: { pt: 'Traduzir de novo', en: 'Translate again' },
+  keepMyTranslation: { pt: 'Manter minha tradução', en: 'Keep my translation' },
   translating: { pt: 'Traduzindo…', en: 'Translating…' },
   translateFailed: { pt: 'Salvo, mas a tradução falhou. O texto aparece só no idioma original.', en: 'Saved, but the translation failed. The text shows in its original language only.' },
 };
