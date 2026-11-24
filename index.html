@@ -166,6 +166,24 @@ select{width:100%;font:500 14px var(--body);padding:8px 10px;border:1px solid va
 .srcs{margin-top:18px;font-size:12.5px;color:var(--muted)}
 .srcs a{color:var(--muted)}
 ::selection{background:var(--accent);color:var(--accent-ink)}
+/* sign-in */
+.auth{position:fixed;inset:0;z-index:30;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
+.auth[hidden]{display:none}
+.auth-card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:12px;padding:28px 24px}
+.auth-card h2{font-family:var(--display);font-size:34px;text-transform:uppercase;margin:0 0 6px;line-height:1}
+.auth-sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+.social{display:grid;gap:8px}
+.social-btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 14px var(--body);padding:11px 14px;border-radius:8px;cursor:pointer;text-align:left}
+.social-btn:hover{border-color:var(--accent)}
+.auth-note{font-size:13px;color:var(--muted);margin:10px 0 0}
+.auth-note[hidden]{display:none}
+.auth-div{text-align:center;color:var(--muted);font-size:13px;margin:16px 0}
+.auth-card input{width:100%;font:500 14px var(--body);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);margin-bottom:10px}
+.auth-go{width:100%;margin-bottom:8px}
+.auth-demo{border:0;background:transparent;color:var(--muted);font:500 13px var(--body);padding:8px;cursor:pointer;text-decoration:underline;width:100%}
+.auth-fine{font-size:12.5px;color:var(--muted);margin:14px 0 0}
+.signout{border:1px solid var(--line);background:transparent;color:var(--muted);font:600 12px var(--body);padding:0 12px;min-height:36px;border-radius:999px;cursor:pointer;flex:none}
+.signout[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -177,10 +195,28 @@ select{width:100%;font:500 14px var(--body);padding:8px 10px;border:1px solid va
         <button type="button" id="btnPt" data-lang="pt">PT</button>
         <button type="button" id="btnEn" data-lang="en">EN</button>
       </div>
+      <button type="button" class="signout" id="signOut" hidden>Sair</button>
     </div>
     <nav id="nav" aria-label="Módulos"></nav>
   </div>
 </header>
+<div class="auth" id="auth">
+  <div class="auth-card">
+    <h2>Sistema Guarda</h2>
+    <p class="auth-sub">Entre para ver o conteúdo da sua semana e o seu sistema. / Sign in to see your week and your system.</p>
+    <div class="social">
+      <button type="button" class="social-btn" data-social="Google">G&nbsp;&nbsp;Continue with Google</button>
+      <button type="button" class="social-btn" data-social="GitHub">Continue with GitHub</button>
+      <button type="button" class="social-btn" data-social="Apple">Continue with Apple</button>
+    </div>
+    <p class="auth-note" id="socialNote" hidden></p>
+    <div class="auth-div">— ou continue com e-mail / or continue with email —</div>
+    <input id="authEmail" type="email" placeholder="you@example.com" autocomplete="email">
+    <button type="button" class="primary auth-go" id="authGo">Entrar / Sign in</button>
+    <button type="button" class="auth-demo" id="authDemo">Use the demo account (demo@example.com)</button>
+    <p class="auth-fine">Demo mode: no passwords, no real OAuth yet. Your config is saved in this browser only. / Modo demonstração: sem senhas e sem OAuth real ainda. Sua configuração fica salva só neste navegador.</p>
+  </div>
+</div>
 <main class="wrap" id="main"></main>
 <div class="scrim" id="scrim" hidden></div>
 <aside class="panel" id="panel" hidden role="dialog" aria-modal="true" aria-labelledby="pTitle"></aside>
@@ -531,6 +567,65 @@ function route(){
 window.addEventListener('hashchange', route);
 window.addEventListener('storage', function(e){ if (e.key === FKEY && D) { favLoad(); render(); } });
 
+// ---- sign-in (demo mode: no passwords, no real OAuth yet) ----
+var USERS = null, USER = null, USER_EMAIL = null, BOOT = null, booted = false;
+function loadUserConfig(email){
+  var stored = null;
+  try { stored = JSON.parse(localStorage.getItem('sg-user-' + email) || 'null'); } catch (e) {}
+  if (stored) return stored;
+  var base = (USERS && USERS.users && USERS.users[email]) || null;
+  if (base) { var c = JSON.parse(JSON.stringify(base)); delete c._example; delete c.name; return c; }
+  return {language: lang, level: 'all', myTechs: [], progress: {}, notes: ''};
+}
+function applyUser(){
+  if (!USER) return;
+  if (USER.language === 'pt' || USER.language === 'en') { lang = USER.language; try { localStorage.setItem('sg-lang', lang); } catch (e) {} }
+}
+function saveUser(){
+  if (!USER || !USER_EMAIL) return;
+  try { localStorage.setItem('sg-user-' + USER_EMAIL, JSON.stringify(USER)); } catch (e) {}
+}
+function signIn(email, silent){
+  email = String(email || '').trim().toLowerCase();
+  if (!email || email.indexOf('@') < 0) { if (!silent) alert(lang === 'pt' ? 'Digite um e-mail válido.' : 'Enter a valid email.'); return; }
+  USER_EMAIL = email;
+  USER = loadUserConfig(email);
+  applyUser();
+  saveUser();
+  try { localStorage.setItem('sg-session', email); } catch (e) {}
+  $('auth').hidden = true;
+  $('signOut').hidden = false;
+  bootApp();
+}
+function signOut(){
+  USER = null; USER_EMAIL = null;
+  try { localStorage.removeItem('sg-session'); } catch (e) {}
+  $('auth').hidden = false;
+  $('signOut').hidden = true;
+}
+function restoreSession(){
+  var email = null;
+  try { email = localStorage.getItem('sg-session'); } catch (e) {}
+  if (email) signIn(email, true);
+}
+function bootApp(){
+  if (booted || !BOOT) return;
+  booted = true;
+  start(BOOT.c, BOOT.k);
+}
+$('authGo').addEventListener('click', function(){ signIn($('authEmail').value); });
+$('authEmail').addEventListener('keydown', function(e){ if (e.key === 'Enter') signIn(e.target.value); });
+$('authDemo').addEventListener('click', function(){ signIn('demo@example.com'); });
+$('signOut').addEventListener('click', signOut);
+Array.prototype.forEach.call(document.querySelectorAll('.social-btn'), function(b){
+  b.addEventListener('click', function(){
+    var n = $('socialNote'); n.hidden = false;
+    n.textContent = lang === 'pt'
+      ? 'Modo demonstração — o login com ' + b.getAttribute('data-social') + ' precisa de hospedagem real e OAuth. Por enquanto, entre com seu e-mail abaixo.'
+      : 'Demo mode — ' + b.getAttribute('data-social') + ' sign-in needs real hosting and OAuth. For now, sign in with your email below.';
+  });
+});
+
 function start(c, k){
   setup(c, k); favLoad();
   if (!pick.items.length) pick.items = ['0-0','0-1','1-0'];
@@ -538,9 +633,13 @@ function start(c, k){
 }
 (function(){
   var ce = $('content'), ke = $('curriculum'), ct = ce && ce.textContent.trim(), kt = ke && ke.textContent.trim();
-  if (ct && ct.charAt(0) === '{') { start(JSON.parse(ct), kt && kt.charAt(0) === '{' ? JSON.parse(kt) : null); return; }
+  function withData(c, k){
+    BOOT = {c: c, k: k};
+    fetch('data/users.json', {cache:'no-cache'}).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }).then(function(u){ USERS = u; restoreSession(); });
+  }
+  if (ct && ct.charAt(0) === '{') { withData(JSON.parse(ct), kt && kt.charAt(0) === '{' ? JSON.parse(kt) : null); return; }
   var get = function(u){ return fetch(u, {cache:'no-cache'}).then(function(r){ if (!r.ok) throw r; return r.json(); }); };
-  Promise.all([get('data/content.json'), get('data/curriculum.json').catch(function(){ return null; })]).then(function(r){ start(r[0], r[1]); })
+  Promise.all([get('data/content.json'), get('data/curriculum.json').catch(function(){ return null; })]).then(function(r){ withData(r[0], r[1]); })
     .catch(function(){ $('main').innerHTML = '<p class="intro" role="alert">' + (lang === 'pt' ? 'Não foi possível carregar as técnicas. Recarregue a página.' : 'Could not load the techniques. Reload the page.') + '</p>'; });
 })();
 </script>
