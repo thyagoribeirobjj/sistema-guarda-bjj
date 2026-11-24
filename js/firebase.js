@@ -121,12 +121,27 @@ export function loadUserSettings(uid) {
   return read(`users/${uid}`);
 }
 
+// The name lets coaches see who is who on their list of students.
 export function saveUserSettings(uid, data) {
-  return write(`users/${uid}`, { ...data, email: auth.currentUser.email });
+  const user = auth.currentUser;
+  return write(`users/${uid}`, { ...data, email: user.email, name: (user.displayName || '').slice(0, 100) });
 }
 
-// ---- each move's video and diagram ----
-// site/media holds { techniques: { <id>: { video: <YouTube id>, diagram: true } } }.
+// users/{uid}/private/notes holds { notes: { <technique id>: text } }. Only that person can read it (firestore.rules).
+export async function loadNotes(uid) {
+  return (await read(`users/${uid}/private/notes`))?.notes || {};
+}
+
+// One note per save, naming the note it changes; an empty note is removed.
+export function saveNote(uid, id, note) {
+  return fb.setDoc(fb.doc(db, `users/${uid}/private/notes`),
+    { notes: { [id]: note ? note : fb.deleteField() }, changed: id, updatedAt: fb.serverTimestamp() },
+    { merge: true });
+}
+
+// ---- each move's video, diagram and belt level ----
+// site/media holds { techniques: { <id>: { video: <YouTube id>, diagram: true, level: 'blue' } } }.
+// level is set only where an admin changed the move's belt level from the one the curriculum gives it.
 // The diagram image itself sits in diagrams/<id> and is read only when someone opens that move.
 
 export async function loadMedia({ fresh = false } = {}) {
@@ -143,6 +158,10 @@ async function saveMediaField(id, field, value) {
 
 export function saveVideo(id, videoId) {
   return saveMediaField(id, 'video', videoId);
+}
+
+export function saveLevel(id, level) {
+  return saveMediaField(id, 'level', level || null);
 }
 
 export async function loadDiagram(id) {

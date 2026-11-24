@@ -1,12 +1,13 @@
 import { loadContent, findTechnique, isModule } from './content.js';
-import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadPastWeeks, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram } from './firebase.js';
+import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadPastWeeks, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram, saveLevel } from './firebase.js';
 import { settings, applyTheme, useAccount, changeSettings, toggleFavorite, markProgress } from './settings.js';
 import { state, readHash } from './state.js';
 import { t, text } from './strings.js';
 import { moduleView, curriculumView, weekView, treeView, methodView, searchView } from './views.js';
 import { accountButton, accountMenu } from './account.js';
-import { bottomBar, sidebar, partSwitcher, toggleParts, openMenu, closeMenus, openedMenu, moveInMenu } from './nav.js';
-import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram } from './panel.js';
+import { bottomBar, sidebar, partSwitcher, toggleParts, openMenu, closeMenus, openedMenu, moveInMenu, noteWeekSeen } from './nav.js';
+import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram, stepPanel, techniquesIn, typing } from './panel.js';
+import { changeNote } from './notes.js';
 import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
 
@@ -46,6 +47,7 @@ function mainView() {
 }
 
 function render() {
+  noteWeekSeen();
   renderHeader();
   renderNavigation();
   $('main').innerHTML = mainView();
@@ -167,7 +169,14 @@ const clickActions = [
   }],
   ['[data-past-weeks]', showPastWeeks],
   ['[data-share]', (el) => shareTechnique(el.dataset.share)],
-  ['[data-technique]', (el) => openPanel(el.dataset.technique)],
+  ['[data-step]', (el) => stepPanel(Number(el.dataset.step))],
+  // A technique opened from the page moves, with next and previous, through the others there (or in its week).
+  ['[data-technique]', (el) => openPanel(el.dataset.technique, el.closest('#panel') ? {} : { list: techniquesIn(el.closest('[data-list]') || $('main')) })],
+  ['[data-belt-filter]', (el) => {
+    state.beltFilter = el.dataset.beltFilter;
+    render();
+    $('main').querySelector(`[data-belt-filter="${el.dataset.beltFilter}"]`)?.focus();
+  }],
   ['[role="menu"] a', () => { closeMenus(); if (state.search) search(''); }],
   ['nav a, .results a, a.part-card', () => { if (state.search) search(''); }],
   ['[data-search-button]', () => { window.scrollTo(0, 0); $('search').focus(); }],
@@ -188,6 +197,14 @@ const clickActions = [
     changeSettings({ theme: el.dataset.themeChoice });
     renderHeader();
     $('accountMenu').querySelector(`[data-theme-choice="${el.dataset.themeChoice}"]`)?.focus();
+  }],
+  ['[data-belt-choice]', (el) => {
+    const belt = el.dataset.beltChoice;
+    changeSettings({ belt: settings.belt === belt ? '' : belt });
+    state.beltFilter = '';
+    render();
+    redrawPanel('#panelClose');
+    if (!$('accountMenu').hidden) $('accountMenu').querySelector(`[data-belt-choice="${belt}"]`)?.focus();
   }],
   ['[aria-haspopup="menu"]', (el) => (el.getAttribute('aria-expanded') === 'true' ? closeMenus() : openMenu(el))],
   ['#signIn', () => { closeMenus(); signIn().catch(() => alert(t('signInFailed'))); }],
@@ -227,6 +244,11 @@ document.addEventListener('change', (event) => {
     changeMedia(id, 'diagram', async () => { await saveDiagram(id, await shrinkImage(event.target.files[0])); return true; });
     return;
   }
+  const level = event.target.dataset?.level;
+  if (level) {
+    changeMedia(level, 'level', async () => { await saveLevel(level, event.target.value); return event.target.value || null; });
+    return;
+  }
   const redraw = changeLesson(event.target);
   if (redraw === true) render();
   else if (redraw === false) redrawPlan();
@@ -234,6 +256,12 @@ document.addEventListener('change', (event) => {
 
 document.addEventListener('input', (event) => {
   if (event.target.id === 'search') search(event.target.value);
+  if (event.target.dataset.note) changeNote(event.target.dataset.note, event.target.value);
+});
+
+document.addEventListener('note-not-saved', (event) => {
+  const box = $('noteBox');
+  if (box?.dataset.note === event.detail) $('noteStatus').textContent = t('noteNotSaved');
 });
 
 document.addEventListener('keydown', (event) => {
@@ -241,6 +269,11 @@ document.addEventListener('keydown', (event) => {
   if (menuOpen && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
     event.preventDefault();
     moveInMenu(event.key === 'ArrowDown' ? 1 : -1);
+    return;
+  }
+  if (!menuOpen && panelOpen() && (event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !typing(event.target)) {
+    event.preventDefault();
+    stepPanel(event.key === 'ArrowRight' ? 1 : -1);
     return;
   }
   if (event.key !== 'Escape') return;

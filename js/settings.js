@@ -1,6 +1,8 @@
 import { loadUserSettings, saveUserSettings } from './firebase.js';
+import { belts } from './content.js';
+import { useNotesAccount } from './notes.js';
 
-// Each visitor's language, theme, favorites, progress and lesson plan. Kept in this browser, and in the
+// Each visitor's language, theme, belt, favorites, progress and lesson plan. Kept in this browser, and in the
 // database (users/{uid}) once they sign in, so they follow them to other devices.
 const storageKey = 'sg-settings';
 // Each one is a block of colors in css/theme.css.
@@ -12,7 +14,8 @@ const browserLanguage = (navigator.language || '').toLowerCase().startsWith('pt'
 
 // progress: { <technique id>: 'learning' | 'done' }
 // lesson: the lesson builder's choices, { mod, dur, items, game }; null until something is picked.
-export const settings = { language: browserLanguage, theme: '', favorites: [], progress: {}, lesson: null };
+// belt: the belt the person says they have ('' until they pick one; one of belts in js/content.js).
+export const settings = { language: browserLanguage, theme: '', belt: '', favorites: [], progress: {}, lesson: null };
 merge(readLocal());
 takeOldLesson();
 
@@ -28,6 +31,7 @@ function readLocal() {
 function merge(from, keep = false) {
   if (from.language === 'pt' || from.language === 'en') settings.language = from.language;
   if (from.theme === '' || themes.includes(from.theme)) settings.theme = from.theme;
+  if ((from.belt === '' || belts.includes(from.belt)) && !(keep && settings.belt)) settings.belt = from.belt;
   if (Array.isArray(from.favorites)) settings.favorites = keep ? [...new Set([...from.favorites, ...settings.favorites])] : from.favorites;
   if (from.progress && typeof from.progress === 'object') settings.progress = keep ? { ...from.progress, ...settings.progress } : from.progress;
   if (isLesson(from.lesson)) settings.lesson = from.lesson;
@@ -54,8 +58,8 @@ function lastAccount() {
 }
 
 function saved() {
-  const { language, theme, favorites, progress, lesson } = settings;
-  return lesson ? { language, theme, favorites, progress, lesson } : { language, theme, favorites, progress };
+  const { language, theme, belt, favorites, progress, lesson } = settings;
+  return lesson ? { language, theme, belt, favorites, progress, lesson } : { language, theme, belt, favorites, progress };
 }
 
 function store() {
@@ -76,6 +80,7 @@ export function currentTheme() {
 }
 
 function forgetPersonalMarks() {
+  settings.belt = '';
   settings.favorites = [];
   settings.progress = {};
   settings.lesson = null;
@@ -84,6 +89,7 @@ function forgetPersonalMarks() {
 export async function useAccount(user) {
   accountId = null;
   const previous = lastAccount();
+  useNotesAccount(user, previous);
   if (!user) {
     // Signed out: the tree and progress stay in the account, not on a device someone else may use next.
     if (previous) {

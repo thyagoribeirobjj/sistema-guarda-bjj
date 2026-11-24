@@ -11,6 +11,7 @@ const people = {
   adminMixedCase: { sub: 'admin-uid', email: 'Coach@Example.com', email_verified: true },
   unverifiedAdmin: { sub: 'unverified-uid', email: 'unverified@example.com', email_verified: false },
   student: { sub: 'student-uid', email: 'student@example.com', email_verified: true },
+  otherStudent: { sub: 'other-uid', email: 'other@example.com', email_verified: true },
 };
 
 function token(person) {
@@ -45,6 +46,12 @@ function headers(who) {
 
 async function read(path, who) {
   const response = await fetch(`${documents}/${path}`, { headers: headers(who) });
+  return response.status === 403 ? 'denied' : 'allowed';
+}
+
+async function remove(path, who) {
+  const response = await fetch(`${documents}/${path}`, { method: 'DELETE', headers: headers(who) });
+  if (response.status !== 200 && response.status !== 403) throw new Error(await response.text());
   return response.status === 403 ? 'denied' : 'allowed';
 }
 
@@ -108,11 +115,24 @@ test('people can save and read their own settings', async () => {
   assert.equal(await read('users/student-uid', 'student'), 'allowed');
 });
 
-test('nobody else can see or change someone’s settings', async () => {
+test('coaches can see every student’s settings; other students and visitors cannot', async () => {
   await write('users/student-uid', settings('student@example.com'), 'setup');
+  assert.equal(await read('users/student-uid', 'admin'), 'allowed');
+  assert.equal(await read('users', 'admin'), 'allowed');
   assert.equal(await read('users/student-uid'), 'denied');
-  assert.equal(await read('users/student-uid', 'admin'), 'denied');
+  assert.equal(await read('users/student-uid', 'otherStudent'), 'denied');
+  assert.equal(await read('users/student-uid', 'unverifiedAdmin'), 'denied');
+  assert.equal(await read('users', 'student'), 'denied');
+  assert.equal(await read('users'), 'denied');
+});
+
+test('only the person can change or delete their settings, not even a coach', async () => {
+  await write('users/student-uid', settings('student@example.com'), 'setup');
   assert.equal(await write('users/student-uid', settings('coach@example.com'), 'admin'), 'denied');
+  assert.equal(await write('users/student-uid', settings('other@example.com'), 'otherStudent'), 'denied');
+  assert.equal(await remove('users/student-uid', 'admin'), 'denied');
+  assert.equal(await remove('users/student-uid', 'otherStudent'), 'denied');
+  assert.equal(await remove('users/student-uid', 'student'), 'allowed');
 });
 
 test('settings must have the expected shape', async () => {
@@ -133,6 +153,57 @@ test('settings must have the expected shape', async () => {
   assert.equal(await save({ ...settings('student@example.com'), lesson: longLesson }), 'denied');
   const tooMany = Object.fromEntries(Array.from({ length: 1001 }, (_, i) => [`move-${i}`, 'done']));
   assert.equal(await save({ ...settings('student@example.com'), progress: tooMany }), 'denied');
+});
+
+test('a name and a belt can be saved with the settings, in the expected shape', async () => {
+  const save = (data) => write('users/student-uid', { ...settings('student@example.com'), ...data }, 'student');
+  assert.equal(await save({ name: 'Ana Souza', belt: 'blue' }), 'allowed');
+  assert.equal(await save({ belt: '' }), 'allowed');
+  for (const belt of ['white', 'purple', 'brown', 'black']) assert.equal(await save({ belt }), 'allowed');
+  assert.equal(await save({ belt: 'red' }), 'denied');
+  assert.equal(await save({ belt: 3 }), 'denied');
+  assert.equal(await save({ name: 'x'.repeat(100) }), 'allowed');
+  assert.equal(await save({ name: 'x'.repeat(101) }), 'denied');
+  assert.equal(await save({ name: ['Ana'] }), 'denied');
+});
+
+const notesPath = 'users/student-uid/private/notes';
+const manyNotes = (count) => Object.fromEntries(Array.from({ length: count }, (_, i) => [`move-${i}`, 'note']));
+
+test('notes: only the person can read, write or delete their own, not even a coach', async () => {
+  assert.equal(await write(notesPath, { notes: { 'top-base': 'Hips low' }, changed: 'top-base' }, 'student'), 'allowed');
+  assert.equal(await read(notesPath, 'student'), 'allowed');
+  assert.equal(await read(notesPath, 'admin'), 'denied');
+  assert.equal(await read(notesPath, 'otherStudent'), 'denied');
+  assert.equal(await read(notesPath), 'denied');
+  assert.equal(await read('users/student-uid/private', 'admin'), 'denied');
+  assert.equal(await write(notesPath, { notes: { 'top-base': 'Mine now' }, changed: 'top-base' }, 'admin'), 'denied');
+  assert.equal(await write(notesPath, { notes: { 'top-base': 'Mine now' }, changed: 'top-base' }, 'otherStudent'), 'denied');
+  assert.equal(await write(notesPath, { notes: { 'top-base': 'Mine now' }, changed: 'top-base' }), 'denied');
+  assert.equal(await remove(notesPath, 'admin'), 'denied');
+  assert.equal(await remove(notesPath, 'otherStudent'), 'denied');
+  assert.equal(await remove(notesPath, 'student'), 'allowed');
+});
+
+test('notes: one short note changes per save, at most 500 notes, nothing else stored there', async () => {
+  const save = (notes, changed, extra = {}) => write(notesPath, changed ? { notes, changed, ...extra } : { notes, ...extra }, 'student');
+  assert.equal(await save({}), 'allowed');
+  assert.equal(await save({ a: 'x'.repeat(2000) }, 'a'), 'allowed');
+  assert.equal(await save({ a: 'x'.repeat(2000), b: 'Second' }, 'b'), 'allowed');
+  assert.equal(await save({ a: 'Changed', b: 'Second' }, 'a'), 'allowed');
+  assert.equal(await save({ b: 'Second' }, 'a'), 'allowed', 'removing one note');
+  assert.equal(await save({ b: 'Second' }), 'allowed', 'nothing changed');
+  assert.equal(await save({ b: 'Second', c: 'Third' }), 'denied', 'a change must say which note');
+  assert.equal(await save({ b: 'Second', c: 'Third' }, 'b'), 'denied', 'says the wrong note');
+  assert.equal(await save({ b: 'Second', c: 'x'.repeat(2001) }, 'c'), 'denied');
+  assert.equal(await save({ b: 'Second', c: 42 }, 'c'), 'denied');
+  assert.equal(await save({ b: 'Changed', c: 'Third' }, 'c'), 'denied', 'two notes in one save');
+  assert.equal(await save('Second'), 'denied');
+  assert.equal(await save({ b: 'Second' }, '', { shared: true }), 'denied');
+  assert.equal(await write('users/student-uid/private/other', { notes: {} }, 'student'), 'denied');
+  await write(notesPath, { notes: manyNotes(500) }, 'setup');
+  assert.equal(await save({ ...manyNotes(500), 'move-0': 'Changed' }, 'move-0'), 'allowed');
+  assert.equal(await save({ ...manyNotes(500), extra: 'One more' }, 'extra'), 'denied');
 });
 
 const image = (size) => `data:image/webp;base64,${'A'.repeat(size)}`;

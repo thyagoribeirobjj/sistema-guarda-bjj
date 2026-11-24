@@ -17,7 +17,7 @@ const methodIcon = icon(html`<path d="M4 20v-5M10 20V10M16 20V4M2 20h20"/>`);
 const adminIcon = icon(html`<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>`);
 
 const students = [
-  { view: 'semana', label: 'week', icon: calendarIcon, shown: () => Boolean(state.week) },
+  { view: 'semana', label: 'week', icon: calendarIcon, shown: () => Boolean(state.week), dot: () => weekIsNew() },
   { view: 'curriculum', label: 'curriculum', icon: curriculumIcon, parts: true },
   { view: 'meu', label: 'myTree', icon: heart(false), count: true },
 ];
@@ -30,6 +30,34 @@ const coach = [
 const shown = (items) => items.filter((item) => !item.shown || item.shown());
 const hrefOf = (item) => item.href || `#${item.view}`;
 const favoritesCount = () => html`<span class="navcount">${settings.favorites.length || ''}</span>`;
+const newDot = (item) => (item.dot?.() ? html`<span class="newdot" role="img" aria-label="${t('newClass')}"></span>` : '');
+
+// ---- the "new" dot on This week ----
+// This browser remembers the class it last showed on This week. A different class gets the dot until This week is opened.
+// The first visit just remembers the class, without a dot.
+const weekSeenKey = 'sg-week-seen';
+
+function weekSignature(week) {
+  return JSON.stringify([week.weekOf || '', week.title || {}, week.note || {}, week.techniques || []]);
+}
+
+function seenWeek() {
+  try { return localStorage.getItem(weekSeenKey); } catch { return null; }
+}
+
+// Called on every render.
+export function noteWeekSeen() {
+  if (!state.week) return;
+  const looking = state.view === 'semana' && !state.search;
+  if (looking || seenWeek() === null) {
+    try { localStorage.setItem(weekSeenKey, weekSignature(state.week)); } catch {}
+  }
+}
+
+function weekIsNew() {
+  const seen = seenWeek();
+  return Boolean(state.week) && seen !== null && seen !== weekSignature(state.week);
+}
 
 // Which entry is "here": a part of the fight belongs to Curriculum. Nothing is, while searching.
 function currentView() {
@@ -41,7 +69,7 @@ const current = (yes) => (yes ? html`aria-current="page"` : '');
 
 export function bottomBar() {
   const here = currentView();
-  return html`${shown(students).map((item) => html`<a href="${hrefOf(item)}" ${current(here === item.view)}><span class="nav-icon">${item.icon}${item.count ? favoritesCount() : ''}</span><span class="nav-label">${t(item.label)}</span></a>`)}<button type="button" data-search-button><span class="nav-icon">${searchIcon}</span><span class="nav-label">${t('searchShort')}</span></button>`;
+  return html`${shown(students).map((item) => html`<a href="${hrefOf(item)}" ${current(here === item.view)}><span class="nav-icon">${item.icon}${item.count ? favoritesCount() : ''}${newDot(item)}</span><span class="nav-label">${t(item.label)}</span></a>`)}<button type="button" data-search-button><span class="nav-icon">${searchIcon}</span><span class="nav-label">${t('searchShort')}</span></button>`;
 }
 
 // ---- desktop sidebar ----
@@ -68,7 +96,7 @@ function partLinks(asMenu) {
 function sidebarItem(item) {
   const here = currentView() === item.view;
   if (!item.parts) {
-    return html`<a class="side-link" href="${hrefOf(item)}" ${current(here)}>${item.icon}<span>${t(item.label)}</span>${item.count ? favoritesCount() : ''}</a>`;
+    return html`<a class="side-link" href="${hrefOf(item)}" ${current(here)}>${item.icon}<span>${t(item.label)}</span>${item.count ? favoritesCount() : ''}${newDot(item)}</a>`;
   }
   const open = partsOpen();
   // Inside a part, the part is marked; with the list folded away, Curriculum is.

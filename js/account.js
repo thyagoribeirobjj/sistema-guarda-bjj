@@ -1,8 +1,10 @@
 import { html } from './html.js';
-import { currentTheme, themes } from './settings.js';
+import { currentTheme, themes, settings } from './settings.js';
+import { belts } from './content.js';
 import { state } from './state.js';
 import { t } from './strings.js';
 import { coachMenu } from './nav.js';
+import { beltName } from './views.js';
 
 // The header's account button and its menu: sign in or out, the coach's tools, the theme picker.
 // Without Firebase (a local preview) the menu has no sign-in, only the coach's tools and the themes.
@@ -13,6 +15,12 @@ const signOutIcon = html`<svg viewBox="0 0 24 24" fill="none" stroke="currentCol
 // One swatch per theme. Each swatch carries its own data-theme, so it shows that theme's colors.
 function themePicker() {
   return html`<div class="menu-themes" role="group" aria-label="${t('theme')}"><span class="menu-label">${t('theme')}</span><div class="swatches">${themes.map((theme) => html`<button type="button" role="menuitemradio" class="swatch" data-theme="${theme}" data-theme-choice="${theme}" aria-checked="${currentTheme() === theme}" title="${themeName(theme)}" aria-label="${themeName(theme)}"><i></i></button>`)}</div></div>`;
+}
+
+// The student's belt, picked by them. Tapping the one already picked clears it.
+function beltPicker() {
+  const label = settings.belt ? `${t('myBelt')} · ${beltName(settings.belt)}` : t('myBelt');
+  return html`<div class="menu-themes menu-belts" role="group" aria-label="${t('myBelt')}"><span class="menu-label">${label}</span><div class="swatches">${belts.map((belt) => html`<button type="button" role="menuitemradio" class="swatch" data-belt-choice="${belt}" aria-checked="${settings.belt === belt}" title="${beltName(belt)}" aria-label="${beltName(belt)}"><i class="belt" data-belt="${belt}"></i></button>`)}</div></div>`;
 }
 
 // The person's Google photo, or the first letter of their name under it in case the photo doesn't load.
@@ -26,8 +34,8 @@ export function accountButton() {
 
 export function accountMenu() {
   const account = state.account;
-  if (!state.online) return html`${coachMenu()}${themePicker()}`;
-  if (!account) return html`<button type="button" role="menuitem" id="signIn">${personIcon}${t('signInWithGoogle')}</button>${coachMenu()}${themePicker()}`;
+  if (!state.online) return html`${coachMenu()}${beltPicker()}${themePicker()}`;
+  if (!account) return html`<button type="button" role="menuitem" id="signIn">${personIcon}${t('signInWithGoogle')}</button>${coachMenu()}${beltPicker()}${themePicker()}`;
   return html`<div class="menu-who" role="none">${account.displayName ? html`<b>${account.displayName}</b>` : ''}<span>${account.email}</span></div>${
-    coachMenu()}${themePicker()}<button type="button" role="menuitem" id="signOut">${signOutIcon}${t('signOut')}</button>`;
+    coachMenu()}${beltPicker()}${themePicker()}<button type="button" role="menuitem" id="signOut">${signOutIcon}${t('signOut')}</button>`;
 }

@@ -269,3 +269,31 @@ a.primary{text-decoration:none;display:inline-block}
 .part-count{margin-top:auto;padding-top:4px;font-size:13px;color:var(--muted)}
 .part-card .progress{min-width:0}
 .menu-themes:last-child{border-bottom:0;margin-bottom:0}
+/* belt levels: a small mark on each technique, the student's belt in the account menu, the filter in a part */
+.belt{display:inline-block;flex:none;width:9px;height:9px;border-radius:50%;border:1px solid var(--muted)}
+.belt[data-belt="white"]{background:var(--belt-white)} .belt[data-belt="blue"]{background:var(--belt-blue)}
+.belt[data-belt="purple"]{background:var(--belt-purple)} .belt[data-belt="brown"]{background:var(--belt-brown)}
+.belt[data-belt="black"]{background:var(--belt-black)}
+.legend .belt + .belt{margin-left:-4px}
+.swatch .belt{width:18px;height:18px}
+.menu-belts{border-bottom:0;margin-bottom:0}
+.belt-filter{margin:-4px 0 14px}
+.belt-hint{margin:-4px 0 14px;font-size:13.5px}
+/* previous and next inside an open technique */
+.panel-steps{display:flex;align-items:center;gap:6px;margin-left:auto;margin-right:46px}
+.step{width:34px;height:34px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:600 20px/1 var(--body);cursor:pointer}
+.step:hover:not(:disabled){border-color:var(--accent)}
+.step:disabled{opacity:.3;cursor:default}
+.step-count{min-width:44px;text-align:center;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+/* notes on a technique */
+.notebox{display:block;width:100%;min-height:64px;resize:vertical;font:400 14px/1.45 var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.notebox:focus{outline:2px solid var(--accent);outline-offset:1px}
+.note-hint{margin-top:4px!important;font-size:12.5px;color:var(--muted)}
+/* "new" on This week */
+.newdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--surface)}
+.nav-icon .newdot{position:absolute;top:-2px;right:-4px}
+.side-link .newdot{margin-left:auto}
+@media (pointer:coarse){
+  .step{width:44px;height:44px}
+  .notebox{font-size:16px}
+}

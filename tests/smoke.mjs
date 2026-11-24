@@ -1,5 +1,6 @@
 // Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
+// previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm install --no-save playwright-core)
 import assert from 'node:assert/strict';
@@ -262,6 +263,98 @@ await step('on a phone: Back returns to the first page, Search, closing the part
   await phone.locator('main .tech').first().tap();
   await phone.locator('#panel [data-favorite]').tap();
   assert.equal((await phone.locator('#bottomBar .navcount').textContent()).trim(), '1');
+});
+
+await step('next and previous move through the part; Back still closes the technique in one press', async () => {
+  const visit = await open('/#top', 'en-US');
+  await visit.locator('main .tech').first().waitFor();
+  const part = visit.url();
+  const list = await visit.locator('main [data-technique]').evaluateAll((chips) => [...new Set(chips.map((chip) => chip.dataset.technique))]);
+  const showing = () => visit.locator('#panel [data-favorite]').getAttribute('data-favorite');
+  await visit.locator('main .tech').first().click();
+  assert.equal(await showing(), list[0]);
+  assert.ok(await visit.locator('#panel [data-step="-1"]').isDisabled(), 'no previous on the first technique');
+  await visit.locator('#panel [data-step="1"]').click();
+  assert.equal(await showing(), list[1]);
+  await visit.keyboard.press('ArrowRight');
+  assert.equal(await showing(), list[2]);
+  await visit.keyboard.press('ArrowLeft');
+  assert.equal(await showing(), list[1]);
+  assert.equal((await visit.locator('#panel .step-count').textContent()).trim(), `2 / ${list.length}`);
+  await visit.goBack();
+  await visit.locator('#panel').waitFor({ state: 'hidden' });
+  assert.equal(visit.url(), part);
+});
+
+await step('on a phone: swiping an open technique moves to the next one, and Back closes it', async () => {
+  const phone = await open('/#top', 'en-US', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const part = phone.url();
+  await phone.locator('main .tech').first().tap();
+  const first = await phone.locator('#panel [data-favorite]').getAttribute('data-favorite');
+  await phone.evaluate(() => {
+    const title = document.getElementById('panelTitle');
+    const touch = (x) => new Touch({ identifier: 1, target: title, clientX: x, clientY: 300 });
+    title.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: [touch(300)], changedTouches: [touch(300)] }));
+    title.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: [touch(140)] }));
+  });
+  assert.notEqual(await phone.locator('#panel [data-favorite]').getAttribute('data-favorite'), first);
+  assert.equal((await phone.locator('#panel .step-count').textContent()).trim().split(' ')[0], '2');
+  await phone.goBack();
+  await phone.locator('#panel').waitFor({ state: 'hidden' });
+  assert.equal(phone.url(), part);
+});
+
+await step('a note on a technique stays in this browser while signed out', async () => {
+  const visit = await open('/#top', 'en-US');
+  await visit.locator('main .tech').first().click();
+  const noted = await visit.locator('#noteBox').getAttribute('data-note');
+  await visit.fill('#noteBox', 'Hips low, elbows in');
+  await visit.locator('#panelClose').click();
+  await visit.reload();
+  await visit.locator(`main [data-technique="${noted}"]`).first().click();
+  assert.equal(await visit.locator('#noteBox').inputValue(), 'Hips low, elbows in');
+  assert.match(await visit.locator('#noteStatus').textContent(), /this device/);
+});
+
+await step('a new class gets a dot on This week until it is opened; a first visit has none', async () => {
+  const visit = await open('/#curriculum', 'en-US');
+  await visit.locator('main .part-card').first().waitFor();
+  const keepWeek = (title) => visit.evaluate((value) => localStorage.setItem('sg-site-week', JSON.stringify({ at: Date.now(), value })),
+    { weekOf: '2026-11-23', title: { pt: title, en: title }, note: {}, techniques: ['top-base'] });
+  const dot = visit.locator('#sidebar a[href="#semana"] .newdot');
+  await keepWeek('Posture');
+  await visit.reload();
+  await visit.locator('#sidebar a[href="#semana"]').waitFor();
+  assert.equal(await dot.count(), 0, 'no dot on the first visit');
+  await keepWeek('Passing');
+  await visit.reload();
+  await dot.waitFor();
+  await visit.locator('#sidebar a[href="#semana"]').click();
+  await visit.locator('main .week-title', { hasText: 'Passing' }).waitFor();
+  assert.equal(await dot.count(), 0, 'the dot goes once This week is open');
+  await visit.locator('#sidebar a[href="#curriculum"]').click();
+  await visit.reload();
+  await visit.locator('#sidebar a[href="#semana"]').waitFor();
+  assert.equal(await dot.count(), 0, 'and stays gone');
+});
+
+await step('picking a belt filters a part to that belt and below; Everything shows all again', async () => {
+  const visit = await open('/#top', 'en-US');
+  await visit.locator('main .tech').first().waitFor();
+  const all = await visit.locator('main .tech').count();
+  assert.ok(await visit.locator('main .belt-hint').isVisible(), 'a hint to pick a belt');
+  await visit.locator('#account').click();
+  await visit.locator('[data-belt-choice="white"]').click();
+  assert.equal(await visit.locator('[data-belt-choice="white"]').getAttribute('aria-checked'), 'true');
+  await visit.keyboard.press('Escape');
+  await visit.locator('main [data-belt-filter="mine"][aria-pressed="true"]').waitFor();
+  const white = await visit.locator('main .tech').count();
+  assert.ok(white > 0 && white < all, `${white} of ${all} techniques shown`);
+  assert.equal(await visit.locator('main .tech .belt:not([data-belt="white"])').count(), 0);
+  await visit.locator('main [data-belt-filter="all"]').click();
+  assert.equal(await visit.locator('main .tech').count(), all);
+  await visit.reload();
+  await visit.locator('main [data-belt-filter="mine"][aria-pressed="true"]').waitFor();
 });
 
 await step('a Portuguese browser gets Portuguese', async () => {

@@ -6,6 +6,8 @@
 :root {
   --display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
   --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Belt colors are the same in every theme; each mark has a border so white and black show on any background. */
+  --belt-white: #F7F7F4; --belt-blue: #1E56C8; --belt-purple: #6B2FA3; --belt-brown: #6E4424; --belt-black: #111111;
 }
 :root, [data-theme="dark"] {
   color-scheme: dark;

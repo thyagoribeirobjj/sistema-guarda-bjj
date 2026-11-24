@@ -50,12 +50,13 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/nav.js` | The navigation, described once (see Navigation below), and the menus (the account menu and the part switcher). |
 | `js/account.js` | The header's account button (`#account`, the person's Google photo) and its menu (`#accountMenu`): sign in or out, the Coach section, the theme picker. The button always shows; without Firebase (a local preview) the menu has no sign-in. |
 | `js/views.js` | The pages: Curriculum home, this week (and past weeks), each part of the fight, my tree (favorites), method; and the search results. |
-| `js/panel.js` | The technique panel: details, share, video, diagram, "where to go" links, next stage; admins attach media here. Opening it adds one step to the browser history, so a phone's back button closes it. |
+| `js/panel.js` | The technique panel: details, share, notes, video, diagram, "where to go" links, next stage; admins attach media and set the belt level here. Previous / next (buttons, arrow keys, swiping) move through the list it was opened from. Opening it adds one step to the browser history and moving replaces it, so a phone's back button closes it in one press. |
+| `js/notes.js` | Each person's private notes on techniques: in this browser, and in `users/{uid}/private/notes` once signed in (read the first time a technique opens, saved one note at a time). |
 | `js/media.js` | YouTube links and player, and shrinking a diagram before it's saved. |
 | `js/lesson.js` | The lesson builder. Its choices are saved in `settings.lesson`. |
 | `js/admin.js` | The admin page (set this week's class; a new week moves the last one into past weeks). |
 | `js/strings.js` | Every button and label, in PT and EN. |
-| `js/settings.js` | Each person's language, theme, favorites, progress ("Drilling" / "Got it" per move) and lesson builder choices. |
+| `js/settings.js` | Each person's language, theme, belt, favorites, progress ("Drilling" / "Got it" per move) and lesson builder choices. |
 | `js/firebase.js` | Sign-in and **every** database call. Nothing else talks to Firebase. |
 | `js/content.js`, `js/state.js` | Loads the curriculum and searches it (names first, then descriptions, key points, drills and steps); tracks which page and technique are showing. |
 | `data/content.json` | The guard modules (top, bottom), drills and the method. |
@@ -108,17 +109,22 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 | `site/week` | This week's class (the "Esta semana" page): `weekOf`, `title`, `note`, `techniques` (ids), `from` (the language the admin wrote in) and `handFixed` (`'title'` and/or `'note'`: translations the admin corrected by hand; missing means none) | everyone | admins |
 | `site/weeks` | Past weeks, newest first, at most 52: `weeks: [{ weekOf, title, note, techniques }]`. Saving a new week on the admin page adds the previous one. Read only when someone taps "Past weeks". | everyone | admins |
 | `admins/{email}` | One document per admin, named by their lowercase email | that person | nobody from the site; add in the Firebase console |
-| `site/media` | Each move's video (a YouTube id) and whether it has a diagram: `techniques.<id>.video`, `.diagram` | everyone | admins |
+| `site/media` | Each move's video (a YouTube id), whether it has a diagram and, where an admin changed it, its belt level: `techniques.<id>.video`, `.diagram`, `.level` | everyone | admins |
 | `diagrams/{id}` | A move's diagram, as a small image (`data:image/webp;base64,…`, under 900 KB) | everyone | admins |
 | `site/config` | `translatorUrl`: where the translator lives | everyone | admins |
-| `users/{uid}` | A person's `language`, `theme`, `favorites` (their "Minha árvore", in their order), `progress` (`<id>: "learning" \| "done"`) and `lesson` (the lesson builder's choices: `mod`, `dur`, `items`, `game`) | that person | that person |
+| `users/{uid}` | A person's `email`, `name` (from Google), `language`, `theme`, `belt` (`''` or `white`…`black`, picked by them), `favorites` (their "Minha árvore", in their order), `progress` (`<id>: "learning" \| "done"`) and `lesson` (the lesson builder's choices: `mod`, `dur`, `items`, `game`) | that person and admins (coaches) | that person |
+| `users/{uid}/private/notes` | Their notes: `notes: { <id>: text }` (at most 500, each under 2,000 characters), `changed` (the note the last save changed: each save changes one) | that person only, not admins | that person |
 
 - `firestore.rules` is the only thing that protects data. The page hiding a button protects nothing.
 - Any change to `firestore.rules` needs a matching test in `tests/rules.test.js`: one that shows the
   allowed case works and one that shows the blocked case is refused.
 - **To add an admin:** Firebase console → Firestore → `admins` → Add document. Document ID: their Google
   email in lowercase. Field `name` (text). Remove the document to remove the admin.
-- Students' settings, favorites and progress are private. Never add a rule that lets one person read another's.
+- Coaches (admins) can read every student's `users/{uid}` (name, email, belt, favorites, progress) to follow them; the
+  privacy page says so. Nobody else can, and notes stay readable by their owner only. Never widen either.
+- **Belt levels.** Every technique is basic (`"lv": "b"`, white belt) or advanced (`"a"`, blue belt) in the `data/`
+  files; an admin can set another belt on the technique's panel, saved in `site/media` (no extra read). `levelOf()` in
+  `js/content.js` decides.
 - **Keep database reads low.** The free plan allows 50,000 reads a day. `site/week`, `site/media` and `site/weeks` are kept
   in each browser for 15 minutes (`site()` in `js/firebase.js`), so a change can take that long to reach a student
   who just visited; admin pages always read fresh. Don't add a database read that runs on every visit.
@@ -145,7 +151,7 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   Locally there is no sign-in or database: every page works except "Esta semana" and the admin page.
 - Every pull request runs the tests, then opens the site in Chrome and uses it (`tests/smoke.mjs`: the sidebar,
   Curriculum home, a technique, search, progress, the tree, sharing, the coach's tools from the account menu, the
-  phone's bottom bar and part switcher, both languages, the admin page). Once a pull request is merged, `main`
+  phone's bottom bar and part switcher, previous / next in a technique, notes, the "new" dot on This week, the belt filter, both languages, the admin page). Once a pull request is merged, `main`
   publishes the site **and** `firestore.rules` about a minute later, then runs the same browser check on the
   published site. When you add a feature people click, add a step for it to `tests/smoke.mjs`.
 - Every night `.github/workflows/nightly.yml` checks the published site (`tests/nightly.mjs`): up, safe, still
@@ -153,7 +159,7 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   the next night that passes. If you see that issue open, fix what it names before other work. GitHub switches
   scheduled workflows off after 60 days with no activity in the repo; turn it back on from the Actions tab
   (or `gh workflow enable nightly.yml`).
-- Signing out clears the tree and progress from that device (they stay in the account), so a shared tablet
+- Signing out clears the tree, progress, belt and notes from that device (they stay in the account), so a shared tablet
   never mixes two students' marks.
 - Before you open or update a pull request: run `npm test`, open the changed pages locally in both languages and
   a dark and a light theme, and check a phone-width window and a desktop-width one.

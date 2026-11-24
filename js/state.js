@@ -11,7 +11,9 @@ export const state = {
   admin: false,
   treeOrder: 'tree',
   confirmEmptyTree: false,
-  panel: { current: null, history: [] },
+  beltFilter: '',
+  // list: the techniques the panel's previous and next move through.
+  panel: { current: null, history: [], list: [] },
 };
 
 // Pages: #curriculum, #fund, #top… (the parts of the fight), #semana, #meu (my tree), #lesson, #method. A technique: #t-<id>.
