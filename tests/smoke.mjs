@@ -69,10 +69,12 @@ await step('Curriculum home lists the parts and a card opens one', async () => {
 });
 
 await step('a part of the fight lists techniques and one opens', async () => {
+  // Wait for the part to be on screen before picking from it, then take the id from what actually opened.
+  const part = await firstTab.getAttribute('href');
   await firstTab.click();
-  const chip = page.locator('main .tech').first();
-  id = await chip.getAttribute('data-technique');
-  await chip.click();
+  await page.locator(`#sidebar a[href="${part}"][aria-current="page"]`).waitFor();
+  await page.locator('main .tech').first().click();
+  id = await page.locator('#panel [data-favorite]').getAttribute('data-favorite');
   name = (await page.locator('#panelTitle').textContent()).trim();
   assert.ok(name, 'the technique has a name');
 });
