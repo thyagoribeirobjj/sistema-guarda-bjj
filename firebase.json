@@ -7,6 +7,7 @@
       "package.json",
       "README.md",
       "CLAUDE.md",
+      "AGENTS.md",
       "**/.*",
       "**/.*/**",
       "gha-creds-*.json",

@@ -2,6 +2,16 @@
 
 A bilingual (PT/EN) jiu-jitsu curriculum site for Gracie Sports Fairfield, live at https://sistemaguarda.com.
 The owner, Thyago, is a coach, not a programmer. Explain changes in plain words and show him the result.
+This file is for every coding agent: `AGENTS.md` is a link to it, so edit `CLAUDE.md` only.
+
+## Stay in sync with `main`
+
+Other people and agents push to this repo too, and every push to `main` goes live.
+
+- **Before you start:** `git pull --rebase origin main`. Read the files you're about to change *after* pulling.
+- **Right before you push:** pull again (`git pull --rebase origin main`), run `npm test`, then push.
+- If the pull brings changes to files you edited, keep both: merge the other work in, never overwrite it.
+- Never force-push `main`, and never "fix" a conflict by replacing a whole file with your copy.
 
 ## How the code should read
 
@@ -78,7 +88,7 @@ The owner, Thyago, is a coach, not a programmer. Explain changes in plain words 
   Locally there is no sign-in or database: every tab works except "Esta semana" and the admin page.
 - Every push to `main` runs the tests. If they pass, it publishes the site **and** `firestore.rules`
   about a minute later. Pull requests run the tests without publishing.
-- Before you push: run `npm test`, open the changed pages locally in both languages and both themes,
+- Before you push: pull, run `npm test`, open the changed pages locally in both languages and both themes,
   and check a phone-width window.
 
 ## Never
