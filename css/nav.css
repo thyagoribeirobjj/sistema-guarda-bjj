@@ -31,8 +31,9 @@
   color:var(--ink);font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.03em;text-transform:uppercase;cursor:pointer}
 .switch-part span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .switch-part[aria-expanded="true"]{color:var(--accent)}
-.part-menu{left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));top:calc(100% + 4px);width:auto;max-height:70vh;overflow:auto}
-.part-menu [aria-current="page"]{color:var(--accent);font-weight:600}
+.part-menu{left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));top:calc(100% + 4px);width:auto}
+/* the open menu covers the bottom bar, so all of it shows on a short screen */
+.switcher:has(.part-menu:not([hidden])){z-index:17}
 
 /* sidebar (desktop only) */
 .sidebar{display:none}

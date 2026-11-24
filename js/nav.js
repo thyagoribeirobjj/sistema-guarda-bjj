@@ -7,7 +7,7 @@ import { heart } from './views.js';
 
 // The site's navigation, described once. The bottom bar (phones), the sidebar (desktop) and the account menu's
 // Coach section are all drawn from these two lists. A new part of the fight needs nothing here: Curriculum lists
-// content.order. A new coach tool is one more entry in `coach` (and its view in `tabs`, js/app.js).
+// content.order. A new coach tool is one more entry in `coach` (and its view in `pages`, js/app.js).
 const icon = (paths) => html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
 const calendarIcon = icon(html`<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>`);
 const curriculumIcon = icon(html`<path d="M12 3 2 8l10 5 10-5z"/><path d="m2 13 10 5 10-5"/>`);
@@ -46,14 +46,19 @@ export function bottomBar() {
 
 // ---- desktop sidebar ----
 
+// Folding the parts away is remembered in this browser when it can be; the button works either way.
 const partsKey = 'sg-nav-parts';
+let partsFolded = (() => {
+  try { return localStorage.getItem(partsKey) === 'closed'; } catch { return false; }
+})();
 
 export function partsOpen() {
-  try { return localStorage.getItem(partsKey) !== 'closed'; } catch { return true; }
+  return !partsFolded;
 }
 
 export function toggleParts() {
-  try { localStorage.setItem(partsKey, partsOpen() ? 'closed' : 'open'); } catch {}
+  partsFolded = !partsFolded;
+  try { localStorage.setItem(partsKey, partsFolded ? 'closed' : 'open'); } catch {}
 }
 
 function partLinks(asMenu) {
@@ -87,7 +92,7 @@ export function partSwitcher() {
 // The account menu's Coach section: the same entries as the sidebar's.
 export function coachMenu() {
   return html`<div class="menu-section" role="group" aria-label="${t('coach')}"><span class="menu-label">${t('coach')}</span>${
-    shown(coach).map((item) => html`<a role="menuitem" href="${hrefOf(item)}" ${item.id ? html`id="${item.id}"` : ''}>${item.icon}${t(item.label)}</a>`)}</div>`;
+    shown(coach).map((item) => html`<a role="menuitem" href="${hrefOf(item)}" ${item.id ? html`id="${item.id}"` : ''} ${current(currentView() === item.view)}>${item.icon}${t(item.label)}</a>`)}</div>`;
 }
 
 // ---- menus (the account menu and the part switcher) ----
@@ -97,6 +102,8 @@ export function openMenu(button) {
   closeMenus();
   const menu = document.getElementById(button.getAttribute('aria-controls'));
   menu.hidden = false;
+  // On a short screen (a phone on its side) the menu scrolls inside the screen instead of running off it.
+  menu.style.maxHeight = `${window.innerHeight - menu.getBoundingClientRect().top - 12}px`;
   button.setAttribute('aria-expanded', 'true');
   (menu.querySelector('[aria-current]') || menu.querySelector('[role^="menuitem"]'))?.focus();
 }

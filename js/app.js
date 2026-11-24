@@ -70,9 +70,11 @@ function route() {
   }
   // The back button, or a link to a page, closes an open technique. History has already moved, so don't move it again.
   if (panelOpen()) closePanel({ fromHistory: true });
-  if (isPage(target.view)) {
-    const newPage = target.view !== state.view;
-    state.view = target.view;
+  // No hash is the first page: This week when there is one, otherwise Curriculum.
+  const view = target.view || (state.week ? 'semana' : 'curriculum');
+  if (isPage(view)) {
+    const newPage = view !== state.view;
+    state.view = view;
     if (newPage) {
       state.search = '';
       $('search').value = '';
@@ -196,8 +198,23 @@ const clickActions = [
   )],
 ];
 
+// A tap outside an open menu only closes it; it doesn't also press what is under the finger.
+// Noted on pointerdown, because the focus leaving the menu closes it before the click arrives.
+let closingTap = false;
+const outsideMenus = (target) => !target.closest('[role="menu"], [aria-haspopup="menu"]');
+document.addEventListener('pointerdown', (event) => { closingTap = Boolean(openedMenu()) && outsideMenus(event.target); });
+document.addEventListener('pointercancel', () => { closingTap = false; });
+
 document.addEventListener('click', (event) => {
-  if (!event.target.closest('[role="menu"], [aria-haspopup="menu"]')) closeMenus();
+  const dismiss = closingTap;
+  closingTap = false;
+  // detail is 0 for a click made with the keyboard.
+  if (dismiss && event.detail) {
+    closeMenus();
+    event.preventDefault();
+    return;
+  }
+  if (outsideMenus(event.target)) closeMenus();
   for (const [selector, action] of clickActions) {
     const element = event.target.closest(selector);
     if (element) { action(element); return; }

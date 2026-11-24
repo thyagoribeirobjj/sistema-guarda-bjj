@@ -1,4 +1,4 @@
-// Opens the site in a real browser and uses it the way a visitor would: the sidebar, Curriculum home, a technique,
+// Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm install --no-save playwright-core)
@@ -178,6 +178,17 @@ await step('a theme can be chosen and survives a reload', async () => {
   assert.equal(await page.getAttribute('html', 'data-theme'), 'gold');
 });
 
+await step('folding the parts away in the sidebar is remembered after a reload', async () => {
+  await page.locator('#partsToggle').click();
+  assert.ok(!(await page.locator('#sideParts').isVisible()), 'the parts fold away');
+  assert.equal(await page.locator('#partsToggle').getAttribute('aria-expanded'), 'false');
+  await page.reload();
+  await page.locator('#partsToggle').waitFor();
+  assert.ok(!(await page.locator('#sideParts').isVisible()), 'still folded after a reload');
+  await page.locator('#partsToggle').click();
+  await firstTab.waitFor();
+});
+
 await step('the back button closes a technique and stays on the site', async () => {
   await firstTab.click();
   const tab = page.url();
@@ -217,6 +228,38 @@ await step('on a phone: the bottom bar, Curriculum, a part, the part switcher, n
     return !document.elementFromPoint(box.left + 10, box.bottom - 10).closest('#bottomBar');
   });
   assert.ok(barCovered, 'the open technique covers the bottom bar');
+});
+
+await step('on a phone: Back returns to the first page, Search, closing the part menu, the My tree count', async () => {
+  const phone = await open('/', 'en-US', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  await phone.locator('main .part-card').first().tap();
+  await phone.locator('main .spine').waitFor();
+  await phone.goBack();
+  await phone.locator('main .part-card').first().waitFor();
+  assert.equal(new URL(phone.url()).hash, '', 'back on the first page');
+  await phone.locator('#bottomBar [data-search-button]').tap();
+  assert.equal(await phone.evaluate(() => document.activeElement.id), 'search');
+  await phone.locator('main .part-card').first().tap();
+  await phone.locator('#partButton').tap();
+  await phone.keyboard.press('Escape');
+  assert.ok(!(await phone.locator('#partMenu').isVisible()), 'Escape closes the part menu');
+  assert.equal(await phone.evaluate(() => document.activeElement.id), 'partButton');
+  await phone.locator('#partButton').tap();
+  // A technique below the open menu, so the tap lands on it and not on the menu.
+  const point = await phone.evaluate(() => {
+    const menuBottom = document.getElementById('partMenu').getBoundingClientRect().bottom;
+    const chip = [...document.querySelectorAll('main .tech')].map((tech) => tech.getBoundingClientRect())
+      .find((box) => box.top > menuBottom + 4 && box.bottom < window.innerHeight - 80);
+    return { x: chip.left + 10, y: chip.top + chip.height / 2 };
+  });
+  const hash = new URL(phone.url()).hash;
+  await phone.touchscreen.tap(point.x, point.y);
+  assert.ok(!(await phone.locator('#partMenu').isVisible()), 'a tap outside closes the part menu');
+  assert.ok(!(await phone.locator('#panel').isVisible()), 'and opens nothing under it');
+  assert.equal(new URL(phone.url()).hash, hash);
+  await phone.locator('main .tech').first().tap();
+  await phone.locator('#panel [data-favorite]').tap();
+  assert.equal((await phone.locator('#bottomBar .navcount').textContent()).trim(), '1');
 });
 
 await step('a Portuguese browser gets Portuguese', async () => {
