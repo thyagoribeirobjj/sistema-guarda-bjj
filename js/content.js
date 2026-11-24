@@ -45,3 +45,23 @@ export function findTechnique(id) {
 export function isModule(key) {
   return content.order.includes(key);
 }
+
+// "Triângulo" and "triangulo" both match.
+function plain(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+// Techniques whose name (in either language) has every word typed; names that start with it come first.
+// Each result is what findTechnique() returns.
+export function searchTechniques(query) {
+  const words = plain(query).split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  const found = [];
+  for (const [id, { technique }] of places) {
+    const names = [plain(technique.n?.pt), plain(technique.n?.en)];
+    if (words.every((word) => names.some((name) => name.includes(word)))) {
+      found.push({ id, starts: names.some((name) => name.startsWith(words[0])) });
+    }
+  }
+  return found.sort((a, b) => b.starts - a.starts).map(({ id }) => findTechnique(id));
+}

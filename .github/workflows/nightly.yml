@@ -1,0 +1,78 @@
+name: Nightly checks
+
+# Every night: is the site up, safe, free, and the same as main? A failure opens one issue here,
+# and the issue closes itself on the next night that passes. Nothing in this workflow changes anything.
+on:
+  schedule:
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: projects/25668106993/locations/global/workloadIdentityPools/github/providers/sistema-guarda-bjj
+          service_account: sg-deploy@sistema-guarda-515619.iam.gserviceaccount.com
+
+      - name: The published site is up, safe, free and the same as main
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          GOOGLE_TOKEN="$(gcloud auth print-access-token)"
+          echo "::add-mask::$GOOGLE_TOKEN"
+          export GOOGLE_TOKEN
+          set -o pipefail
+          node tests/nightly.mjs 2>&1 | tee "$RUNNER_TEMP/checks.txt"
+
+      - name: The published site works in a real browser
+        if: always()
+        run: |
+          npm install --no-save playwright-core@1.65.1
+          set -o pipefail
+          node tests/smoke.mjs https://sistemaguarda.com 2>&1 | tee "$RUNNER_TEMP/browser.txt"
+
+      - name: Open an issue on failure, close it once the checks pass again
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ job.status }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Nightly check failed"
+          open=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ "$RESULT" = success ]; then
+            if [ -n "$open" ]; then gh issue close "$open" --repo "$GITHUB_REPOSITORY" --comment "Tonight's checks all passed: $RUN"; fi
+            exit 0
+          fi
+          if [ -n "$open" ]; then exit 0; fi
+          {
+            echo "The nightly checks of sistemaguarda.com found a problem. This issue closes itself on the next night they all pass."
+            echo
+            echo '```'
+            grep -h -E '^FAIL|problem' "$RUNNER_TEMP/checks.txt" "$RUNNER_TEMP/browser.txt" 2>/dev/null || echo "The checks could not run. See the run."
+            echo '```'
+            echo
+            echo "Run: $RUN"
+          } > "$RUNNER_TEMP/issue.md"
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file "$RUNNER_TEMP/issue.md"

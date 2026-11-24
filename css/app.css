@@ -187,3 +187,13 @@ a.primary{text-decoration:none;display:inline-block}
 /* admin: writing language */
 .auto label{color:var(--muted)}
 .auto input,.auto textarea{border-style:dashed}
+/* search box: beside the title on wide screens, its own row on phones */
+.search{flex:1 1 200px;max-width:320px;min-width:0;min-height:34px;font:500 14px var(--body);padding:0 14px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--ink)}
+.search::placeholder{color:var(--muted)}
+@media (max-width:640px){.search{order:3;flex-basis:100%;max-width:none}}
+.results{display:grid;gap:12px}
+/* progress marks */
+.ptag{color:var(--accent);font-size:12px;font-weight:700}
+.marks{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.progress{min-width:180px;font-size:13.5px;color:var(--muted)}
+.progress b{color:var(--ink)}

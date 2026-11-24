@@ -33,6 +33,17 @@ export const strings = {
   time: { pt: 'Tempo', en: 'Time' },
   techniques: { pt: 'técnicas', en: 'techniques' },
 
+  search: { pt: 'Buscar técnica', en: 'Search techniques' },
+  searchResults: { pt: 'Busca', en: 'Search' },
+  found: { pt: 'encontradas', en: 'found' },
+  nothingFound: { pt: 'Nenhuma técnica com esse nome.', en: 'No technique matches that.' },
+  nothingFoundHint: { pt: 'Tente outra palavra, em português ou inglês.', en: 'Try another word, in Portuguese or English.' },
+
+  learning: { pt: 'Treinando', en: 'Drilling' },
+  done: { pt: 'Já sei', en: 'Got it' },
+  myProgress: { pt: 'Meu progresso', en: 'My progress' },
+  of: { pt: 'de', en: 'of' },
+
   myTree: { pt: 'Minha árvore', en: 'My tree' },
   addToTree: { pt: 'Adicionar à minha árvore', en: 'Add to my tree' },
   inTree: { pt: 'Na minha árvore', en: 'In my tree' },
@@ -53,8 +64,8 @@ export const strings = {
   signInWithGoogle: { pt: 'Entrar com Google', en: 'Sign in with Google' },
   signOut: { pt: 'Sair', en: 'Sign out' },
   signedInAs: { pt: 'Conectado como', en: 'Signed in as' },
-  savedToAccount: { pt: 'Sua árvore, idioma e tema ficam salvos na sua conta.', en: 'Your tree, language and theme are saved to your account.' },
-  signInToSave: { pt: 'Sua árvore fica só neste aparelho. Entre com Google para tê-la em qualquer aparelho.', en: 'Your tree is only on this device. Sign in with Google to have it on every device.' },
+  savedToAccount: { pt: 'Sua árvore, seu progresso, idioma e tema ficam salvos na sua conta.', en: 'Your tree, progress, language and theme are saved to your account.' },
+  signInToSave: { pt: 'Sua árvore e seu progresso ficam só neste aparelho. Entre com Google para tê-los em qualquer aparelho.', en: 'Your tree and progress are only on this device. Sign in with Google to have them on every device.' },
   signInFailed: { pt: 'Não foi possível entrar. Tente de novo.', en: "Couldn't sign in. Please try again." },
   darkMode: { pt: 'Modo escuro', en: 'Dark mode' },
   lightMode: { pt: 'Modo claro', en: 'Light mode' },

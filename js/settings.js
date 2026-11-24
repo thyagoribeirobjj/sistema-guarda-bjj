@@ -1,10 +1,14 @@
 import { loadUserSettings, saveUserSettings } from './firebase.js';
 
-// Each visitor's language, theme and favorites. Kept in this browser, and in the
+// Each visitor's language, theme, favorites and progress. Kept in this browser, and in the
 // database (users/{uid}) once they sign in, so they follow them to other devices.
 const storageKey = 'sg-settings';
 
-export const settings = { language: 'pt', theme: '', favorites: [], ...readLocal() };
+// First visit: Portuguese for a browser set to Portuguese, English for everyone else.
+const browserLanguage = (navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en';
+
+// progress: { <technique id>: 'learning' | 'done' }
+export const settings = { language: browserLanguage, theme: '', favorites: [], progress: {}, ...readLocal() };
 
 let accountId = null;
 
@@ -13,8 +17,8 @@ function readLocal() {
 }
 
 function saved() {
-  const { language, theme, favorites } = settings;
-  return { language, theme, favorites };
+  const { language, theme, favorites, progress } = settings;
+  return { language, theme, favorites, progress };
 }
 
 function store() {
@@ -56,4 +60,16 @@ export function toggleFavorite(id) {
     ? settings.favorites.filter((favorite) => favorite !== id)
     : [...settings.favorites, id];
   changeSettings({ favorites });
+}
+
+export function progressOf(id) {
+  return settings.progress[id] || '';
+}
+
+// Tapping the mark a move already has clears it.
+export function markProgress(id, mark) {
+  const progress = { ...settings.progress };
+  if (progress[id] === mark) delete progress[id];
+  else progress[id] = mark;
+  changeSettings({ progress });
 }

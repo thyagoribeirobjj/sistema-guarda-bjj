@@ -49,7 +49,7 @@ sistemaguarda.com (static files on Firebase Hosting)
 | `js/strings.js` | Button and label text in PT and EN |
 | `data/` | The curriculum |
 | `firestore.rules` | Database access rules |
-| `tests/` | Checks for the curriculum and the database rules |
+| `tests/` | Checks for the curriculum and the database rules, a browser check of the whole site, and the nightly checks of the published site |
 | `CLAUDE.md` (and `AGENTS.md`, a link to it) | How coding agents (Claude, Muse and others) should work in this repo |
 
 ## Editing the curriculum

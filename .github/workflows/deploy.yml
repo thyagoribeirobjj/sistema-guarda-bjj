@@ -35,6 +35,14 @@ jobs:
           export JAVA_HOME="$JAVA_HOME_21_X64" PATH="$JAVA_HOME_21_X64/bin:$PATH"
           npm test
 
+      # Opens the site in Chrome and uses it: a page that would load blank fails here, before it is published.
+      - name: The site works in a real browser
+        run: |
+          npm install --no-save playwright-core@1.65.1
+          python3 -m http.server 8000 > /dev/null 2>&1 &
+          curl --silent --output /dev/null --retry 10 --retry-connrefused --retry-delay 1 http://localhost:8000/
+          npm run smoke -- http://localhost:8000
+
   # Runs only after "check" passes, and only for main. Google accepts this job's
   # identity token for main of this repository and nothing else, so no keys live here.
   deploy:
@@ -60,3 +68,8 @@ jobs:
 
       - name: Publish the site and the database rules
         run: npx --yes firebase-tools@15.35.0 deploy --only hosting,firestore:rules --project sistema-guarda-515619 --non-interactive
+
+      - name: The published site works in a real browser
+        run: |
+          npm install --no-save playwright-core@1.65.1
+          npm run smoke -- https://sistemaguarda.com

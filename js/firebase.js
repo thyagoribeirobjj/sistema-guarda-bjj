@@ -62,12 +62,44 @@ export async function isAdmin(email) {
   return (await read(`admins/${email.toLowerCase()}`).catch(() => null)) !== null;
 }
 
-export function loadWeek() {
-  return db ? read('site/week') : Promise.resolve(null);
+// ---- what the whole site shows ----
+// The week and the list of videos change a few times a week, so each browser keeps its last copy for a few
+// minutes instead of asking the database on every visit. Admin pages ask for a fresh copy.
+const keepMinutes = 15;
+
+function kept(name) {
+  try { return JSON.parse(localStorage.getItem(`sg-site-${name}`)); } catch { return null; }
 }
 
-export function saveWeek(week) {
-  return write('site/week', { ...week, updatedBy: auth.currentUser.email });
+function forget(name) {
+  try { localStorage.removeItem(`sg-site-${name}`); } catch {}
+}
+
+export function lastSeen(name) {
+  return kept(name)?.value ?? null;
+}
+
+async function site(name, fresh) {
+  const copy = kept(name);
+  if (!fresh && copy && Date.now() - copy.at < keepMinutes * 60000) return copy.value;
+  if (!db) return copy?.value ?? null;
+  try {
+    const value = await read(`site/${name}`);
+    try { localStorage.setItem(`sg-site-${name}`, JSON.stringify({ at: Date.now(), value })); } catch {}
+    return value;
+  } catch (error) {
+    if (copy) return copy.value;
+    throw error;
+  }
+}
+
+export function loadWeek({ fresh = false } = {}) {
+  return site('week', fresh);
+}
+
+export async function saveWeek(week) {
+  await write('site/week', { ...week, updatedBy: auth.currentUser.email });
+  forget('week');
 }
 
 export function loadUserSettings(uid) {
@@ -79,19 +111,19 @@ export function saveUserSettings(uid, data) {
 }
 
 // ---- each move's video and diagram ----
-// site/media holds { techniques: { <id>: { video: <YouTube id>, diagram: true } } }, read once per visit.
+// site/media holds { techniques: { <id>: { video: <YouTube id>, diagram: true } } }.
 // The diagram image itself sits in diagrams/<id> and is read only when someone opens that move.
 
-export async function loadMedia() {
-  if (!db) return {};
-  return (await read('site/media').catch(() => null))?.techniques || {};
+export async function loadMedia({ fresh = false } = {}) {
+  return (await site('media', fresh).catch(() => null))?.techniques || {};
 }
 
-function saveMediaField(id, field, value) {
+async function saveMediaField(id, field, value) {
   const change = { [field]: value === null ? fb.deleteField() : value };
-  return fb.setDoc(fb.doc(db, 'site/media'),
+  await fb.setDoc(fb.doc(db, 'site/media'),
     { techniques: { [id]: change }, updatedBy: auth.currentUser.email, updatedAt: fb.serverTimestamp() },
     { merge: true });
+  forget('media');
 }
 
 export function saveVideo(id, videoId) {

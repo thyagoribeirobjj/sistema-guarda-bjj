@@ -1,10 +1,12 @@
 import { html } from './html.js';
-import { content, findTechnique } from './content.js';
-import { settings, isFavorite } from './settings.js';
+import { content, findTechnique, searchTechniques } from './content.js';
+import { settings, isFavorite, progressOf } from './settings.js';
 import { state } from './state.js';
 import { t, text } from './strings.js';
 
 export const heart = (filled) => html`<svg viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`;
+
+export const progressMarks = { learning: '◐', done: '✓' };
 
 // ---- pieces used by several tabs ----
 
@@ -13,7 +15,9 @@ export function techniqueChip(id) {
   if (!place) return '';
   const technique = place.technique;
   const favorite = isFavorite(id);
+  const progress = progressOf(id);
   return html`<button type="button" class="tech b${favorite ? ' on' : ''}" data-technique="${id}">${text(technique.n)}${
+    progress ? html` <span class="ptag" aria-label="${t(progress)}">${progressMarks[progress]}</span>` : ''}${
     technique.mine ? html` <span class="mine">★</span>` : ''}${
     technique.g ? html` <span class="gtag">G</span>` : ''}${
     state.media[id]?.video ? html` <span class="vtag" aria-label="${t('video')}">▶</span>` : ''}${
@@ -21,7 +25,7 @@ export function techniqueChip(id) {
 }
 
 function legend() {
-  return html`<div class="legend"><span><b class="mine">★</b> ${t('mine')}</span><span><b class="gtag">G</b> ${t('bookTag')}</span><span><b class="vtag">▶</b> ${t('video')}</span><span><b class="heart">♥</b> ${t('inTree')}</span></div>`;
+  return html`<div class="legend"><span><b class="mine">★</b> ${t('mine')}</span><span><b class="gtag">G</b> ${t('bookTag')}</span><span><b class="vtag">▶</b> ${t('video')}</span><span><b class="heart">♥</b> ${t('inTree')}</span><span><b class="ptag">◐</b> ${t('learning')}</span><span><b class="ptag">✓</b> ${t('done')}</span></div>`;
 }
 
 function intro(title, lead, extra = '') {
@@ -37,7 +41,7 @@ function gameCard(game) {
 }
 
 export function navigation() {
-  const tab = (key, label, extra = '') => html`<a href="#${key}" ${state.view === key ? html`aria-current="page"` : ''}>${label}${extra}</a>`;
+  const tab = (key, label, extra = '') => html`<a href="#${key}" ${state.view === key && !state.search ? html`aria-current="page"` : ''}>${label}${extra}</a>`;
   return html`${state.week ? tab('semana', t('week')) : ''}${content.order.map((key) => tab(key, text(content.modules[key].title)))}${
     tab('meu', `♥ ${t('myTree')}`, html`<span class="navcount">${settings.favorites.length || ''}</span>`)}${
     tab('lesson', t('lesson'))}${tab('method', t('method'))}`;
@@ -51,7 +55,23 @@ export function moduleView(key) {
   const games = module.games?.length
     ? html`<section class="games"><h3 class="sect-title">${t('games')}</h3><p class="sect-sub">${t('gamesLead')}</p><div class="grid">${module.games.map(gameCard)}</div></section>`
     : '';
-  return html`${intro(text(module.title), `${text(module.intro)} ${t('tapHint')}`)}${legend()}<div class="spine">${stages}</div>${games}`;
+  const ids = [...new Set(module.stages.flatMap((stage) => stage.items.map((technique) => technique.id)))];
+  return html`${intro(text(module.title), `${text(module.intro)} ${t('tapHint')}`, progressBar(ids))}${legend()}<div class="spine">${stages}</div>${games}`;
+}
+
+// "Got it: 3 of 24", shown once the visitor has marked something in this tab.
+function progressBar(ids) {
+  if (!ids.some((id) => progressOf(id))) return '';
+  const done = ids.filter((id) => progressOf(id) === 'done').length;
+  return html`<div class="progress"><span>${t('done')}: <b>${done}</b> ${t('of')} ${ids.length}</span><div class="lad-bar"><i style="width:${Math.round((done / ids.length) * 100)}%"></i></div></div>`;
+}
+
+export function searchView() {
+  const found = searchTechniques(state.search);
+  if (!found.length) return html`${intro(t('searchResults'), `“${state.search}”`)}<div class="empty"><h3>${t('nothingFound')}</h3><p class="note">${t('nothingFoundHint')}</p></div>`;
+  const groups = content.order.map((key) => ({ key, places: found.filter((place) => place.moduleKey === key) })).filter((group) => group.places.length);
+  return html`${intro(t('searchResults'), `“${state.search}” · ${found.length} ${t('found')}`)}<div class="results">${groups.map((group) => html`<section class="week"><h3 class="sect-title"><a class="plain" href="#${group.key}">${text(content.modules[group.key].title)}</a></h3>
+    <div class="techs">${group.places.map((place) => techniqueChip(place.technique.id))}</div></section>`)}</div>`;
 }
 
 export function weekView() {
