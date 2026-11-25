@@ -39,8 +39,11 @@ export function cookiesOffered() {
   return Boolean(analyticsId());
 }
 
+// A page opened for the television (?tv, js/tv.js) has no one at it to answer, so it does not ask. With no choice it counts nothing.
+const forTv = new URLSearchParams(location.search).has('tv');
+
 export function cookieBarShown() {
-  return cookiesOffered() && (barOpen || !choice);
+  return cookiesOffered() && (barOpen || (!choice && !forTv));
 }
 
 // Called once Firebase has started: someone who accepted before is counted again from this page on.

@@ -1,5 +1,5 @@
 import { html } from './html.js';
-import { content, findTechnique, belts } from './content.js';
+import { content, findTechnique, belts, whereGroups, groupOf } from './content.js';
 import { settings, isFavorite, progressOf } from './settings.js';
 import { state } from './state.js';
 import { t, text } from './strings.js';
@@ -12,7 +12,16 @@ import { countTechnique } from './analytics.js';
 // The technique, big; below it, the branches to where you can go next.
 const panel = () => document.getElementById('panel');
 const scrim = () => document.getElementById('scrim');
-const linkKinds = ['next', 'chain', 'combo', 'counter'];
+// "Where to go" is subdivided by what the next move does; one group is open at a time, as tabs.
+const groupMeta = {
+  trans: { icon: '🔀', label: 'groupTrans', hint: 'groupTransHint' },
+  sub: { icon: '🎯', label: 'groupSubmit', hint: 'groupSubmitHint' },
+  pos: { icon: '🧱', label: 'groupControl', hint: 'groupControlHint' },
+  esc: { icon: '🚪', label: 'groupEscape', hint: 'groupEscapeHint' },
+  def: { icon: '🛡️', label: 'groupDefend', hint: 'groupDefendHint' },
+  train: { icon: '🔁', label: 'groupTrain', hint: 'groupTrainHint' },
+};
+let whereGroup = '';
 const diagrams = new Map();
 // What the sheet was last drawn from, so drawing the same technique again can tell whether anything changed.
 let drawnMarkup = '';
@@ -72,16 +81,42 @@ function notesBox(id) {
     <p class="note-hint" id="noteStatus" role="status">${t(state.account ? 'notesPrivate' : 'notesOnDevice')}</p>`;
 }
 
+// "Where to go": the branches out of this technique, subdivided by what the next move does.
+// One group is open at a time; each technique in it carries how it links from here.
+function whereToGo(technique) {
+  const links = (technique.links || []).filter(([target]) => findTechnique(target));
+  if (!links.length) return '';
+  const groups = whereGroups
+    .map((group) => ({ group, list: links.filter(([target]) => groupOf(target) === group) }))
+    .filter(({ list }) => list.length);
+  if (!groups.some(({ group }) => group === whereGroup)) whereGroup = groups[0].group;
+  const current = groups.find(({ group }) => group === whereGroup);
+  const tabs = groups.map(({ group, list }) => html`<button type="button" role="tab" class="gtab" data-where-group="${group}" aria-selected="${group === whereGroup}">${groupMeta[group].icon} ${t(groupMeta[group].label)} <span class="gn">${list.length}</span></button>`);
+  return html`<h5 class="grp">${t('whereTo')}</h5><div class="gpick" role="tablist" aria-label="${t('whereTo')}">${tabs}</div>
+    <p class="note where-hint">${t(groupMeta[whereGroup].hint)}</p><div class="next" role="tabpanel">${current.list.map(([target, kind]) => techniqueChip(target, t(kind)))}</div>`;
+}
+
+// Choosing a "where to go" group redraws the open technique on that group.
+export function pickWhereGroup(group) {
+  whereGroup = group;
+  redrawPanel(`[data-where-group="${group}"]`);
+}
+
+// The next stage's techniques, subdivided by the same groups as "where to go".
+function nextStageBlock(nextStage) {
+  const groups = whereGroups
+    .map((group) => ({ group, items: nextStage.items.filter((item) => groupOf(item.id) === group) }))
+    .filter(({ items }) => items.length);
+  return html`<h5>${t('nextStage')} · ${text(nextStage.name)}</h5>${groups.map(({ group, items }) => html`<p class="subg">${groupMeta[group].icon} ${t(groupMeta[group].label)}</p><div class="next">${items.map((item) => techniqueChip(item.id))}</div>`)}`;
+}
+
 function panelContent(id) {
   const { technique, module, stage, stageIndex } = findTechnique(id);
   const favorite = isFavorite(id);
   const media = state.media[id] || {};
   const drill = technique.dr ? text(technique.dr) : `${text(content.drill.b)} ${text(content.drill.a)}`.trim();
   const steps = (technique.s || []).map((pair) => html`<li>${settings.language === 'pt' ? pair[0] : pair[1]}</li>`);
-  const links = linkKinds.map((kind) => {
-    const targets = (technique.links || []).filter(([, linkKind]) => linkKind === kind);
-    return targets.length ? html`<h5 class="grp">${t('whereTo')} · ${t(kind)}</h5><div class="next">${targets.map(([target]) => techniqueChip(target))}</div>` : '';
-  });
+  const links = whereToGo(technique);
   const nextStage = module.stages[stageIndex + 1];
   return html`<div class="panel-top"><button type="button" class="pback" id="panelBack" ${state.panel.history.length ? '' : 'hidden'}>← ${t('back')}</button>${stepButtons(id)}</div>
     <button type="button" class="close" id="panelClose" aria-label="${t('close')}">×</button>
@@ -89,7 +124,8 @@ function panelContent(id) {
     <h3 id="panelTitle">${text(technique.n)}</h3>
     <div class="from">${text(module.title)} · ${t('stage')} ${stageIndex + 1}: ${text(stage.name)}${minBeltOf(id) ? ` · ${t('minBelt')}: ${beltName(minBeltOf(id))}` : ''}</div>
     <div class="actions panel-actions"><button type="button" class="fav-btn" data-favorite="${id}" aria-pressed="${favorite}">${heart(favorite)}${t(favorite ? 'inTree' : 'addToTree')}</button>
-    <button type="button" class="chipbtn" data-share="${id}">${t('share')}</button><span class="status" id="shareStatus" role="status"></span></div>
+    <button type="button" class="chipbtn" data-share="${id}">${t('share')}</button>
+    <button type="button" class="chipbtn" data-tv>📺 ${t('showOnTv')}</button><span class="status" id="shareStatus" role="status"></span></div>
     <div class="marks" role="group" aria-label="${t('myProgress')}">${['learning', 'done'].map((mark) => html`<button type="button" class="chipbtn" data-progress="${id}:${mark}" aria-pressed="${progressOf(id) === mark}">${progressMarks[mark]} ${t(mark)}</button>`)}</div>
     ${notesBox(id)}
     ${videoPreview(media.video)}
@@ -100,7 +136,7 @@ function panelContent(id) {
     <h5>${t('drill')}</h5><p>${drill}</p>
     ${technique.g || technique.bk ? html`<p class="note">${t('bookReference')}</p>` : ''}
     ${links}
-    ${nextStage ? html`<h5>${t('nextStage')} · ${text(nextStage.name)}</h5><div class="next">${nextStage.items.map((item) => techniqueChip(item.id))}</div>` : ''}
+    ${nextStage ? nextStageBlock(nextStage) : ''}
     ${state.admin ? mediaControls(id, media) : ''}`;
 }
 
