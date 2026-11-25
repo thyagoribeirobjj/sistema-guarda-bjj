@@ -65,6 +65,20 @@ export function advance(steps, clock, elapsed) {
   return { running: true, step, left, added };
 }
 
+// How long a session's clock had already been running when it reached the TV. The TV's clock and the database's
+// need not agree, so a change that arrives while the TV listens counts from its arrival, and teaches the TV the gap
+// between the two clocks (`skew`: its time minus the save's time, the trip included, in ms). The first answer after
+// the TV (re)loads, or a change older than the gap allows (missed while offline), counts from its save instead.
+// lag: the TV's time minus the save's time when it arrived (ms). Returns { elapsed (seconds), skew (to keep) }.
+export const freshSlack = 5000;
+
+export function caughtUp({ lag, skew = null, live }) {
+  if (!Number.isFinite(lag)) return { elapsed: 0, skew };
+  const behind = Math.max(0, lag - (skew ?? 0));
+  if (live && (skew === null || behind <= freshSlack)) return { elapsed: 0, skew: lag };
+  return { elapsed: behind / 1000, skew: skew === null ? null : Math.min(skew, lag) };
+}
+
 // Start or Pause. A finished show starts again from the beginning.
 export function toggle(steps, clock) {
   if (isOver(steps, clock)) return { ...startClock(steps), running: steps.length > 0 };

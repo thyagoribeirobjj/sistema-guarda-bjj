@@ -3,7 +3,7 @@ import { startFirebase } from './firebase.js';
 import { listenToTv, loadCoachGames } from './firebase-tv.js';
 import { settings } from './settings.js';
 import { newCode, randomLetterIndex, isCode } from './tv-code.js';
-import { showSteps, advance } from './game-clock.js';
+import { showSteps, advance, caughtUp } from './game-clock.js';
 import { buildShow, needsCoachGames } from './tv-show.js';
 import { waitingScreen, gameScreen, tickScreen } from './tv-screen-view.js';
 
@@ -12,12 +12,15 @@ import { waitingScreen, gameScreen, tickScreen } from './tv-screen-view.js';
 // clock itself from the moment a change arrives, so the phone's clock and the TV's need not agree. Nothing on it is
 // counted (Google Analytics never starts here) and it asks nothing about cookies.
 const codeKey = 'sg-tv-code';
+const skewKey = 'sg-tv-skew';
 let screen = null;
 let code = '';
 let session; // undefined until the database answers, then null (no coach yet) or tv/{code}
 let show = null;
 let steps = [];
-let arrivedAt = 0; // performance.now() when the clock in the session arrived
+let arrivedAt = 0; // performance.now() at the moment the session's clock was set (its save, when that was earlier)
+let skew = keptSkew(); // this TV's clock minus the database's (ms), learned from changes as they arrive
+let heard = false; // a first answer has come since the TV started listening
 let drawnStep = null; // the step (and state) the whole screen was last drawn for
 let lastWhole = null;
 let changes = 0;
@@ -36,6 +39,28 @@ function tvCode() {
   } catch {
     return newCode(randomLetterIndex);
   }
+}
+
+// Kept, so a reloaded TV still knows how far its clock is from the database's.
+function keptSkew() {
+  try {
+    const kept = Number(localStorage.getItem(skewKey));
+    return localStorage.getItem(skewKey) !== null && Number.isFinite(kept) ? kept : null;
+  } catch {
+    return null;
+  }
+}
+
+// A TV reloaded (or back online) while the clock runs counts on from the coach's last press, not from now.
+function setArrival(data) {
+  const saved = data?.updatedAt?.toMillis?.();
+  const caught = caughtUp({ lag: Number.isFinite(saved) ? Date.now() - saved : NaN, skew, live: heard });
+  heard = true;
+  if (caught.skew !== skew) {
+    skew = caught.skew;
+    try { localStorage.setItem(skewKey, String(skew)); } catch {}
+  }
+  arrivedAt = performance.now() - caught.elapsed * 1000;
 }
 
 const position = () => advance(steps, session.clock, (performance.now() - arrivedAt) / 1000);
@@ -82,7 +107,7 @@ function tick() {
 
 async function arrived(data) {
   const change = ++changes;
-  arrivedAt = performance.now();
+  setArrival(data);
   if (data?.language === 'pt' || data?.language === 'en') settings.language = data.language;
   document.documentElement.lang = settings.language === 'pt' ? 'pt-BR' : 'en';
   let coachGames = {};
@@ -99,6 +124,7 @@ async function arrived(data) {
 // Until the database lets this TV listen (it may be offline, or not allow it yet), the code still shows; it tries
 // again in a while.
 function listen() {
+  heard = false;
   listenToTv(code, arrived, (error) => {
     console.warn('The TV could not listen for a coach yet:', error.code || error.message);
     setTimeout(listen, 30000);

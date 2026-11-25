@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   gameSteps, showSteps, totalSeconds, gameLength, clockText, startClock, advance, toggle, nextPart, backPart, addTime,
-  restart, stepLength, timeLeft, rolesSwitched, gameProblems, clockGame, isOver,
+  restart, stepLength, timeLeft, rolesSwitched, gameProblems, clockGame, isOver, caughtUp, freshSlack,
 } from '../js/game-clock.js';
 import { newCode, isCode, typedCode, codeLetters } from '../js/tv-code.js';
 
@@ -71,6 +71,25 @@ test('Start / Pause, Next part, Back a part, +30 s and Restart', () => {
   assert.deepEqual(addTime(steps, over), over, 'nothing to add to once it is over');
   assert.deepEqual(restart(steps), startClock(steps));
   assert.deepEqual(toggle(steps, over), { running: true, step: 0, left: 10, added: 0 }, 'Start after the end starts again');
+});
+
+test('a TV counts a change from its arrival, but a reload counts on from the coach’s last press', () => {
+  // A change while the TV listens: from now, whatever the two clocks say; the gap between them is learned.
+  assert.deepEqual(caughtUp({ lag: 30000, skew: null, live: true }), { elapsed: 0, skew: 30000 });
+  assert.deepEqual(caughtUp({ lag: 31000, skew: 30000, live: true }), { elapsed: 0, skew: 31000 });
+  // Reloaded 20 s after the last press: 20 s already gone, with the TV's clock 30 s ahead of the database's.
+  assert.deepEqual(caughtUp({ lag: 50000, skew: 30000, live: false }), { elapsed: 20, skew: 30000 });
+  // A new TV knows no gap yet: it trusts the clocks, never counting backwards.
+  assert.deepEqual(caughtUp({ lag: 20000, skew: null, live: false }), { elapsed: 20, skew: null });
+  assert.deepEqual(caughtUp({ lag: -4000, skew: null, live: false }), { elapsed: 0, skew: null });
+  // A change missed while offline arrives late: counted from its save.
+  assert.deepEqual(caughtUp({ lag: 30000 + freshSlack + 60000, skew: 30000, live: true }), { elapsed: 65, skew: 30000 });
+  // A save without its time yet: from now.
+  assert.deepEqual(caughtUp({ lag: NaN, skew: 5, live: false }), { elapsed: 0, skew: 5 });
+  // So a running clock reloaded 20 s on shows 20 s less, as the phone does.
+  const steps = showSteps({ blocks: [{ title: 'Warm-up', seconds: 600 }] });
+  const { elapsed } = caughtUp({ lag: 20000, skew: 0, live: false });
+  assert.equal(advance(steps, { running: true, step: 0, left: 599, added: 0 }, elapsed).left, 579);
 });
 
 test('the clocks show minutes and seconds, a part of a second as a whole one', () => {

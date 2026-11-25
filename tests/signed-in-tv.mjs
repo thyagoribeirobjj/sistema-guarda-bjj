@@ -194,6 +194,25 @@ export async function tvSteps({ visitor, step, until, stored, seed, address, peo
     await tvShows(tv, '#tvsClock', '0:45', 'its first part, 45 s');
   });
 
+  // The TV counts on from the coach's last press, not from when it loaded: a reload mid-run keeps the phone's time.
+  await step('a TV reloaded while its clock runs shows the same time as the phone', async () => {
+    await coach.selectOption('#remoteShow', 'lesson');
+    await press(coach, 'show');
+    await tvShows(tv, '.tvs-phase', 'Warm-up', 'the plan is on the TV');
+    await press(coach, 'toggle');
+    const seconds = (text) => text.split(':').reduce((sum, part) => sum * 60 + Number(part), 0);
+    await until(async () => seconds(await tvClock(tv)) < 600, 'the TV clock runs', soon);
+    await tv.waitForTimeout(8000);
+    await tv.reload();
+    await tv.locator('#tvsClock').waitFor({ timeout: soon });
+    await tv.waitForTimeout(500);
+    const [onTv, onPhone] = [seconds(await tvClock(tv)), seconds(await coach.locator('#remoteTime').textContent())];
+    assert.ok(onPhone < 595, `the clock ran on the phone (${onPhone} s)`);
+    assert.ok(Math.abs(onTv - onPhone) <= 1, `the TV shows ${onTv} s, the phone ${onPhone} s`);
+    await press(coach, 'end');
+    await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
+  });
+
   await step('the whole class runs on the TV: each block on the clock, and the game\'s own parts at the game', async () => {
     await coach.selectOption('#remoteShow', 'lesson');
     await press(coach, 'show');
