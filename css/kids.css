@@ -1,0 +1,44 @@
+/* The kids' class: "I train in" in the account menu, the kids' belts, the Kids page (worlds and challenges) and the
+   coach's answers in the admin page's Students list. Colors come from css/theme.css. */
+.menu-audience{border-bottom:0;margin-bottom:0}
+.audience-choices{display:flex;flex-wrap:wrap;gap:6px}
+.audience-choices .chipbtn[aria-checked="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.kids-belts .swatches{flex-wrap:wrap}
+
+/* a kids' belt with a stripe: the outer color, then white or black across the middle */
+.belt[data-belt^="gray"]{--outer:var(--belt-gray)} .belt[data-belt^="yellow"]{--outer:var(--belt-yellow)}
+.belt[data-belt^="orange"]{--outer:var(--belt-orange)} .belt[data-belt^="green"]{--outer:var(--belt-green)}
+.belt[data-belt="gray"],.belt[data-belt="yellow"],.belt[data-belt="orange"],.belt[data-belt="green"]{background:var(--outer)}
+.belt[data-belt$="-white"]{background:linear-gradient(var(--outer) 0 33%,var(--belt-white) 33% 67%,var(--outer) 67%)}
+.belt[data-belt$="-black"]{background:linear-gradient(var(--outer) 0 33%,var(--belt-black) 33% 67%,var(--outer) 67%)}
+
+/* the Kids page */
+.kids-level{min-width:min(100%,260px)}
+.kids-level .note{margin-top:2px}
+.kids-sign-in{margin:-4px 0 14px;font-size:13.5px}
+.worlds{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;align-items:start}
+.world-head{display:flex;align-items:center;gap:12px}
+.world-head>div{flex:1;min-width:0}
+.world-head .eyebrow{margin:0}
+.world-head h3{margin:0;font-size:19px}
+.world-mark{font-size:30px;line-height:1}
+.world-count{flex:none;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.world.locked .world-mark{filter:grayscale(1);opacity:.6}
+.challenges{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.challenge{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.challenge.locked{opacity:.7}
+.challenge-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.challenge-head b{flex:1 1 auto;min-width:0}
+.challenge .xp{font-size:12.5px;color:var(--muted)}
+.challenge p{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.challenge .techs{margin-top:8px}
+.challenge .actions{margin-top:8px}
+.kid-status{display:inline-block;font:600 11.5px/1.3 var(--body);padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.kid-status[data-status="done"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.kid-status[data-status="waiting"]{border-color:var(--accent);color:var(--ink)}
+.kid-status[data-status="again"]{background:var(--accent-soft);color:var(--ink)}
+
+/* the coach's answers (admin page) */
+.kid-answers{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14px}
+.kid-answer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px}
+.kid-answer .actions{margin:0}

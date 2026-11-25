@@ -1,6 +1,6 @@
 import { html } from './html.js';
-import { currentTheme, themes, settings } from './settings.js';
-import { belts } from './content.js';
+import { currentTheme, themes, audiences, settings } from './settings.js';
+import { belts, kidsBelts } from './content.js';
 import { state } from './state.js';
 import { t } from './strings.js';
 import { coachMenu } from './nav.js';
@@ -20,10 +20,17 @@ function themePicker() {
   return html`<div class="menu-themes" role="group" aria-label="${t('theme')}"><span class="menu-label">${t('theme')}</span><div class="swatches">${themes.map((theme) => html`<button type="button" role="menuitemradio" class="swatch" data-theme="${theme}" data-theme-choice="${theme}" aria-checked="${currentTheme() === theme}" title="${themeName(theme)}" aria-label="${themeName(theme)}"><i></i></button>`)}</div></div>`;
 }
 
-// The student's belt, picked by them. Tapping the one already picked clears it.
+// "I train in": the kids class, the adult class (the site as it always was) or both, for a parent or a coach.
+const audienceLabels = { kids: 'audienceKids', adult: 'audienceAdult', both: 'audienceBoth' };
+function audiencePicker() {
+  return html`<div class="menu-themes menu-audience" role="group" aria-label="${t('trainIn')}"><span class="menu-label">${t('trainIn')}</span><div class="audience-choices">${audiences.map((audience) => html`<button type="button" role="menuitemradio" class="chipbtn" data-audience-choice="${audience}" aria-checked="${settings.audience === audience}">${t(audienceLabels[audience])}</button>`)}</div></div>`;
+}
+
+// The student's belt, picked by them, from the kids' belts for the kids class. Tapping the one already picked clears it.
 function beltPicker() {
   const label = settings.belt ? `${t('myBelt')} · ${beltName(settings.belt)}` : t('myBelt');
-  return html`<div class="menu-themes menu-belts" role="group" aria-label="${t('myBelt')}"><span class="menu-label">${label}</span><div class="swatches">${belts.map((belt) => html`<button type="button" role="menuitemradio" class="swatch" data-belt-choice="${belt}" aria-checked="${settings.belt === belt}" title="${beltName(belt)}" aria-label="${beltName(belt)}"><i class="belt" data-belt="${belt}"></i></button>`)}</div></div>`;
+  const track = settings.audience === 'kids' ? kidsBelts : belts;
+  return html`${audiencePicker()}<div class="menu-themes menu-belts${track === kidsBelts ? ' kids-belts' : ''}" role="group" aria-label="${t('myBelt')}"><span class="menu-label">${label}</span><div class="swatches">${track.map((belt) => html`<button type="button" role="menuitemradio" class="swatch" data-belt-choice="${belt}" aria-checked="${settings.belt === belt}" title="${beltName(belt)}" aria-label="${beltName(belt)}"><i class="belt" data-belt="${belt}"></i></button>`)}</div></div>`;
 }
 
 // The person's Google photo, or the first letter of their name under it in case the photo doesn't load.

@@ -11,9 +11,9 @@ export const progressMarks = { learning: '◐', done: '✓' };
 
 // ---- pieces used by several pages ----
 
-// "White belt", "Blue belt"…
+// "White belt", "Blue belt", "Gray-white belt"…
 export function beltName(belt) {
-  return t(`belt${belt.charAt(0).toUpperCase()}${belt.slice(1)}`);
+  return t(`belt${belt.split('-').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('')}`);
 }
 
 // The minimum belt an admin set for a technique, or '' (for everyone).
@@ -76,13 +76,13 @@ export function curriculumView() {
   return html`${intro(t('curriculum'), t('curriculumLead'))}<div class="grid parts">${cards}</div>`;
 }
 
-// With a belt picked, a part shows "up to my belt" unless the student asks for everything.
+// With an adult belt picked, a part shows "up to my belt" unless the student asks for everything.
 function beltFilterOn() {
-  return Boolean(settings.belt) && state.beltFilter !== 'all';
+  return belts.includes(settings.belt) && state.beltFilter !== 'all';
 }
 
 function beltFilter() {
-  if (!settings.belt) return html`<p class="note belt-hint">${t('pickBeltHint')}</p>`;
+  if (!belts.includes(settings.belt)) return html`<p class="note belt-hint">${t('pickBeltHint')}</p>`;
   const on = beltFilterOn();
   return html`<div class="filters belt-filter" role="group" aria-label="${t('myBelt')}"><button type="button" class="chipbtn" data-belt-filter="mine" aria-pressed="${on}">${t('upToMyBelt')} (${beltName(settings.belt)})</button><button type="button" class="chipbtn" data-belt-filter="all" aria-pressed="${!on}">${t('everything')}</button></div>`;
 }

@@ -1,12 +1,14 @@
 import { html } from './html.js';
 import { t } from './strings.js';
 import { analyticsId, loadAnalytics } from './firebase.js';
+import { settings } from './settings.js';
 
 // Visitor statistics (Google Analytics, through Firebase), only in a browser where someone pressed "Accept" on the
 // cookie bar. Until then Google Analytics' code is not even loaded, so nothing is sent and no cookie is set.
 // The choice belongs to this browser (sg-cookies), not to the account, and is never saved to the database.
 // Without a measurement id in the site's Firebase settings there is no bar, no menu item and nothing loaded.
 // Only pages are counted: the part of the site and the technique opened, by link and name. Never who is looking.
+// Someone who trains in the kids class is never counted, whatever the cookie choice: no bar, nothing loaded.
 const choiceKey = 'sg-cookies';
 const adsOff = { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' };
 
@@ -36,7 +38,19 @@ function storeChoice(value) {
 }
 
 export function cookiesOffered() {
-  return Boolean(analyticsId());
+  return Boolean(analyticsId()) && settings.audience !== 'kids';
+}
+
+// "I train in" changed (here, or with the account arriving): the kids class switches counting off at once and
+// deletes its cookies, keeping the cookie choice itself; going back to another class follows that choice again.
+export function followAudience() {
+  if (!started || !analyticsId()) return;
+  if (cookiesOffered()) {
+    if (choice === 'accepted') turnOn();
+    return;
+  }
+  barOpen = false;
+  turnOff();
 }
 
 // A page opened for the television (?tv, js/tv.js) has no one at it to answer, so it does not ask. With no choice it counts nothing.
@@ -63,7 +77,7 @@ async function turnOn() {
   loading ||= loadAnalytics().then(async (loaded) => ((await loaded.sdk.isSupported()) ? loaded : null))
     .catch((error) => { console.error(error); return null; });
   const loaded = await loading;
-  if (!loaded || call !== turnOnCalls || choice !== 'accepted') return;
+  if (!loaded || call !== turnOnCalls || choice !== 'accepted' || !cookiesOffered()) return;
   if (!analytics) {
     // The defaults, before anything is sent: statistics yes, advertising no.
     loaded.sdk.setConsent({ analytics_storage: 'granted', ...adsOff });
@@ -138,7 +152,7 @@ export function forgetCookieChoice() {
 }
 
 function send() {
-  if (analytics && choice === 'accepted' && page) analytics.sdk.logEvent(analytics.instance, 'page_view', page);
+  if (analytics && choice === 'accepted' && cookiesOffered() && page) analytics.sdk.logEvent(analytics.instance, 'page_view', page);
 }
 
 // The link is built from the page's own hash, so nothing else in the address (a search, a test's ?emulators=) goes.

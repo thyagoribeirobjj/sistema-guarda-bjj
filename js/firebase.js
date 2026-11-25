@@ -166,10 +166,32 @@ export async function loadStudents() {
   });
 }
 
-// "Delete my data": the person's notes, their settings, then their sign-in record on this site, which signs them
-// out (and so clears this browser).
+// ---- the kids' challenges ----
+// approvals/{uid} holds { challenges: { <challenge id>: { status: 'approved' | 'again', claim } } }: the coaches'
+// answers to what the kid claimed (users/{uid}.claims). The kid reads their own (one read, only for the kids class);
+// only coaches write them (firestore.rules).
+export async function loadApprovals(uid) {
+  return (await read(`approvals/${uid}`))?.challenges || {};
+}
+
+// Every kid's answers, for the coach's list of students: one read per kid with any answer.
+export async function loadAllApprovals() {
+  const snapshot = await fb.getDocs(fb.collection(db, 'approvals'));
+  return Object.fromEntries(snapshot.docs.map((answers) => [answers.id, answers.data().challenges || {}]));
+}
+
+// answer: { status: 'approved' | 'again', claim }, or null to take the answer back.
+export function saveApproval(uid, id, answer) {
+  return fb.setDoc(fb.doc(db, `approvals/${uid}`), {
+    challenges: { [id]: answer || fb.deleteField() }, changed: id, updatedBy: auth.currentUser.email, updatedAt: fb.serverTimestamp(),
+  }, { merge: true });
+}
+
+// "Delete my data": the person's notes, the coaches' answers to their kids' challenges, their settings, then their
+// sign-in record on this site, which signs them out (and so clears this browser).
 export async function deleteMyData(uid) {
   await fb.deleteDoc(fb.doc(db, `users/${uid}/private/notes`));
+  await fb.deleteDoc(fb.doc(db, `approvals/${uid}`));
   await fb.deleteDoc(fb.doc(db, `users/${uid}`));
   try {
     await fb.deleteUser(auth.currentUser);

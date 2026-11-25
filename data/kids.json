@@ -1,0 +1,551 @@
+{
+  "version": 1,
+  "source": "The Jiu-Jitsu Kids game the owner supplied (worlds, challenges, XP and levels).",
+  "note": "Each challenge points at techniques of the site (data/content.json, data/curriculum.json) by id. A world opens once 2 challenges of the world before are done; alwaysOpen worlds are open from the start.",
+  "levels": [
+    {
+      "xp": 0,
+      "n": {
+        "pt": "Filhote",
+        "en": "Cub"
+      }
+    },
+    {
+      "xp": 40,
+      "n": {
+        "pt": "Tigrinho",
+        "en": "Little tiger"
+      }
+    },
+    {
+      "xp": 100,
+      "n": {
+        "pt": "Ninja",
+        "en": "Ninja"
+      }
+    },
+    {
+      "xp": 180,
+      "n": {
+        "pt": "Samurai",
+        "en": "Samurai"
+      }
+    },
+    {
+      "xp": 280,
+      "n": {
+        "pt": "Leão",
+        "en": "Lion"
+      }
+    },
+    {
+      "xp": 400,
+      "n": {
+        "pt": "Dragão",
+        "en": "Dragon"
+      }
+    },
+    {
+      "xp": 550,
+      "n": {
+        "pt": "Mestre",
+        "en": "Master"
+      }
+    }
+  ],
+  "worlds": [
+    {
+      "id": "w1",
+      "mark": "🥋",
+      "n": {
+        "pt": "Ninja das quedas",
+        "en": "Breakfall ninja"
+      },
+      "d": {
+        "pt": "Aprenda a cair e se mexer no tatame.",
+        "en": "Learn to fall and move on the mat."
+      }
+    },
+    {
+      "id": "w2",
+      "mark": "🛡️",
+      "n": {
+        "pt": "Defesa em pé",
+        "en": "Standing defense"
+      },
+      "d": {
+        "pt": "Base forte, solte pegadas e leve a luta para o chão.",
+        "en": "Strong base, break grips and take it to the ground."
+      }
+    },
+    {
+      "id": "w3",
+      "mark": "🌀",
+      "n": {
+        "pt": "Guarda guerreira",
+        "en": "Guard warrior"
+      },
+      "d": {
+        "pt": "Por baixo: segure, raspe e finalize.",
+        "en": "From bottom: hold, sweep and submit."
+      }
+    },
+    {
+      "id": "w4",
+      "mark": "🚀",
+      "n": {
+        "pt": "Passador",
+        "en": "Guard passer"
+      },
+      "d": {
+        "pt": "Por cima: postura e passagem.",
+        "en": "From top: posture and passing."
+      }
+    },
+    {
+      "id": "w5",
+      "mark": "🧱",
+      "n": {
+        "pt": "Controle lateral",
+        "en": "Side control"
+      },
+      "d": {
+        "pt": "Cole no chão e não deixe ele sair.",
+        "en": "Stick to the mat and don't let him out."
+      }
+    },
+    {
+      "id": "w6",
+      "mark": "👑",
+      "n": {
+        "pt": "Rei da montada",
+        "en": "King of the mount"
+      },
+      "d": {
+        "pt": "Suba, mantenha e saia por baixo.",
+        "en": "Climb up, stay there and escape from under."
+      }
+    },
+    {
+      "id": "w7",
+      "mark": "🐒",
+      "n": {
+        "pt": "Macaco das costas",
+        "en": "Back monkey"
+      },
+      "d": {
+        "pt": "Pegue as costas e saia da tartaruga.",
+        "en": "Take the back and escape the turtle."
+      }
+    },
+    {
+      "id": "w8",
+      "mark": "✨",
+      "n": {
+        "pt": "Professor mirim",
+        "en": "Little coach"
+      },
+      "d": {
+        "pt": "Crie, explique e ajude os colegas. Sempre aberto!",
+        "en": "Create, explain and help your friends. Always open!"
+      },
+      "alwaysOpen": true
+    }
+  ],
+  "challenges": [
+    {
+      "id": "rolamento",
+      "world": "w1",
+      "n": {
+        "pt": "Mestre do rolamento",
+        "en": "Roll master"
+      },
+      "task": {
+        "pt": "Faça 10 rolamentos para a frente, sem a cabeça tocar o chão.",
+        "en": "Do 10 forward rolls without your head touching the mat."
+      },
+      "xp": 10,
+      "techniques": [
+        "fund-zenpo-kaiten-ukemi-forward-roll"
+      ]
+    },
+    {
+      "id": "queda-costas",
+      "world": "w1",
+      "n": {
+        "pt": "Queda de costas perfeita",
+        "en": "Perfect back fall"
+      },
+      "task": {
+        "pt": "Faça 10 quedas para trás com o queixo no peito e batendo os dois braços.",
+        "en": "Do 10 back breakfalls with chin tucked, slapping both arms."
+      },
+      "xp": 10,
+      "techniques": [
+        "fund-ushiro-ukemi-back-breakfall"
+      ]
+    },
+    {
+      "id": "camarao",
+      "world": "w1",
+      "n": {
+        "pt": "Camarão veloz",
+        "en": "Speedy shrimp"
+      },
+      "task": {
+        "pt": "Atravesse o tatame fazendo fuga de quadril, ida e volta, sem parar.",
+        "en": "Cross the mat and back doing hip escapes without stopping."
+      },
+      "xp": 10,
+      "techniques": [
+        "bottom-hip-escape-shrimp"
+      ]
+    },
+    {
+      "id": "levanta",
+      "world": "w1",
+      "n": {
+        "pt": "Levanta, guerreiro!",
+        "en": "Up, warrior!"
+      },
+      "task": {
+        "pt": "Faça a levantada técnica 10 vezes de cada lado.",
+        "en": "Do the technical stand-up 10 times on each side."
+      },
+      "xp": 10,
+      "techniques": [
+        "fund-getting-up-in-base"
+      ]
+    },
+    {
+      "id": "base",
+      "world": "w2",
+      "n": {
+        "pt": "Base de árvore",
+        "en": "Tree base"
+      },
+      "task": {
+        "pt": "No jogo, o colega empurra e puxa por 30 segundos e você não cai.",
+        "en": "In a game, your partner pushes and pulls for 30 seconds and you don't fall."
+      },
+      "xp": 15,
+      "techniques": [
+        "top-base"
+      ]
+    },
+    {
+      "id": "pulso",
+      "world": "w2",
+      "n": {
+        "pt": "Solte o pulso",
+        "en": "Free your wrist"
+      },
+      "task": {
+        "pt": "Mostre 3 jeitos de soltar o pulso quando alguém segura.",
+        "en": "Show 3 ways to free your wrist when someone grabs it."
+      },
+      "xp": 15,
+      "techniques": [
+        "pe-wrist-grab-defenses"
+      ]
+    },
+    {
+      "id": "puxar",
+      "world": "w2",
+      "n": {
+        "pt": "Puxar a guarda com segurança",
+        "en": "Pull guard safely"
+      },
+      "task": {
+        "pt": "Puxe a guarda 5 vezes com pegada na gola e na manga.",
+        "en": "Pull guard 5 times with collar and sleeve grips."
+      },
+      "xp": 15,
+      "techniques": [
+        "queda-pulling-guard"
+      ]
+    },
+    {
+      "id": "double",
+      "world": "w2",
+      "n": {
+        "pt": "Minha primeira queda",
+        "en": "My first takedown"
+      },
+      "task": {
+        "pt": "Treine 10 double legs e aplique 1 no treino da aula.",
+        "en": "Drill 10 double legs and land 1 during class training."
+      },
+      "xp": 20,
+      "techniques": [
+        "queda-double-leg"
+      ]
+    },
+    {
+      "id": "guarda-ferro",
+      "world": "w3",
+      "n": {
+        "pt": "Guarda fechada de ferro",
+        "en": "Iron closed guard"
+      },
+      "task": {
+        "pt": "Segure a guarda fechada por 30 segundos sem o colega passar.",
+        "en": "Keep your closed guard for 30 seconds without your partner passing."
+      },
+      "xp": 15,
+      "techniques": [
+        "bottom-classic-position"
+      ]
+    },
+    {
+      "id": "tesoura",
+      "world": "w3",
+      "n": {
+        "pt": "Raspagem tesoura",
+        "en": "Scissor sweep"
+      },
+      "task": {
+        "pt": "Faça 10 de cada lado e aplique 1 no treino da aula.",
+        "en": "Do 10 on each side and land 1 during class training."
+      },
+      "xp": 20,
+      "techniques": [
+        "bottom-scissor-sweep"
+      ]
+    },
+    {
+      "id": "armlock",
+      "world": "w3",
+      "n": {
+        "pt": "Armlock da guarda",
+        "en": "Armbar from guard"
+      },
+      "task": {
+        "pt": "Pratique 10 armlocks de cada lado e aplique 1 durante as aulas.",
+        "en": "Practice 10 armbars on each side and land 1 during class."
+      },
+      "xp": 25,
+      "techniques": [
+        "bottom-armbar-with-hip-pivot"
+      ]
+    },
+    {
+      "id": "triangulo",
+      "world": "w3",
+      "n": {
+        "pt": "Triângulo",
+        "en": "Triangle"
+      },
+      "task": {
+        "pt": "Pratique 10 triângulos devagar com o colega e mostre ao professor.",
+        "en": "Practice 10 slow triangles with a partner and show your coach."
+      },
+      "xp": 25,
+      "techniques": [
+        "bottom-triangle"
+      ]
+    },
+    {
+      "id": "postura",
+      "world": "w4",
+      "n": {
+        "pt": "Postura de rei",
+        "en": "King's posture"
+      },
+      "task": {
+        "pt": "Mantenha a postura dentro da guarda por 30 segundos.",
+        "en": "Keep your posture inside the guard for 30 seconds."
+      },
+      "xp": 15,
+      "techniques": [
+        "top-closed-guard-posture"
+      ]
+    },
+    {
+      "id": "toreando",
+      "world": "w4",
+      "n": {
+        "pt": "Toureiro",
+        "en": "Bullfighter"
+      },
+      "task": {
+        "pt": "Passe a guarda com o toreando 3 vezes no jogo.",
+        "en": "Pass the guard with the toreando 3 times in a game."
+      },
+      "xp": 20,
+      "techniques": [
+        "top-toreando-bullfighter"
+      ]
+    },
+    {
+      "id": "cola",
+      "world": "w5",
+      "n": {
+        "pt": "Cola no chão",
+        "en": "Glued to the mat"
+      },
+      "task": {
+        "pt": "Segure o yoko shiho gatame por 10 segundos no jogo.",
+        "en": "Hold yoko shiho gatame for 10 seconds in a game."
+      },
+      "xp": 15,
+      "techniques": [
+        "top-yoko-shiho-gatame-side-four-quarter-hold"
+      ]
+    },
+    {
+      "id": "ciclo",
+      "world": "w5",
+      "n": {
+        "pt": "Ciclo do side control",
+        "en": "Side control cycle"
+      },
+      "task": {
+        "pt": "Faça o drill de transições do side control 3 vezes sem perder a pressão.",
+        "en": "Do the side control transitions drill 3 times without losing pressure."
+      },
+      "xp": 20,
+      "techniques": [
+        "lateral-side-control-transitions-drill"
+      ]
+    },
+    {
+      "id": "americana",
+      "world": "w5",
+      "n": {
+        "pt": "Americana",
+        "en": "Americana"
+      },
+      "task": {
+        "pt": "Pratique 10 americanas e aplique 1 no treino da aula.",
+        "en": "Practice 10 americanas and land 1 during class training."
+      },
+      "xp": 25,
+      "techniques": [
+        "top-americana"
+      ]
+    },
+    {
+      "id": "subir",
+      "world": "w6",
+      "n": {
+        "pt": "Suba na montada",
+        "en": "Climb to mount"
+      },
+      "task": {
+        "pt": "Vá do side control para a montada 5 vezes.",
+        "en": "Go from side control to mount 5 times."
+      },
+      "xp": 15,
+      "techniques": [
+        "montada-from-side-control-to-mount"
+      ]
+    },
+    {
+      "id": "upa",
+      "world": "w6",
+      "n": {
+        "pt": "Upa!",
+        "en": "Upa!"
+      },
+      "task": {
+        "pt": "Saia da montada com o upa 1 vez no treino.",
+        "en": "Escape the mount with the upa once in training."
+      },
+      "xp": 20,
+      "techniques": [
+        "bottom-upa-bridge-and-roll"
+      ]
+    },
+    {
+      "id": "armlock-montada",
+      "world": "w6",
+      "n": {
+        "pt": "Armlock da montada",
+        "en": "Armbar from mount"
+      },
+      "task": {
+        "pt": "Pratique 10 armlocks da montada e aplique 1 nas aulas.",
+        "en": "Practice 10 armbars from mount and land 1 in class."
+      },
+      "xp": 25,
+      "techniques": [
+        "top-armbar-from-mount"
+      ]
+    },
+    {
+      "id": "ganchos",
+      "world": "w7",
+      "n": {
+        "pt": "Ganchos de macaco",
+        "en": "Monkey hooks"
+      },
+      "task": {
+        "pt": "Pegue as costas e coloque os dois ganchos 5 vezes.",
+        "en": "Take the back and put both hooks in 5 times."
+      },
+      "xp": 20,
+      "techniques": [
+        "top-inserting-the-hooks"
+      ]
+    },
+    {
+      "id": "tartaruga",
+      "world": "w7",
+      "n": {
+        "pt": "Saída da tartaruga",
+        "en": "Turtle escape"
+      },
+      "task": {
+        "pt": "Saia da tartaruga 3 vezes no jogo.",
+        "en": "Escape the turtle 3 times in a game."
+      },
+      "xp": 20,
+      "techniques": [
+        "costas-escaping-the-bottom-turtle"
+      ]
+    },
+    {
+      "id": "explique",
+      "world": "w8",
+      "n": {
+        "pt": "Explique uma técnica",
+        "en": "Explain a technique"
+      },
+      "task": {
+        "pt": "Explique a sua técnica favorita, passo a passo, para o professor.",
+        "en": "Explain your favorite technique, step by step, to your coach."
+      },
+      "xp": 20,
+      "techniques": []
+    },
+    {
+      "id": "ajude",
+      "world": "w8",
+      "n": {
+        "pt": "Ajude um amigo",
+        "en": "Help a friend"
+      },
+      "task": {
+        "pt": "Ensine uma técnica para um colega mais novo, com o professor olhando.",
+        "en": "Teach a technique to a younger friend while your coach watches."
+      },
+      "xp": 20,
+      "techniques": []
+    },
+    {
+      "id": "crie",
+      "world": "w8",
+      "n": {
+        "pt": "Crie o seu jiu-jitsu",
+        "en": "Create your jiu-jitsu"
+      },
+      "task": {
+        "pt": "Faça um desenho ou invente uma história sobre jiu-jitsu e mostre ao professor.",
+        "en": "Make a drawing or a story about jiu-jitsu and show it to your coach."
+      },
+      "xp": 15,
+      "techniques": []
+    }
+  ]
+}

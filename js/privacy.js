@@ -8,7 +8,7 @@ import { forgetCookieChoice } from './analytics.js';
 
 // The privacy page (#privacy): what is kept, who sees it, and "Delete my data". Keep its words true to the code:
 // firestore.rules says who can read what, js/settings.js and js/notes.js what is kept, js/analytics.js what is counted.
-const sections = ['SignedOut', 'Kept', 'Who', 'Notes', 'Where', 'Ads', 'Stats', 'Storage'];
+const sections = ['SignedOut', 'Kept', 'Who', 'Kids', 'Notes', 'Where', 'Ads', 'Stats', 'Storage'];
 
 // state.deleting: '' | 'ask' | 'working' | 'deleted' | 'cleared' | 'failed'
 function deleteBlock() {

@@ -15,10 +15,16 @@ const searchIcon = icon(html`<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"
 const lessonIcon = icon(html`<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h6"/>`);
 const methodIcon = icon(html`<path d="M4 20v-5M10 20V10M16 20V4M2 20h20"/>`);
 const adminIcon = icon(html`<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>`);
+const kidsIcon = icon(html`<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>`);
+
+// "I train in" (settings.audience): the kids class sees the Kids page instead of the adult curriculum; both, both.
+const adultClass = () => settings.audience !== 'kids';
+const kidsClass = () => settings.audience !== 'adult';
 
 const students = [
-  { view: 'semana', label: 'week', icon: calendarIcon, shown: () => Boolean(state.week), dot: () => weekIsNew() },
-  { view: 'curriculum', label: 'curriculum', icon: curriculumIcon, parts: true },
+  { view: 'semana', label: 'week', icon: calendarIcon, shown: () => Boolean(state.week) && adultClass(), dot: () => weekIsNew() },
+  { view: 'curriculum', label: 'curriculum', icon: curriculumIcon, parts: true, shown: adultClass },
+  { view: 'kids', label: 'kids', icon: kidsIcon, shown: kidsClass },
   { view: 'meu', label: 'myTree', icon: heart(false), count: true },
 ];
 const coach = [
@@ -49,7 +55,7 @@ export function noteWeekSeen() {
 }
 
 function weekIsNew() {
-  return Boolean(state.week) && Boolean(settings.seenWeek) && settings.seenWeek !== weekSignature(state.week);
+  return Boolean(state.week) && adultClass() && Boolean(settings.seenWeek) && settings.seenWeek !== weekSignature(state.week);
 }
 
 // Which entry is "here": a part of the fight belongs to Curriculum. Nothing is, while searching.
