@@ -209,7 +209,7 @@ await step('"Show on the TV" opens from a technique with this page\'s address, a
   await page.locator('#panelClose').click();
   const tvPage = await browser.newPage();
   await tvPage.goto(`${address}/?tv#curriculum`);
-  assert.ok(await tvPage.evaluate(() => document.documentElement.classList.contains('tv')), 'large on the TV');
+  await tvPage.waitForFunction(() => document.documentElement.classList.contains('tv'));
   await tvPage.close();
 });
 
