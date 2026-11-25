@@ -467,7 +467,8 @@ await step('a note changed or cleared in another tab shows here, and this tab ne
   await until(async () => (await stored(notesPath))?.notes?.[second] === 'Second note, tab A', 'tab A saves its other note');
   const local = await tabA.evaluate(() => JSON.parse(localStorage.getItem('sg-notes')));
   assert.deepEqual(local, { [first]: 'Changed in tab B', [second]: 'Second note, tab A' }, 'tab A did not write its older copy back');
-  assert.equal((await stored(notesPath)).notes[first], 'Changed in tab B');
+  // Tab B saves on its own timer, which can land after tab A's save.
+  await until(async () => (await stored(notesPath))?.notes?.[first] === 'Changed in tab B', 'the account keeps the note changed in tab B');
   // Cleared in tab B: tab A shows it gone.
   await tabA.locator('#panelClose').click();
   await openTechnique(tabA, first);
