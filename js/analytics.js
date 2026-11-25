@@ -44,29 +44,31 @@ export function cookieBarShown() {
 }
 
 // Called once Firebase has started: someone who accepted before is counted again from this page on.
+let started = false;
 export function startAnalytics() {
+  started = true;
   if (cookiesOffered() && choice === 'accepted') turnOn();
 }
 
 // Only the latest call carries on, so pressing "Accept" twice while the code loads still counts the page once.
+// Loading the code sends nothing; starting it does (its settings, an install id, gtag.js from Tag Manager), so it is
+// started only if the choice is still "Accept" once the code has arrived. A "Reject" pressed meanwhile wins.
 let turnOnCalls = 0;
 let switchedOff = false;
 async function turnOn() {
   const call = ++turnOnCalls;
-  loading ||= loadAnalytics().then(async ({ sdk, app }) => {
-    if (!(await sdk.isSupported())) return null;
+  loading ||= loadAnalytics().then(async (loaded) => ((await loaded.sdk.isSupported()) ? loaded : null))
+    .catch((error) => { console.error(error); return null; });
+  const loaded = await loading;
+  if (!loaded || call !== turnOnCalls || choice !== 'accepted') return;
+  if (!analytics) {
     // The defaults, before anything is sent: statistics yes, advertising no.
-    sdk.setConsent({ analytics_storage: 'granted', ...adsOff });
-    const instance = sdk.initializeAnalytics(app, {
+    loaded.sdk.setConsent({ analytics_storage: 'granted', ...adsOff });
+    const instance = loaded.sdk.initializeAnalytics(loaded.app, {
       config: { send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false },
     });
-    return { sdk, instance };
-  }).catch((error) => { console.error(error); return null; });
-  analytics = await loading;
-  if (!analytics || call !== turnOnCalls) return;
-  // Rejected while the code was still loading.
-  if (choice !== 'accepted') return turnOff();
-  if (switchedOff) {
+    analytics = { sdk: loaded.sdk, instance };
+  } else if (switchedOff) {
     analytics.sdk.setConsent({ analytics_storage: 'granted', ...adsOff });
     analytics.sdk.setAnalyticsCollectionEnabled(analytics.instance, true);
     switchedOff = false;
@@ -101,6 +103,24 @@ export function chooseCookies(value) {
   if (value === 'accepted') turnOn();
   else turnOff();
 }
+
+// Another tab of this browser changed the choice (or cleared everything): this tab follows at once, so a "Reject"
+// there stops the counting here too, and its cookies, deleted there, are not set again from here.
+let choiceShown = () => {};
+export function onCookieChoiceChange(redraw) {
+  choiceShown = redraw;
+}
+
+addEventListener('storage', (event) => {
+  if (event.key !== choiceKey && event.key !== null) return;
+  const theirs = storedChoice();
+  if (theirs === choice) return;
+  choice = theirs;
+  if (!started || !cookiesOffered()) return;
+  if (choice === 'accepted') turnOn();
+  else turnOff();
+  choiceShown();
+});
 
 // The account menu's "Cookies": the same bar, showing the choice made.
 export function reopenCookieChoice() {

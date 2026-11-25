@@ -807,6 +807,58 @@ await step('after "Accept": a page view for the part and for each technique open
   assert.ok(await visit.locator('#cookieBar').isHidden());
 });
 
+await step('"Reject" in one tab stops the counting in another tab of the same browser too', async () => {
+  const first = await openLate('/#top', 'en-US', {}, withAnalytics);
+  await first.release();
+  await first.locator('#cookieBar [data-cookies="accepted"]').click();
+  const second = await first.context().newPage();
+  await second.goto(`${address}/#curriculum`);
+  await until(second, () => hits(first).some((hit) => hit.page_location.endsWith('/#curriculum')), 'a page view from the second tab');
+  await first.locator('#account').click();
+  await first.locator('#accountMenu #cookieChoice').click();
+  await first.locator('#cookieBar [data-cookies="rejected"]').click();
+  assert.deepEqual(await analyticsCookies(first), [], 'the _ga cookies are deleted');
+  await second.waitForTimeout(300);
+  const sent = first.analytics.length;
+  await second.locator('main .part-card').first().click();
+  await second.locator('main .tech').first().click();
+  await second.locator('#panelClose').click();
+  await second.locator('main .tech').nth(1).click();
+  await second.waitForTimeout(800);
+  assert.equal(first.analytics.length, sent, 'the other tab sends nothing more');
+  assert.deepEqual(await analyticsCookies(second), [], 'nor sets its cookies again');
+  assert.equal(await second.evaluate((id) => window[`ga-disable-${id}`], measurementId), true, 'its collection is switched off');
+  // And the other way: "Accept" in one tab is followed by the other one.
+  await first.locator('#account').click();
+  await first.locator('#accountMenu #cookieChoice').click();
+  await first.locator('#cookieBar [data-cookies="accepted"]').click();
+  await second.locator('#panelClose').click();
+  await second.locator('main .tech').nth(2).click();
+  await until(second, () => first.analytics.length > sent, 'the other tab counting again after "Accept"');
+});
+
+await step('"Reject" pressed while the Google Analytics code is still loading: it is never started, nothing goes to Google', async () => {
+  const visit = await openLate('/#top', 'en-US', {}, withAnalytics);
+  let arrived;
+  const loaded = new Promise((resolve) => { arrived = resolve; });
+  await visit.context().route('**/firebase-analytics.js', async (route) => {
+    await visit.waitForTimeout(2500); // a slow phone
+    await route.fallback();
+    arrived();
+  });
+  await visit.release();
+  await visit.locator('#cookieBar [data-cookies="accepted"]').click();
+  await visit.locator('#account').click();
+  await visit.locator('#accountMenu #cookieChoice').click();
+  await visit.locator('#cookieBar [data-cookies="rejected"]').click();
+  await loaded;
+  await visit.locator('main .tech').first().click();
+  await visit.waitForTimeout(1500);
+  assert.deepEqual(visit.analytics.map((request) => request.url), [], 'no request to Google Analytics, Tag Manager or Firebase installations');
+  assert.deepEqual(await analyticsCookies(visit), []);
+  assert.ok(!(await visit.evaluate(async () => (await indexedDB.databases()).map((database) => database.name))).includes('firebase-installations-database'), 'no install id kept');
+});
+
 await step('"Clear this browser" forgets the cookie choice, so the bar asks again', async () => {
   const visit = await openLate('/#privacy', 'en-US', {}, withAnalytics);
   await visit.release();

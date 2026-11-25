@@ -12,7 +12,7 @@ import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
 import { privacyView, privacyActions } from './privacy.js';
 import { weekOn, localDate } from './week.js';
-import { cookieBar, chooseCookies, reopenCookieChoice, startAnalytics, countView } from './analytics.js';
+import { cookieBar, chooseCookies, reopenCookieChoice, startAnalytics, countView, onCookieChoiceChange } from './analytics.js';
 
 const $ = (id) => document.getElementById(id);
 const pages = { curriculum: curriculumView, semana: weekView, meu: treeView, lesson: lessonView, method: methodView, privacy: privacyView };
@@ -377,6 +377,7 @@ async function start() {
     redrawPanel(null);
     return;
   }
+  onCookieChoiceChange(renderCookieBar);
   startAnalytics();
   renderHeader();
   renderCookieBar();

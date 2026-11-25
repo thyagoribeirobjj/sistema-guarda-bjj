@@ -165,6 +165,8 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 - "Cookies" in the account menu opens the same bar, showing the choice. "Reject" switches collection off at once
   (`setAnalyticsCollectionEnabled(false)`, consent `denied`) and deletes the `_ga…` cookies. "Clear this browser" and
   "Delete my data" forget the choice, so the bar asks again: a "Reject" never quietly becomes a yes.
+  Other open tabs follow a change of choice at once (a `storage` listener), and the SDK is only started, never just
+  loaded, while the choice is still "Accept": a "Reject" pressed while its code downloads means nothing goes out.
 - **What is counted:** a page view when the part of the site changes and when a technique opens (its link and name),
   plus what Google Analytics notes by itself (language, device, country). Never a name, email, account id, belt, notes,
   progress or search words, and never `setUserId`. Advertising stays off: `ad_storage`, `ad_user_data` and
