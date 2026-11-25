@@ -44,7 +44,10 @@ export async function kidsSteps({ open, openLate, step, hits, analyticsCookies, 
     await visit.locator('#account').click();
     await visit.locator('[data-belt-choice="yellow-black"]').click();
     await visit.locator('[data-audience-choice="adult"]').click();
-    await visit.locator('main .part-card').first().waitFor();
+    // The first page again: This week when there is one (the published site), otherwise Curriculum.
+    await visit.locator('main :is(.part-card, .week)').first().waitFor();
+    assert.match(new URL(visit.url()).hash, /^#(semana|curriculum)$/);
+    assert.equal(await visit.locator('#sidebar a[href="#curriculum"]').count(), 1, 'the curriculum is back');
     assert.equal(await visit.locator('#accountMenu [data-belt-choice]').count(), 5);
     assert.equal(await visit.evaluate(() => JSON.parse(localStorage.getItem('sg-settings')).belt), '', 'a kids\' belt is cleared for the adult class');
     assert.equal(await visit.locator('#sidebar a[href="#kids"]').count(), 0);
