@@ -46,6 +46,14 @@ jobs:
           curl --silent --output /dev/null --retry 10 --retry-connrefused --retry-delay 1 http://localhost:8000/
           npm run smoke -- http://localhost:8000
 
+      # The same check with this code at the real address, before it is published: Chrome opens https://sistemaguarda.com,
+      # but every file of the site comes from this checkout, with the headers in its firebase.json and 404 for what it
+      # would not publish. Sign-in state, the week and the videos come from the real Firebase, late, as they do once
+      # published. Signed out and only reading: no secrets, no Google identity, nothing published, no preview.
+      # About 25 database reads a run, out of the free plan's 50,000 a day that visitors use too.
+      - name: This code works on the real site
+        run: npm run smoke:real
+
       # Signed in as made-up students and a made-up coach, against local copies of sign-in and the database only.
       # No Google identity and no real account: the emulators accept anyone.
       - name: The site works signed in

@@ -187,7 +187,12 @@ whether it was translated automatically or corrected by hand (nothing when that 
   Curriculum home, a technique, search, progress, the tree, sharing, the coach's tools from the account menu, the
   phone's bottom bar and part switcher, previous / next in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and "Clear this
   browser", a prepared next week taking over on its date, both languages, the admin page, `robots.txt` and the `noai`
-  tags; on the published site also the `X-Robots-Tag` headers). It then does the same signed in (`tests/signed-in.mjs`). Once a pull request is merged, `main`
+  tags; on the published site also the `X-Robots-Tag` headers). It then runs the same check again at the real address
+  (`npm run smoke:real`): Chrome opens https://sistemaguarda.com, but every file of the site comes from the pull request's
+  checkout (`tests/checkout.mjs`: what `firebase.json` would publish, with its headers, 404 for the rest), while sign-in,
+  the week and the videos come from the real Firebase, signed out and only reading (about 25 database reads). That
+  catches what only shows once the real data arrives late, before the merge, with no preview and no Google identity.
+  It then does the same signed in (`tests/signed-in.mjs`). Once a pull request is merged, `main`
   publishes the site **and** `firestore.rules` about a minute later, then runs the same browser check on the
   published site. When you add a feature people click, add a step for it to `tests/smoke.mjs`.
 - Every night `.github/workflows/nightly.yml` checks the published site (`tests/nightly.mjs`): up, safe, still
