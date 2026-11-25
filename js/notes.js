@@ -22,6 +22,10 @@ let loading = null;
 let reading = false;
 let changedWhileLoading = new Set();
 const waiting = new Map(); // technique id → timer of a save not sent yet
+// Counts the times the notes were replaced other than by typing in this page (forgotten, another account, the
+// account's notes read). A note box filled before the count last changed may show notes that are gone.
+let epoch = 0;
+let usedFor = null; // the account the notes were last used with (useNotesAccount)
 
 function readLocal() {
   try {
@@ -38,7 +42,12 @@ function joinedAccount() {
   try { return localStorage.getItem(joinedKey); } catch { return null; }
 }
 
+export function notesEpoch() {
+  return epoch;
+}
+
 export function forgetNotes() {
+  epoch++;
   notes = {};
   storeLocal();
   try { localStorage.removeItem(joinedKey); } catch {}
@@ -66,12 +75,17 @@ export function useNotesAccount(person, previous, settingsSaved) {
     for (const id of afterSettings) send(id);
     afterSettings.clear();
   });
+  // was: the account this page itself was signed in to. Another tab signing out has already cleared what this browser
+  // keeps (so previous and joined are gone), but not the notes this page holds.
+  const was = usedFor;
+  usedFor = person?.uid ?? null;
+  if (usedFor !== was) epoch++;
   const joined = joinedAccount();
   if (!person) {
-    if (previous || joined) forgetNotes();
+    if (previous || joined || was) forgetNotes();
     return;
   }
-  if ((previous && previous !== person.uid) || (joined && joined !== person.uid)) forgetNotes();
+  if ([previous, joined, was].some((other) => other && other !== person.uid)) forgetNotes();
   user = person;
 }
 
@@ -81,9 +95,9 @@ export function notesLoading() {
   return reading;
 }
 
-// Called when a technique opens. Resolves true when the notes shown changed.
+// Called when a technique opens. Resolves once the account's notes are read (or could not be).
 export function readNotes() {
-  if (!user || accountId === user.uid) return Promise.resolve(false);
+  if (!user || accountId === user.uid) return Promise.resolve();
   if (!loading) loading = join(user.uid);
   return loading;
 }
@@ -97,17 +111,18 @@ async function join(uid) {
   } catch (error) {
     // Couldn't read the account: notes stay on this device for this visit, so nothing is written over the account.
     console.error(error);
-    return false;
+    return;
   } finally {
     reading = false;
   }
-  if (user?.uid !== uid) return false;
+  if (user?.uid !== uid) return;
   // With no notes in the account yet, what is here was never saved there (or the first save didn't arrive): keep it.
   const firstTime = joinedAccount() !== uid || !fromAccount;
   notesSaved = Boolean(fromAccount);
   fromAccount = fromAccount || {};
   const here = notes;
   // A browser joining for the first time adds its notes to the account; after that the account is the truth.
+  epoch++;
   notes = firstTime ? { ...fromAccount, ...here } : { ...fromAccount };
   for (const id of changedWhileLoading) {
     if (here[id]) notes[id] = here[id];
@@ -118,7 +133,6 @@ async function join(uid) {
   try { localStorage.setItem(joinedKey, uid); } catch {}
   const toSave = Object.keys({ ...fromAccount, ...notes }).filter((id) => (notes[id] || '') !== (fromAccount[id] || ''));
   for (const id of toSave) await send(id);
-  return true;
 }
 
 export function changeNote(id, value) {

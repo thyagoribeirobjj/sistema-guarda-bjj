@@ -20,27 +20,45 @@ function isPage(view) {
   return isModule(view) || (view in pages && (view !== 'semana' || state.week));
 }
 
+// The page is drawn again when the site's data or the account arrive, often while someone is using it. A part whose
+// markup is the same is left alone, so an open menu, the keyboard focus and a tap in progress survive.
+// Only menus opening and closing change the header and the navigation in between, and an open menu is meant to stay.
+// #main is also changed directly (the lesson plan, a status line) and holds form controls: after any of that, its
+// next draw is a real one, so what it shows always follows the state.
+const drawn = new WeakMap();
+const mainEdits = new MutationObserver(() => drawn.delete($('main')));
+mainEdits.observe($('main'), { childList: true, subtree: true, characterData: true, attributes: true });
+function draw(element, markup) {
+  const value = String(markup);
+  if (mainEdits.takeRecords().length) drawn.delete($('main'));
+  if (drawn.get(element) === value) return;
+  drawn.set(element, value);
+  element.innerHTML = value;
+  mainEdits.takeRecords();
+}
+
 function renderHeader() {
   document.documentElement.lang = settings.language === 'pt' ? 'pt-BR' : 'en';
   $('appTitle').textContent = t('title');
   document.querySelectorAll('[data-lang]').forEach((button) => button.setAttribute('aria-pressed', button.dataset.lang === settings.language));
-  $('account').innerHTML = accountButton();
+  draw($('account'), accountButton());
   const who = state.account ? state.account.displayName || state.account.email : t('signIn');
   $('account').setAttribute('aria-label', state.online ? `${t('account')}: ${who}` : t('menu'));
   $('account').title = $('account').getAttribute('aria-label');
-  $('accountMenu').innerHTML = accountMenu();
+  draw($('accountMenu'), accountMenu());
   $('search').placeholder = t('search');
   $('search').setAttribute('aria-label', t('search'));
 }
 
 function renderNavigation() {
   $('sidebar').setAttribute('aria-label', t('navigation'));
-  $('sidebar').innerHTML = sidebar();
+  draw($('sidebar'), sidebar());
   $('bottomBar').setAttribute('aria-label', t('navigation'));
-  $('bottomBar').innerHTML = bottomBar();
+  draw($('bottomBar'), bottomBar());
   $('switcher').setAttribute('aria-label', t('partsOfFight'));
-  $('switcher').innerHTML = partSwitcher();
-  $('switcher').hidden = !$('switcher').innerHTML;
+  const switcher = String(partSwitcher());
+  draw($('switcher'), switcher);
+  $('switcher').hidden = !switcher;
 }
 
 function mainView() {
@@ -52,7 +70,7 @@ function render() {
   noteWeekSeen();
   renderHeader();
   renderNavigation();
-  $('main').innerHTML = mainView();
+  draw($('main'), mainView());
 }
 
 function search(words) {
@@ -243,6 +261,7 @@ document.addEventListener('click', (event) => {
 });
 
 document.addEventListener('change', (event) => {
+  if ($('main').contains(event.target)) drawn.delete($('main'));
   const id = event.target.dataset?.diagramFile;
   if (id && event.target.files[0]) {
     changeMedia(id, 'diagram', async () => { await saveDiagram(id, await shrinkImage(event.target.files[0])); return true; });
@@ -301,7 +320,7 @@ async function accountChanged(user) {
   await useAccount(user);
   state.admin = user ? await isAdmin(user.email) : false;
   render();
-  redrawPanel();
+  redrawPanel(null);
 }
 
 // site/week as stored: a prepared next week becomes this week on its start date, by this browser's own date.
@@ -332,7 +351,7 @@ async function start() {
   if (state.week && (!location.hash || location.hash === '#semana')) state.view = 'semana';
   if (!isPage(state.view)) state.view = 'curriculum';
   render();
-  if (panelOpen()) redrawPanel('#panelClose');
+  if (panelOpen()) redrawPanel(null);
 }
 
 start();

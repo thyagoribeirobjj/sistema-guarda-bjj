@@ -4,7 +4,7 @@ import { settings, isFavorite, progressOf } from './settings.js';
 import { state } from './state.js';
 import { t, text } from './strings.js';
 import { heart, techniqueChip, progressMarks, beltName, minBeltOf } from './views.js';
-import { noteOf, noteLength, readNotes, notesLoading } from './notes.js';
+import { noteOf, noteLength, readNotes, notesLoading, notesEpoch } from './notes.js';
 import { videoPreview } from './media.js';
 import { loadDiagram } from './firebase.js';
 
@@ -13,6 +13,11 @@ const panel = () => document.getElementById('panel');
 const scrim = () => document.getElementById('scrim');
 const linkKinds = ['next', 'chain', 'combo', 'counter'];
 const diagrams = new Map();
+// What the sheet was last drawn from, so drawing the same technique again can tell whether anything changed.
+let drawnMarkup = '';
+// The note box shows noteOf() as it was when it was filled. Typing here keeps the two the same; anything else that
+// replaced the notes (js/notes.js counts it) means the box must be filled again, whatever it holds.
+let boxFilled = { id: null, epoch: -1 };
 
 // Admins attach a YouTube link and a diagram to each move right here, from any device.
 function mediaControls(id, media) {
@@ -28,16 +33,23 @@ function mediaControls(id, media) {
     <p class="status" id="mediaStatus" role="status"></p></section>`;
 }
 
+// Read once per visit, and only once the database is there: a read that failed, or came too early, is tried again
+// the next time the technique is drawn (start() draws it again once the site is online).
 async function showDiagram(id) {
+  if (!state.online || !document.getElementById('panelDiagram')) return;
+  if (!diagrams.has(id)) {
+    const reading = loadDiagram(id);
+    diagrams.set(id, reading);
+    reading.catch(() => { if (diagrams.get(id) === reading) diagrams.delete(id); });
+  }
+  const image = await diagrams.get(id).catch(() => null);
   const slot = document.getElementById('panelDiagram');
-  if (!slot) return;
-  if (!diagrams.has(id)) diagrams.set(id, await loadDiagram(id).catch(() => null));
-  const image = diagrams.get(id);
-  if (image && state.panel.current === id) slot.innerHTML = html`<img src="${image}" alt="${t('diagram')}">`;
+  if (image && slot && !slot.firstChild && state.panel.current === id) slot.innerHTML = html`<img src="${image}" alt="${t('diagram')}">`;
 }
 
 export function forgetDiagram(id) {
   diagrams.delete(id);
+  drawnMarkup = '';
 }
 
 // Previous and next in the list the technique was opened from (a part, the week, search results, my tree).
@@ -55,7 +67,7 @@ function stepButtons(id) {
 // Only for the student: coaches don't see notes.
 function notesBox(id) {
   return html`<h5><label for="noteBox">${t('myNotes')}</label></h5>
-    <textarea class="notebox" id="noteBox" data-note="${id}" maxlength="${noteLength}" rows="3" ${notesLoading() ? html`readonly placeholder="${t('loading')}"` : html`placeholder="${t('notePlaceholder')}"`}>${noteOf(id)}</textarea>
+    <textarea class="notebox" id="noteBox" data-note="${id}" maxlength="${noteLength}" rows="3" ${notesLoading() ? html`readonly placeholder="${t('loading')}"` : html`placeholder="${t('notePlaceholder')}"`}></textarea>
     <p class="note-hint" id="noteStatus" role="status">${t(state.account ? 'notesPrivate' : 'notesOnDevice')}</p>`;
 }
 
@@ -97,32 +109,85 @@ export function openPanel(id, { remember = true, focus = '#panelClose', list } =
   if (!findTechnique(id)) return;
   if (remember && state.panel.current && state.panel.current !== id) state.panel.history.push(state.panel.current);
   const wasOpen = panelOpen();
+  const again = wasOpen && state.panel.current === id;
   if (list) state.panel.list = list;
   else if (!wasOpen) state.panel.list = techniquesIn(document.getElementById('main'));
   state.panel.current = id;
   const notesRead = readNotes();
-  panel().innerHTML = panelContent(id);
-  panel().hidden = false;
-  scrim().hidden = false;
-  document.documentElement.classList.add('panel-open');
-  panel().scrollTop = 0;
+  const markup = String(panelContent(id));
+  // The technique already showing, drawn again (the site's data arriving late, say), is left alone when nothing changed.
+  if (!again || markup !== drawnMarkup || !boxCurrent(id)) drawPanel(id, markup, again, focus);
+  else if (state.media[id]?.diagram) showDiagram(id);
   // Opening a technique adds one step to the browser's history, so the phone's back button closes it.
   // Moving between techniques inside the panel replaces that step. { panel: true } marks a step the site added.
   if (location.hash !== `#t-${id}`) {
     if (wasOpen) history.replaceState(history.state, '', `#t-${id}`);
     else history.pushState({ panel: true }, '', `#t-${id}`);
   }
-  if (state.media[id]?.diagram) showDiagram(id);
-  (panel().querySelector(focus) || panel().querySelector('#panelClose')).focus();
-  notesRead.then((changed) => {
+  // The account's notes read (or not): the box can be typed in again, and shows them.
+  notesRead.then(() => {
     const box = document.getElementById('noteBox');
-    if (!box) return;
-    if (box.readOnly) {
-      box.value = noteOf(box.dataset.note);
-      box.readOnly = false;
-      box.placeholder = t('notePlaceholder');
-    } else if (changed && document.activeElement !== box) box.value = noteOf(box.dataset.note);
+    if (box && (box.readOnly !== notesLoading() || !boxCurrent(box.dataset.note))) fillNoteBox(box, box.dataset.note);
   });
+}
+
+function boxCurrent(id) {
+  return boxFilled.id === id && boxFilled.epoch === notesEpoch();
+}
+
+// The box shows the note as it is now. The same text keeps the caret where it was.
+function fillNoteBox(box, id, from = box) {
+  const note = noteOf(id);
+  const caret = from.value === note && [from.selectionStart, from.selectionEnd];
+  box.value = note;
+  if (caret) box.setSelectionRange(...caret);
+  box.readOnly = notesLoading();
+  box.placeholder = t(box.readOnly ? 'loading' : 'notePlaceholder');
+  boxFilled = { id, epoch: notesEpoch() };
+}
+
+// Drawn again, the same technique keeps where the sheet was scrolled to and a note being typed: the same box,
+// its focus and caret, as long as the notes were not replaced since it was filled (then a new box, with the focus).
+// focus null: nobody asked for this redraw (the account or the site's data arriving), so the
+// focus stays on the same control in the new sheet, or on the sheet itself, never on a button it did not choose.
+function drawPanel(id, markup, again, focus) {
+  const active = again && panel().contains(document.activeElement) ? document.activeElement : null;
+  const typingNote = active?.id === 'noteBox' ? active : null;
+  const keepBox = typingNote && boxCurrent(id);
+  const same = focus === null && active && !typingNote ? sameControl(active) : null;
+  const scrolled = panel().scrollTop;
+  drawnMarkup = markup;
+  panel().innerHTML = markup;
+  const box = panel().querySelector('#noteBox');
+  if (keepBox) {
+    // While the account's notes are read the box can't be typed in, kept or not (js/notes.js).
+    typingNote.readOnly = box.readOnly;
+    typingNote.placeholder = box.placeholder;
+    box.replaceWith(typingNote);
+  } else fillNoteBox(box, id, typingNote || box);
+  panel().hidden = false;
+  scrim().hidden = false;
+  document.documentElement.classList.add('panel-open');
+  panel().scrollTop = again ? scrolled : 0;
+  if (state.media[id]?.diagram) showDiagram(id);
+  if (typingNote) (keepBox ? typingNote : box).focus({ preventScroll: true });
+  else if (focus !== null || !again) (panel().querySelector(focus || '#panelClose') || panel().querySelector('#panelClose')).focus();
+  else if (active) {
+    same?.()?.focus({ preventScroll: true });
+    // Nothing the same, or it can't take the focus now (the last technique's "next", say): the sheet keeps it.
+    if (!panel().contains(document.activeElement)) panel().focus({ preventScroll: true });
+  }
+}
+
+// The control in the redrawn sheet that does what this one did: the same id, or the same data-* attributes (the
+// same progress mark, the same technique link), counted in order when several match.
+function sameControl(element) {
+  const data = [...element.attributes].filter(({ name }) => name.startsWith('data-'));
+  const selector = element.id ? `#${CSS.escape(element.id)}`
+    : data.length ? element.localName + data.map(({ name, value }) => `[${name}="${CSS.escape(value)}"]`).join('') : '';
+  if (!selector) return null;
+  const at = [...panel().querySelectorAll(selector)].indexOf(element);
+  return () => panel().querySelectorAll(selector)[at];
 }
 
 export function techniquesIn(element) {
@@ -136,7 +201,7 @@ export function stepPanel(step) {
   if (target) openPanel(target, { remember: false, focus: `[data-step="${step}"]:not(:disabled)` });
 }
 
-// Redraws the open technique; focus says which button keeps the keyboard focus.
+// Redraws the open technique; focus says which button keeps the keyboard focus, null where it already is.
 export function redrawPanel(focus = '[data-favorite]') {
   if (state.panel.current) openPanel(state.panel.current, { remember: false, focus });
 }
