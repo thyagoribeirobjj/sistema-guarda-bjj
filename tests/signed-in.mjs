@@ -281,20 +281,25 @@ await step('a note changed on another device is shown, not typed over, when the 
     if (route.request().postData()?.includes('private/notes')) await new Promise((done) => setTimeout(done, 1500));
     await route.continue();
   });
-  await student.goto('about:blank');
-  await student.open('', '#top');
-  await student.locator(`main [data-technique="${fromOtherDevice}"]`).first().click();
-  await student.locator('#noteBox').click();
-  await student.keyboard.type('typed before the account arrived');
-  release();
-  await student.locator('#account[aria-label*="Test"]').waitFor();
-  await student.keyboard.type(' and while its notes load');
-  await until(async () => (await student.locator('#noteBox').inputValue()) === newer, 'the note from the other device is shown');
-  assert.ok(await student.evaluate(() => document.activeElement.id === 'noteBox' && !document.activeElement.readOnly), 'the box keeps the focus and can be typed in again');
-  await new Promise((done) => setTimeout(done, 1500)); // longer than a note waits before it is saved
-  assert.equal((await stored(notesPath)).notes[fromOtherDevice], newer, 'the account keeps the newer note');
-  await student.unroute('https://www.gstatic.com/firebasejs/**');
-  await student.unroute(/documents:batchGet/);
+  try {
+    await student.goto('about:blank');
+    await student.open('', '#top');
+    await student.locator(`main [data-technique="${fromOtherDevice}"]`).first().click();
+    await student.locator('#noteBox').click();
+    await student.keyboard.type('typed before the account arrived');
+    release();
+    await student.locator('#account[aria-label*="Test"]').waitFor();
+    await student.keyboard.type(' and while its notes load');
+    await until(async () => (await student.locator('#noteBox').inputValue()) === newer, 'the note from the other device is shown');
+    assert.ok(await student.evaluate(() => document.activeElement.id === 'noteBox' && !document.activeElement.readOnly), 'the box keeps the focus and can be typed in again');
+    await new Promise((done) => setTimeout(done, 1500)); // longer than a note waits before it is saved
+    assert.equal((await stored(notesPath)).notes[fromOtherDevice], newer, 'the account keeps the newer note');
+  } finally {
+    // A failure here must not leave the next steps with the Firebase code or the notes held back.
+    release();
+    await student.unroute('https://www.gstatic.com/firebasejs/**');
+    await student.unroute(/documents:batchGet/);
+  }
 });
 
 await step('and on another device once signed in, from the account', async () => {
@@ -337,6 +342,41 @@ await step('signing out clears the personal marks from the device, not from the 
   assert.equal((await stored(`users/${uid.student}`)).favorites.length, 3, 'the account keeps them');
   assert.equal((await stored(`users/${uid.student}/private/notes`)).notes[fromOtherDevice], noteBeforeSignOut, 'and the note typed just before');
   await laptop.context().close();
+});
+
+await step('a device that turns out to be signed out shows no one\'s note, even in a box in use, and one key saves none', async () => {
+  // This browser was signed in to an account, which left its private note here; at this visit nobody is signed in.
+  // The Firebase code is held back, so the sign-out arrives while the technique, and its note box, are open.
+  const secret = 'Private note of the account signed in before';
+  for (const focused of [true, false]) {
+    const device = await visitor(people.other);
+    let release;
+    const held = new Promise((resolve) => { release = resolve; });
+    try {
+      await device.context().addInitScript(([account, note]) => {
+        if (sessionStorage.getItem('kept')) return;
+        sessionStorage.setItem('kept', '1');
+        localStorage.setItem('sg-account', account);
+        localStorage.setItem('sg-notes-account', account);
+        localStorage.setItem('sg-notes', JSON.stringify(note));
+      }, [uid.other, { [fromOtherDevice]: secret }]);
+      await device.route('https://www.gstatic.com/firebasejs/**', async (route) => { await held; await route.continue(); });
+      await device.open('', '#top');
+      await device.locator(`main [data-technique="${fromOtherDevice}"]`).first().click();
+      assert.equal(await device.locator('#noteBox').inputValue(), secret, 'until the account arrives, the note this browser kept shows');
+      if (focused) await device.locator('#noteBox').click();
+      release();
+      await until(() => device.evaluate(() => localStorage.getItem('sg-account') === null), 'the device learns nobody is signed in');
+      await until(async () => (await device.locator('#noteBox').inputValue()) === '', `the ${focused ? 'focused' : 'unfocused'} box no longer shows the note`);
+      if (focused) assert.ok(await device.evaluate(() => document.activeElement.id === 'noteBox'), 'the box keeps the focus');
+      await device.locator('#noteBox').press('End');
+      await device.locator('#noteBox').press('x');
+      assert.deepEqual(await device.evaluate(() => JSON.parse(localStorage.getItem('sg-notes'))), { [fromOtherDevice]: 'x' }, 'the next key saves only itself');
+    } finally {
+      release();
+      await device.context().close();
+    }
+  }
 });
 
 await step('another student cannot read the first student\'s settings, notes or the list of students', async () => {
@@ -546,8 +586,11 @@ await step('"Delete my data" deletes the account\'s settings, notes and sign-in 
   const phone = await signedInDevice();
   const desk = await signedInDevice();
   const pad = await signedInDevice(); // never reads the account's notes before the delete
+  const writer = await signedInDevice(); // is typing in a note when it finds the account deleted
   await openTechnique(phone, first); // reads the account's notes
   await until(async () => (await phone.locator('#noteBox').inputValue()) === noteBeforeSignIn, 'the phone has the notes');
+  await openTechnique(writer, first);
+  await until(async () => (await writer.locator('#noteBox').inputValue()) === noteBeforeSignIn, 'the writer has the notes');
   await student.open('', '#privacy');
   await student.locator('[data-delete-data="ask"]').click();
   await student.locator('[data-delete-data="yes"]').click();
@@ -590,7 +633,20 @@ await step('"Delete my data" deletes the account\'s settings, notes and sign-in 
   await pad.locator('#panelClose').click();
   await pad.locator('#account').click();
   await pad.locator('#accountMenu #signIn').waitFor();
-  for (const device of [tablet, phone, desk, pad]) {
+  // Still typing on another: its save finds the notes gone and it signs out, and the box it is typing in shows them
+  // gone, so the next key does not keep the deleted note on the device (and the next sign-in can't bring it back).
+  writer.refusalsExpected = true;
+  await writer.locator('#noteBox').click();
+  await writer.keyboard.press('End');
+  await writer.keyboard.type(' (typed while it was deleted)');
+  await until(() => writer.evaluate(() => localStorage.getItem('sg-account') === null), 'the writer signs out');
+  await until(async () => (await writer.locator('#noteBox').inputValue()) === '', 'the box being typed in no longer shows the deleted note');
+  assert.ok(await writer.evaluate(() => document.activeElement.id === 'noteBox'), 'and keeps the focus');
+  await writer.keyboard.press('x');
+  assert.deepEqual(await writer.evaluate(() => JSON.parse(localStorage.getItem('sg-notes'))), { [first]: 'x' }, 'the next key saves only itself');
+  await writer.keyboard.press('Backspace');
+  await writer.locator('#panelClose').click();
+  for (const device of [tablet, phone, desk, pad, writer]) {
     await until(() => device.evaluate(() => {
       const left = JSON.parse(localStorage.getItem('sg-settings'));
       return !left.favorites.length && !Object.keys(left.progress).length && !left.belt && localStorage.getItem('sg-notes') === '{}';

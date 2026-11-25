@@ -41,8 +41,10 @@ async function open(path, locale, device = {}, prepare = async () => {}) {
 // database's own form ({ 'site/media': fields }); anything else is "nothing stored". `kept`: what this browser
 // already keeps ({ localStorage key: value }) when the page opens.
 // release() returns once the page has been drawn again for all three (the header is drawn three more times).
+// page.reads: the documents the page asked the database for.
 // The Firebase code itself still comes from www.gstatic.com, so these steps need an internet connection.
 const firestoreValue = (value) => (typeof value === 'string' ? { stringValue: value }
+  : typeof value === 'boolean' ? { booleanValue: value }
   : Array.isArray(value) ? { arrayValue: { values: value.map(firestoreValue) } }
   : { mapValue: { fields: Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, firestoreValue(inner)])) } });
 const firestoreFields = (value) => firestoreValue(value).mapValue.fields;
@@ -52,6 +54,7 @@ async function openLate(path, locale, device = {}, { stored = {}, kept = {} } = 
   const held = new Promise((resolve) => { release = resolve; });
   let noSdk;
   const sdkMissing = new Promise((resolve) => { noSdk = resolve; });
+  const reads = [];
   const page = await open(path, locale, device, async (context) => {
     await context.addInitScript((entries) => { for (const [key, value] of entries) localStorage.setItem(key, value); }, Object.entries(kept));
     await context.route('**/__/firebase/init.json', (route) => route.fulfill({ json: { apiKey: 'made-up', projectId: 'demo-late', appId: '1:1:web:1' } }));
@@ -66,6 +69,7 @@ async function openLate(path, locale, device = {}, { stored = {}, kept = {} } = 
     });
     await context.route(/firestore\.googleapis\.com/, (route) => {
       const documents = JSON.parse(route.request().postData() || '{}').documents || [];
+      reads.push(...documents.map((name) => name.split('/documents/')[1]));
       const now = new Date().toISOString();
       route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: documents.map((name) => {
         const fields = Object.entries(stored).find(([where]) => name.endsWith(`/documents/${where}`))?.[1];
@@ -73,6 +77,7 @@ async function openLate(path, locale, device = {}, { stored = {}, kept = {} } = 
       }) });
     });
   });
+  page.reads = reads;
   page.release = async () => {
     await page.evaluate(() => {
       window.headerDrawn = 0;
@@ -449,6 +454,29 @@ await step('the site arriving late with a video for the open technique leaves th
   await visit.keyboard.press('Space');
   assert.ok(await visit.locator('#panel').isVisible(), 'so the next key presses the mark and does not close the technique');
   assert.equal(await visit.locator(`#panel ${mark}`).getAttribute('aria-pressed'), 'true');
+});
+
+await step('a technique opened before the site is online shows its diagram once it is, read once', async () => {
+  // This browser's copy of the site's media is old but says the technique has a diagram, so the sheet has a place
+  // for it before the database is there; the database says so too.
+  const technique = 'top-base';
+  const techniques = { [technique]: { diagram: true } };
+  const image = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+  const visit = await openLate(`/#t-${technique}`, 'en-US', {}, {
+    stored: { 'site/media': firestoreFields({ techniques }), [`diagrams/${technique}`]: firestoreFields({ image }) },
+    kept: { 'sg-site-media': JSON.stringify({ at: 0, value: { techniques } }) },
+  });
+  await visit.locator('#panelDiagram').waitFor({ state: 'attached' });
+  await visit.release();
+  await visit.locator('#panelDiagram img').waitFor({ timeout: 5000 });
+  await visit.locator('#panelClose').click();
+  await visit.locator(`main [data-technique="${technique}"]`).first().click();
+  await visit.locator('#panelDiagram img').waitFor({ timeout: 5000 });
+  // Another technique, without a diagram: nothing more is read.
+  await visit.locator('#panel [data-step="1"]').click();
+  await visit.waitForFunction((hash) => location.hash !== hash, `#t-${technique}`);
+  await visit.waitForTimeout(300);
+  assert.deepEqual(visit.reads.filter((name) => name.startsWith('diagrams/')), [`diagrams/${technique}`], 'the diagram is read once, and no other');
 });
 
 await step('the site arriving late shows the lesson plan the settings hold', async () => {
