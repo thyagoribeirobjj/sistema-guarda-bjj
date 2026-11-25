@@ -1306,7 +1306,36 @@
             "en": "Top: 30 s of posture with both his hands controlled"
           },
           "time": "30 s × 6",
-          "id": "top-game-posture-keeper"
+          "id": "top-game-posture-keeper",
+          "start": {
+            "pt": "Guarda fechada",
+            "en": "Closed guard"
+          },
+          "top": {
+            "pt": "30 s de postura com as duas mãos dele controladas",
+            "en": "30 s of posture with both his hands controlled"
+          },
+          "bottom": {
+            "pt": "Quebrar a postura ou alcançar o pescoço",
+            "en": "Break the posture or reach the neck"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Postura",
+                "en": "Posture"
+              },
+              "seconds": 30,
+              "say": {
+                "pt": "Cima: postura, bíceps e mão oposta. Baixo tenta quebrar a postura ou alcançar o pescoço.",
+                "en": "Top: posture, biceps grips and the opposite hand. Bottom tries to break posture or reach the neck."
+              }
+            }
+          ],
+          "rounds": 6,
+          "rest": 15,
+          "ready": 10,
+          "switch": true
         },
         {
           "n": {
@@ -1326,7 +1355,36 @@
             "en": "Top: side control for 3 s. Bottom: sweep, submit or re-close guard twice"
           },
           "time": "2 min",
-          "id": "top-game-open-and-pass"
+          "id": "top-game-open-and-pass",
+          "start": {
+            "pt": "Guarda fechada",
+            "en": "Closed guard"
+          },
+          "top": {
+            "pt": "Side control por 3 s",
+            "en": "Side control for 3 s"
+          },
+          "bottom": {
+            "pt": "Raspar, finalizar ou fechar a guarda 2 vezes",
+            "en": "Sweep, submit or re-close guard twice"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Abrir e passar",
+                "en": "Open and pass"
+              },
+              "seconds": 120,
+              "say": {
+                "pt": "Cima abre a guarda fechada, em pé ou ajoelhado, e passa.",
+                "en": "Top opens the closed guard, standing or kneeling, and passes."
+              }
+            }
+          ],
+          "rounds": 2,
+          "rest": 30,
+          "ready": 10,
+          "switch": true
         },
         {
           "n": {
@@ -1347,7 +1405,36 @@
             "en": "Top: complete the cycle. Bottom (50%): recover guard"
           },
           "time": "1 min",
-          "id": "top-game-cycle-1-to-5"
+          "id": "top-game-cycle-1-to-5",
+          "start": {
+            "pt": "Side control 1",
+            "en": "Side control 1"
+          },
+          "top": {
+            "pt": "Completar o ciclo 1→5→2",
+            "en": "Complete the cycle 1→5→2"
+          },
+          "bottom": {
+            "pt": "Repor a guarda (a 50%)",
+            "en": "Recover guard (at 50%)"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Ciclo 1→5→2",
+                "en": "Cycle 1→5→2"
+              },
+              "seconds": 60,
+              "say": {
+                "pt": "Cima passa pelos side controls sem perder a pressão. Baixo resiste a 50%.",
+                "en": "Top moves through the side controls without losing pressure. Bottom resists at 50%."
+              }
+            }
+          ],
+          "rounds": 2,
+          "rest": 30,
+          "ready": 10,
+          "switch": true
         },
         {
           "n": {
@@ -1367,7 +1454,36 @@
             "en": "Top: 30 s in mount. Bottom: reach guard"
           },
           "time": "30 s × 4",
-          "id": "top-game-hold-the-mount"
+          "id": "top-game-hold-the-mount",
+          "start": {
+            "pt": "Montada",
+            "en": "Mount"
+          },
+          "top": {
+            "pt": "30 s na montada",
+            "en": "30 s in mount"
+          },
+          "bottom": {
+            "pt": "Chegar à guarda",
+            "en": "Reach guard"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Segurar ou sair",
+                "en": "Hold or escape"
+              },
+              "seconds": 30,
+              "say": {
+                "pt": "Baixo usa os 4 empurrões do livro: peito, barriga, joelho e levantada.",
+                "en": "Bottom uses the book's 4 escapes: chest push, belly push, knee push and sitting up."
+              }
+            }
+          ],
+          "rounds": 4,
+          "rest": 15,
+          "ready": 10,
+          "switch": true
         },
         {
           "n": {
@@ -1391,7 +1507,47 @@
             "pt": "3 movimentos cada",
             "en": "3 moves each"
           },
-          "id": "top-game-bjj-chess"
+          "id": "top-game-bjj-chess",
+          "start": {
+            "pt": "A posição da aula",
+            "en": "The class's position"
+          },
+          "top": {
+            "pt": "Finalizar ou terminar na melhor posição",
+            "en": "Submit or finish in the better position"
+          },
+          "bottom": {
+            "pt": "Finalizar ou terminar na melhor posição",
+            "en": "Submit or finish in the better position"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Primeiro jogador · 3 movimentos",
+                "en": "First player · 3 moves"
+              },
+              "seconds": 30,
+              "say": {
+                "pt": "Três movimentos, um por vez, em câmera lenta. O outro só observa.",
+                "en": "Three moves, one at a time, in slow motion. The other player only watches."
+              }
+            },
+            {
+              "label": {
+                "pt": "Segundo jogador · 3 movimentos",
+                "en": "Second player · 3 moves"
+              },
+              "seconds": 30,
+              "say": {
+                "pt": "Responda com três movimentos, um por vez, em câmera lenta.",
+                "en": "Answer with three moves, one at a time, in slow motion."
+              }
+            }
+          ],
+          "rounds": 3,
+          "rest": 0,
+          "ready": 10,
+          "switch": false
         }
       ]
     },
@@ -2942,7 +3098,36 @@
             "en": "Bottom: break posture 3 times or submit"
           },
           "time": "1 min",
-          "id": "bottom-game-break-and-attack"
+          "id": "bottom-game-break-and-attack",
+          "start": {
+            "pt": "Guarda clássica",
+            "en": "Classic guard"
+          },
+          "top": {
+            "pt": "Manter a postura",
+            "en": "Keep the posture"
+          },
+          "bottom": {
+            "pt": "Quebrar a postura 3 vezes ou finalizar",
+            "en": "Break posture 3 times or submit"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Quebrar e atacar",
+                "en": "Break and attack"
+              },
+              "seconds": 60,
+              "say": {
+                "pt": "Baixo quebra a postura e ataca. Cima mantém a postura.",
+                "en": "Bottom breaks posture and attacks. Top keeps posture."
+              }
+            }
+          ],
+          "rounds": 2,
+          "rest": 30,
+          "ready": 10,
+          "switch": true
         },
         {
           "n": {
@@ -2963,7 +3148,36 @@
             "en": "Bottom: keep him in the sights for 1 min or submit. Top: escape the guard"
           },
           "time": "1 min × 2",
-          "id": "bottom-game-sights-game"
+          "id": "bottom-game-sights-game",
+          "start": {
+            "pt": "Guarda",
+            "en": "Guard"
+          },
+          "top": {
+            "pt": "Sair da guarda",
+            "en": "Escape the guard"
+          },
+          "bottom": {
+            "pt": "Mantê-lo na mira por 1 min ou finalizar",
+            "en": "Keep him in the sights for 1 min or submit"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Na mira",
+                "en": "In the sights"
+              },
+              "seconds": 60,
+              "say": {
+                "pt": "Rodada 1: cima tenta sair da guarda. Rodada 2: cima usa qualquer passagem. Baixo mantém na mira e, se tiver chance, pega braço ou pescoço.",
+                "en": "Round 1: top tries to escape the guard. Round 2: top uses any pass. Bottom keeps him in the sights and, given a chance, grabs an arm or the neck."
+              }
+            }
+          ],
+          "rounds": 2,
+          "rest": 15,
+          "ready": 10,
+          "switch": true
         },
         {
           "n": {
@@ -2983,7 +3197,36 @@
             "en": "Bottom: sweep into mount. Top: side control 3 s"
           },
           "time": "2 min",
-          "id": "bottom-game-he-stands-i-sweep"
+          "id": "bottom-game-he-stands-i-sweep",
+          "start": {
+            "pt": "Guarda fechada",
+            "en": "Closed guard"
+          },
+          "top": {
+            "pt": "Side control 3 s",
+            "en": "Side control 3 s"
+          },
+          "bottom": {
+            "pt": "Raspar até a montada",
+            "en": "Sweep into mount"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Ele levanta, eu raspo",
+                "en": "He stands, I sweep"
+              },
+              "seconds": 120,
+              "say": {
+                "pt": "Cima se levanta para passar. Baixo usa as raspagens clássicas.",
+                "en": "Top stands to pass. Bottom uses the classic sweeps."
+              }
+            }
+          ],
+          "rounds": 2,
+          "rest": 30,
+          "ready": 10,
+          "switch": true
         },
         {
           "n": {
@@ -3003,7 +3246,36 @@
             "en": "Bottom: reach guard or end on top. Top: 30 s in mount"
           },
           "time": "30 s × 6",
-          "id": "bottom-game-upa-or-elbow"
+          "id": "bottom-game-upa-or-elbow",
+          "start": {
+            "pt": "Montada",
+            "en": "Mount"
+          },
+          "top": {
+            "pt": "30 s na montada",
+            "en": "30 s in mount"
+          },
+          "bottom": {
+            "pt": "Chegar à guarda ou ficar por cima",
+            "en": "Reach guard or end on top"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Upa ou cotovelo",
+                "en": "Upa or elbow"
+              },
+              "seconds": 30,
+              "say": {
+                "pt": "Baixo escolhe upa ou saída de cotovelo conforme a reação.",
+                "en": "Bottom picks upa or elbow escape based on the reaction."
+              }
+            }
+          ],
+          "rounds": 6,
+          "rest": 15,
+          "ready": 10,
+          "switch": true
         },
         {
           "n": {
@@ -3023,7 +3295,36 @@
             "en": "Bottom: 1 point per recovery. Top: side control for 3 s"
           },
           "time": "1 min",
-          "id": "bottom-game-don-t-get-passed"
+          "id": "bottom-game-don-t-get-passed",
+          "start": {
+            "pt": "Guarda aberta",
+            "en": "Open guard"
+          },
+          "top": {
+            "pt": "Side control por 3 s",
+            "en": "Side control for 3 s"
+          },
+          "bottom": {
+            "pt": "1 ponto por reposição",
+            "en": "1 point per recovery"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Não deixe passar",
+                "en": "Don't get passed"
+              },
+              "seconds": 60,
+              "say": {
+                "pt": "Cima só tenta passar. Baixo repõe a guarda.",
+                "en": "Top only tries to pass. Bottom recovers guard."
+              }
+            }
+          ],
+          "rounds": 2,
+          "rest": 30,
+          "ready": 10,
+          "switch": true
         },
         {
           "n": {
@@ -3047,7 +3348,47 @@
             "pt": "3 movimentos cada",
             "en": "3 moves each"
           },
-          "id": "bottom-game-bjj-chess"
+          "id": "bottom-game-bjj-chess",
+          "start": {
+            "pt": "Guarda, com gola e cotovelo já seguros",
+            "en": "Guard, collar and elbow already gripped"
+          },
+          "top": {
+            "pt": "Passar em 3 movimentos",
+            "en": "Pass in 3 moves"
+          },
+          "bottom": {
+            "pt": "Raspar ou finalizar em 3 movimentos",
+            "en": "Sweep or submit in 3 moves"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Primeiro jogador · 3 movimentos",
+                "en": "First player · 3 moves"
+              },
+              "seconds": 30,
+              "say": {
+                "pt": "Três movimentos, um por vez, em câmera lenta. O outro só observa.",
+                "en": "Three moves, one at a time, in slow motion. The other player only watches."
+              }
+            },
+            {
+              "label": {
+                "pt": "Segundo jogador · 3 movimentos",
+                "en": "Second player · 3 moves"
+              },
+              "seconds": 30,
+              "say": {
+                "pt": "Responda com três movimentos, um por vez, em câmera lenta.",
+                "en": "Answer with three moves, one at a time, in slow motion."
+              }
+            }
+          ],
+          "rounds": 3,
+          "rest": 0,
+          "ready": 10,
+          "switch": false
         },
         {
           "n": {
@@ -3071,7 +3412,58 @@
             "pt": "3 min + 1min30 de descanso, × 2",
             "en": "3 min + 1:30 rest, × 2"
           },
-          "id": "bottom-game-progressive-passing"
+          "id": "bottom-game-progressive-passing",
+          "start": {
+            "pt": "Guarda aberta, cima de joelhos",
+            "en": "Open guard, top on the knees"
+          },
+          "top": {
+            "pt": "Side control por 3 s",
+            "en": "Side control for 3 s"
+          },
+          "bottom": {
+            "pt": "Não deixar passar",
+            "en": "No pass"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Minuto 1 · lento",
+                "en": "Minute 1 · slow"
+              },
+              "seconds": 60,
+              "say": {
+                "pt": "Cima pode ficar em pé, mudar de direção, se afastar ou se aproximar. Devagar.",
+                "en": "Top may stand, change direction, back off or close in. Slowly."
+              }
+            },
+            {
+              "label": {
+                "pt": "Minuto 2 · médio",
+                "en": "Minute 2 · medium"
+              },
+              "seconds": 60,
+              "say": {
+                "pt": "Velocidade média, tentando passar para os lados.",
+                "en": "Medium pace, trying to pass to the sides."
+              }
+            },
+            {
+              "label": {
+                "pt": "Minuto 3 · rápido",
+                "en": "Minute 3 · fast"
+              },
+              "seconds": 60,
+              "say": {
+                "pt": "Rápido: faz o possível para passar. Baixo usa a mira o tempo todo.",
+                "en": "Fast: does whatever it takes to pass. Bottom uses the sights throughout."
+              }
+            }
+          ],
+          "rounds": 2,
+          "rest": 90,
+          "ready": 10,
+          "switch": true
         },
         {
           "n": {
@@ -3092,7 +3484,47 @@
             "en": "Submit or finish in the better position"
           },
           "time": "5 min",
-          "id": "bottom-game-timed-bjj-chess"
+          "id": "bottom-game-timed-bjj-chess",
+          "start": {
+            "pt": "A posição da aula",
+            "en": "The class's position"
+          },
+          "top": {
+            "pt": "Finalizar ou terminar na melhor posição",
+            "en": "Submit or finish in the better position"
+          },
+          "bottom": {
+            "pt": "Finalizar ou terminar na melhor posição",
+            "en": "Submit or finish in the better position"
+          },
+          "parts": [
+            {
+              "label": {
+                "pt": "Primeiro jogador · 3 movimentos",
+                "en": "First player · 3 moves"
+              },
+              "seconds": 20,
+              "say": {
+                "pt": "3 movimentos em 20 segundos. O outro espera.",
+                "en": "3 moves in 20 seconds. The other waits."
+              }
+            },
+            {
+              "label": {
+                "pt": "Segundo jogador · 3 movimentos",
+                "en": "Second player · 3 moves"
+              },
+              "seconds": 20,
+              "say": {
+                "pt": "Responda com 3 movimentos em 20 segundos.",
+                "en": "Answer with 3 moves in 20 seconds."
+              }
+            }
+          ],
+          "rounds": 7,
+          "rest": 0,
+          "ready": 10,
+          "switch": false
         }
       ]
     }
