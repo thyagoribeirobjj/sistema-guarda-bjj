@@ -202,7 +202,7 @@ function fightOrderList(favorites, removeButton) {
 export function methodView() {
   const method = content.method;
   return html`${intro(text(method.title), text(method.intro), '', t('coach'))}
-    <div class="steps">${method.steps.map((step, i) => html`<div class="step"><div class="n">${i + 1}</div><h4>${text(step.n)} · ${step.m} min</h4><p>${text(step.d)}</p></div>`)}</div>
+    <div class="steps">${method.steps.map((step, i) => html`<div class="mstep"><div class="n">${i + 1}</div><h4>${text(step.n)} · ${step.m} min</h4><p>${text(step.d)}</p></div>`)}</div>
     <h3 class="sect-title">${t('principles')}</h3><ol class="principles">${method.principles.map((p) => html`<li><b>${text(p.b)}</b><span>${text(p.s)}</span></li>`)}</ol>
     <h3 class="sect-title">${t('ladder')}</h3><div class="ladder">${method.ladder.map((step) => html`<div><div class="pct">${step.p}</div><div class="lad-bar"><i style="width:${Number(step.w)}%"></i></div><p>${text(step.d)}</p></div>`)}</div>
     <h3 class="sect-title">${text(method.gracie.h)}</h3><ol class="principles">${method.gracie.q.map((quote) => html`<li><span class="ink">${text(quote)}</span></li>`)}</ol>
