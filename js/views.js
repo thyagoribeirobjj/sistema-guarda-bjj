@@ -27,13 +27,13 @@ export const beltMark = (belt, label = false) => (label
   ? html`<i class="belt" data-belt="${belt}" role="img" aria-label="${t('minBelt')}: ${beltName(belt)}" title="${t('minBelt')}: ${beltName(belt)}"></i>`
   : html`<i class="belt" data-belt="${belt}" aria-hidden="true"></i>`);
 
-export function techniqueChip(id) {
+export function techniqueChip(id, tag = '') {
   const place = findTechnique(id);
   if (!place) return '';
   const technique = place.technique;
   const favorite = isFavorite(id);
   const progress = progressOf(id);
-  return html`<button type="button" class="tech b${favorite ? ' on' : ''}" data-technique="${id}">${text(technique.n)}${minBeltOf(id) ? html` ${beltMark(minBeltOf(id), true)}` : ''}${
+  return html`<button type="button" class="tech b${favorite ? ' on' : ''}" data-technique="${id}">${text(technique.n)}${tag ? html` <span class="rel">${tag}</span>` : ''}${minBeltOf(id) ? html` ${beltMark(minBeltOf(id), true)}` : ''}${
     progress ? html` <span class="ptag" aria-label="${t(progress)}">${progressMarks[progress]}</span>` : ''}${
     technique.mine ? html` <span class="mine">★</span>` : ''}${
     technique.g ? html` <span class="gtag">G</span>` : ''}${

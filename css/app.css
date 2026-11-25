@@ -76,6 +76,14 @@ html.panel-open{overflow:hidden}
 .close{position:absolute;right:max(14px,env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;width:34px;height:34px;font-size:18px;cursor:pointer}
 @media (max-width:640px){.close{top:12px}}
 .next{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.gpick{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px}
+.gtab{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--muted);font:600 13px var(--body);cursor:pointer}
+.gtab[aria-selected="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.gn{font:700 11px var(--body);min-width:18px;height:18px;line-height:18px;border-radius:999px;background:var(--accent-soft);text-align:center;padding:0 5px}
+.gtab[aria-selected="true"] .gn{background:rgba(255,255,255,.25)}
+.subg{font:600 12px var(--body);color:var(--muted);margin:10px 0 0}
+.where-hint{margin:6px 0 2px}
+.tech .rel{color:var(--muted);font-size:11px;font-weight:600}
 /* method */
 .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px}
 .step{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;border-top:4px solid var(--accent)}

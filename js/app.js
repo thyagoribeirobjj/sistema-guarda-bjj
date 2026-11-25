@@ -6,7 +6,7 @@ import { t, text } from './strings.js';
 import { moduleView, curriculumView, weekView, treeView, methodView, searchView } from './views.js';
 import { accountButton, accountMenu } from './account.js';
 import { bottomBar, sidebar, partSwitcher, toggleParts, openMenu, closeMenus, openedMenu, moveInMenu, noteWeekSeen } from './nav.js';
-import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram, stepPanel, techniquesIn, typing, sameControl } from './panel.js';
+import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram, stepPanel, techniquesIn, typing, sameControl, pickWhereGroup } from './panel.js';
 import { changeNote, sendWaiting, awaitAccount } from './notes.js';
 import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
@@ -198,6 +198,7 @@ const clickActions = [
   ['[data-past-weeks]', showPastWeeks],
   ['[data-share]', (el) => shareTechnique(el.dataset.share)],
   ['[data-step]', (el) => stepPanel(Number(el.dataset.step))],
+  ['[data-where-group]', (el) => pickWhereGroup(el.dataset.whereGroup)],
   // A technique opened from the page moves, with next and previous, through the others there (or in its week).
   ['[data-technique]', (el) => openPanel(el.dataset.technique, el.closest('#panel') ? {} : { list: techniquesIn(el.closest('[data-list]') || $('main')) })],
   ['[data-belt-filter]', (el) => {
