@@ -165,14 +165,17 @@ export const typing = (element) => element.matches?.('input, textarea, select, [
 
 // Swiping an open technique left or right moves to the next or previous one.
 let swipeStart = null;
+// The sheet can redraw under the finger (a diagram arrives, say). A touch keeps reporting to the element it began on,
+// even once that element has left the page, so the end of the swipe is listened for there, not on the sheet.
 panel().addEventListener('touchstart', (event) => {
   swipeStart = event.touches.length === 1 && !typing(event.target) ? event.touches[0] : null;
+  if (swipeStart) event.target.addEventListener('touchend', swipeEnd, { once: true, passive: true });
 }, { passive: true });
-panel().addEventListener('touchend', (event) => {
+function swipeEnd(event) {
   if (!swipeStart) return;
   const end = event.changedTouches[0];
   const across = end.clientX - swipeStart.clientX;
   const down = end.clientY - swipeStart.clientY;
   swipeStart = null;
   if (Math.abs(across) > 60 && Math.abs(across) > 2 * Math.abs(down)) stepPanel(across < 0 ? 1 : -1);
-}, { passive: true });
+}

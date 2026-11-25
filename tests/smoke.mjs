@@ -298,9 +298,11 @@ await step('on a phone: swiping an open technique moves to the next one and back
   // Real touches, through the browser itself, so the browser's own swipe-to-go-back gets its chance too.
   const touchscreen = await phone.context().newCDPSession(phone);
   const title = await phone.locator('#panelTitle').boundingBox();
-  const swipe = async (fromX, toX) => {
+  const swipe = async (fromX, toX, redraw = false) => {
     const y = title.y + title.height / 2;
     await touchscreen.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: fromX, y }] });
+    // The sheet redrawing under the finger, as it does when a diagram arrives: the touched title is replaced by a copy.
+    if (redraw) await phone.evaluate(() => { const title = document.querySelector('#panelTitle'); title.replaceWith(title.cloneNode(true)); });
     for (let i = 1; i <= 8; i++) await touchscreen.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: fromX + ((toX - fromX) * i) / 8, y }] });
     await touchscreen.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await phone.waitForTimeout(400);
@@ -313,6 +315,10 @@ await step('on a phone: swiping an open technique moves to the next one and back
   assert.ok(await phone.locator('#panel').isVisible(), 'swiping back keeps the technique open');
   assert.equal(await position(), '1');
   assert.equal(new URL(phone.url()).hash, `#t-${first}`);
+  await swipe(330, 80, true);
+  assert.equal(await position(), '2', 'a swipe counts even when the sheet redraws under the finger');
+  await swipe(150, 330);
+  assert.equal(await position(), '1');
   await phone.goBack();
   await phone.locator('#panel').waitFor({ state: 'hidden' });
   assert.equal(phone.url(), part);
