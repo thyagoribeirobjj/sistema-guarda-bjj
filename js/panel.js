@@ -13,6 +13,8 @@ const panel = () => document.getElementById('panel');
 const scrim = () => document.getElementById('scrim');
 const linkKinds = ['next', 'chain', 'combo', 'counter'];
 const diagrams = new Map();
+// What the sheet was last drawn from, so drawing the same technique again can tell whether anything changed.
+let drawnMarkup = '';
 
 // Admins attach a YouTube link and a diagram to each move right here, from any device.
 function mediaControls(id, media) {
@@ -38,6 +40,7 @@ async function showDiagram(id) {
 
 export function forgetDiagram(id) {
   diagrams.delete(id);
+  drawnMarkup = '';
 }
 
 // Previous and next in the list the technique was opened from (a part, the week, search results, my tree).
@@ -55,7 +58,7 @@ function stepButtons(id) {
 // Only for the student: coaches don't see notes.
 function notesBox(id) {
   return html`<h5><label for="noteBox">${t('myNotes')}</label></h5>
-    <textarea class="notebox" id="noteBox" data-note="${id}" maxlength="${noteLength}" rows="3" ${notesLoading() ? html`readonly placeholder="${t('loading')}"` : html`placeholder="${t('notePlaceholder')}"`}>${noteOf(id)}</textarea>
+    <textarea class="notebox" id="noteBox" data-note="${id}" maxlength="${noteLength}" rows="3" ${notesLoading() ? html`readonly placeholder="${t('loading')}"` : html`placeholder="${t('notePlaceholder')}"`}></textarea>
     <p class="note-hint" id="noteStatus" role="status">${t(state.account ? 'notesPrivate' : 'notesOnDevice')}</p>`;
 }
 
@@ -97,23 +100,20 @@ export function openPanel(id, { remember = true, focus = '#panelClose', list } =
   if (!findTechnique(id)) return;
   if (remember && state.panel.current && state.panel.current !== id) state.panel.history.push(state.panel.current);
   const wasOpen = panelOpen();
+  const again = wasOpen && state.panel.current === id;
   if (list) state.panel.list = list;
   else if (!wasOpen) state.panel.list = techniquesIn(document.getElementById('main'));
   state.panel.current = id;
   const notesRead = readNotes();
-  panel().innerHTML = panelContent(id);
-  panel().hidden = false;
-  scrim().hidden = false;
-  document.documentElement.classList.add('panel-open');
-  panel().scrollTop = 0;
+  const markup = String(panelContent(id));
+  // The technique already showing, drawn again (the site's data arriving late, say), is left alone when nothing changed.
+  if (!again || markup !== drawnMarkup) drawPanel(id, markup, again, focus);
   // Opening a technique adds one step to the browser's history, so the phone's back button closes it.
   // Moving between techniques inside the panel replaces that step. { panel: true } marks a step the site added.
   if (location.hash !== `#t-${id}`) {
     if (wasOpen) history.replaceState(history.state, '', `#t-${id}`);
     else history.pushState({ panel: true }, '', `#t-${id}`);
   }
-  if (state.media[id]?.diagram) showDiagram(id);
-  (panel().querySelector(focus) || panel().querySelector('#panelClose')).focus();
   notesRead.then((changed) => {
     const box = document.getElementById('noteBox');
     if (!box) return;
@@ -123,6 +123,24 @@ export function openPanel(id, { remember = true, focus = '#panelClose', list } =
       box.placeholder = t('notePlaceholder');
     } else if (changed && document.activeElement !== box) box.value = noteOf(box.dataset.note);
   });
+}
+
+// Drawn again, the same technique keeps where the sheet was scrolled to and a note being typed: the same box,
+// its focus and caret.
+function drawPanel(id, markup, again, focus) {
+  const typingNote = again && document.activeElement?.id === 'noteBox' ? document.activeElement : null;
+  const scrolled = panel().scrollTop;
+  drawnMarkup = markup;
+  panel().innerHTML = markup;
+  if (typingNote) panel().querySelector('#noteBox').replaceWith(typingNote);
+  else panel().querySelector('#noteBox').value = noteOf(id);
+  panel().hidden = false;
+  scrim().hidden = false;
+  document.documentElement.classList.add('panel-open');
+  panel().scrollTop = again ? scrolled : 0;
+  if (state.media[id]?.diagram) showDiagram(id);
+  if (typingNote) typingNote.focus({ preventScroll: true });
+  else (panel().querySelector(focus) || panel().querySelector('#panelClose')).focus();
 }
 
 export function techniquesIn(element) {

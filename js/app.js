@@ -20,27 +20,38 @@ function isPage(view) {
   return isModule(view) || (view in pages && (view !== 'semana' || state.week));
 }
 
+// The page is drawn again when the site's data or the account arrive, often while someone is using it. A part whose
+// markup is the same is left alone, so an open menu, the keyboard focus and a tap in progress survive.
+const drawn = new WeakMap();
+function draw(element, markup) {
+  const value = String(markup);
+  if (drawn.get(element) === value) return;
+  drawn.set(element, value);
+  element.innerHTML = value;
+}
+
 function renderHeader() {
   document.documentElement.lang = settings.language === 'pt' ? 'pt-BR' : 'en';
   $('appTitle').textContent = t('title');
   document.querySelectorAll('[data-lang]').forEach((button) => button.setAttribute('aria-pressed', button.dataset.lang === settings.language));
-  $('account').innerHTML = accountButton();
+  draw($('account'), accountButton());
   const who = state.account ? state.account.displayName || state.account.email : t('signIn');
   $('account').setAttribute('aria-label', state.online ? `${t('account')}: ${who}` : t('menu'));
   $('account').title = $('account').getAttribute('aria-label');
-  $('accountMenu').innerHTML = accountMenu();
+  draw($('accountMenu'), accountMenu());
   $('search').placeholder = t('search');
   $('search').setAttribute('aria-label', t('search'));
 }
 
 function renderNavigation() {
   $('sidebar').setAttribute('aria-label', t('navigation'));
-  $('sidebar').innerHTML = sidebar();
+  draw($('sidebar'), sidebar());
   $('bottomBar').setAttribute('aria-label', t('navigation'));
-  $('bottomBar').innerHTML = bottomBar();
+  draw($('bottomBar'), bottomBar());
   $('switcher').setAttribute('aria-label', t('partsOfFight'));
-  $('switcher').innerHTML = partSwitcher();
-  $('switcher').hidden = !$('switcher').innerHTML;
+  const switcher = String(partSwitcher());
+  draw($('switcher'), switcher);
+  $('switcher').hidden = !switcher;
 }
 
 function mainView() {
@@ -52,7 +63,7 @@ function render() {
   noteWeekSeen();
   renderHeader();
   renderNavigation();
-  $('main').innerHTML = mainView();
+  draw($('main'), mainView());
 }
 
 function search(words) {

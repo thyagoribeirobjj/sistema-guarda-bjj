@@ -1,7 +1,7 @@
 // Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
 // previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and
-// "Clear this browser", a prepared next week taking over on its date,
+// "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types or uses a menu,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page, robots.txt and the "noai"
 // tags. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm ci)
@@ -15,8 +15,9 @@ const problems = [];
 // Not the site's fault: no icon file, no Firebase settings in a local preview, a video removed from YouTube.
 const expectedMisses = /favicon\.ico|\/__\/firebase\/|ytimg\.com/;
 
-async function open(path, locale, device = {}) {
+async function open(path, locale, device = {}, prepare = async () => {}) {
   const context = await browser.newContext({ locale, ...device });
+  await prepare(context);
   const page = await context.newPage();
   page.on('pageerror', (error) => problems.push(`${path}: ${error.message}`));
   page.on('console', (message) => {
@@ -31,6 +32,32 @@ async function open(path, locale, device = {}) {
     problems.push(`${path}: could not load ${request.url()} (${request.failure()?.errorText})`);
   });
   await page.goto(address + path);
+  return page;
+}
+
+// On the published site the account, the week and the videos arrive a moment after the page shows, and the page is
+// drawn again then, often while someone is already using it. This opens a page that waits for them until release():
+// made-up Firebase settings, the Firebase code held back, and a database that answers that nothing is stored.
+// release() returns once the page has been drawn again for all three (the header is drawn three more times).
+async function openLate(path, locale, device = {}) {
+  let release;
+  const held = new Promise((resolve) => { release = resolve; });
+  const page = await open(path, locale, device, async (context) => {
+    await context.route('**/__/firebase/init.json', (route) => route.fulfill({ json: { apiKey: 'made-up', projectId: 'demo-late', appId: '1:1:web:1' } }));
+    await context.route('https://www.gstatic.com/firebasejs/**', async (route) => { await held; await route.continue(); });
+    await context.route(/firestore\.googleapis\.com/, (route) => {
+      const documents = JSON.parse(route.request().postData() || '{}').documents || [];
+      route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: documents.map((missing) => ({ missing, readTime: new Date().toISOString() })) });
+    });
+  });
+  page.release = async () => {
+    await page.evaluate(() => {
+      window.headerDrawn = 0;
+      new MutationObserver((changes) => { window.headerDrawn += changes.length; }).observe(document.getElementById('appTitle'), { childList: true });
+    });
+    release();
+    await page.waitForFunction(() => window.headerDrawn >= 3);
+  };
   return page;
 }
 
@@ -334,6 +361,53 @@ await step('a note on a technique stays in this browser while signed out', async
   await visit.locator(`main [data-technique="${noted}"]`).first().click();
   assert.equal(await visit.locator('#noteBox').inputValue(), 'Hips low, elbows in');
   assert.match(await visit.locator('#noteStatus').textContent(), /this device/);
+});
+
+await step('the site arriving late keeps a note being typed', async () => {
+  const visit = await openLate('/#top', 'en-US');
+  await visit.locator('main .tech').first().click();
+  const noted = await visit.locator('#noteBox').getAttribute('data-note');
+  await visit.locator('#noteBox').click();
+  await visit.keyboard.type('Hips low');
+  await visit.release();
+  assert.equal(await visit.evaluate(() => document.activeElement.id), 'noteBox', 'the note box keeps the focus');
+  await visit.keyboard.type(', elbows in');
+  assert.ok(await visit.locator('#panel').isVisible(), 'the technique stays open');
+  assert.equal(await visit.locator('#noteBox').inputValue(), 'Hips low, elbows in');
+  await visit.locator('#panelClose').click();
+  await visit.reload();
+  await visit.locator(`main [data-technique="${noted}"]`).first().click();
+  assert.equal(await visit.locator('#noteBox').inputValue(), 'Hips low, elbows in', 'and is kept');
+});
+
+await step('on a phone: the site arriving late keeps the part menu open, and a tap outside it still opens nothing', async () => {
+  const phone = await openLate('/#top', 'en-US', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  await phone.locator('main .tech').first().waitFor();
+  await phone.locator('#partButton').tap();
+  await phone.release();
+  const point = await phone.evaluate(() => {
+    const menuBottom = document.getElementById('partMenu').getBoundingClientRect().bottom;
+    const chip = [...document.querySelectorAll('main .tech')].map((tech) => tech.getBoundingClientRect())
+      .find((box) => box.top > menuBottom + 4 && box.bottom < window.innerHeight - 80);
+    return { x: chip.left + 10, y: chip.top + chip.height / 2 };
+  });
+  await phone.touchscreen.tap(point.x, point.y);
+  assert.ok(!(await phone.locator('#panel').isVisible()), 'a tap outside the menu opens nothing under it');
+  assert.ok(!(await phone.locator('#partMenu').isVisible()), 'and closes the menu');
+});
+
+await step('on a phone: the site arriving late keeps the part menu open and its parts work', async () => {
+  const phone = await openLate('/#top', 'en-US', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  await phone.locator('main .tech').first().waitFor();
+  await phone.locator('#partButton').click();
+  await phone.release();
+  assert.ok(await phone.locator('#partMenu').isVisible(), 'the part menu stays open');
+  assert.equal(await phone.locator('#partButton').getAttribute('aria-expanded'), 'true');
+  assert.ok(await phone.evaluate(() => document.getElementById('partMenu').contains(document.activeElement)), 'the focus stays in the menu');
+  const other = phone.locator('#partMenu a:not([aria-current])').first();
+  const href = await other.getAttribute('href');
+  await other.click({ timeout: 5000 });
+  await phone.waitForFunction((hash) => location.hash === hash, href);
 });
 
 await step('a new class gets a dot on This week until it is opened; a first visit has none', async () => {
