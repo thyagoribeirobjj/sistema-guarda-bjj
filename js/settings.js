@@ -1,12 +1,14 @@
 import { loadUserSettings, saveUserSettings, signOut } from './firebase.js';
-import { belts } from './content.js';
+import { belts, kidsBelts } from './content.js';
 import { useNotesAccount, leaveNotesAccount, forgetNotes } from './notes.js';
 
-// Each visitor's language, theme, belt, favorites, progress and lesson plan. Kept in this browser, and in the
+// Each visitor's language, theme, class (audience), belt, favorites, progress, kids' challenges and lesson plan. Kept in this browser, and in the
 // database (users/{uid}) once they sign in, so they follow them to other devices.
 const storageKey = 'sg-settings';
 // Each one is a block of colors in css/theme.css.
 export const themes = ['dark', 'light', 'orange', 'gold', 'royal', 'emerald'];
+// The class someone trains in ("I train in"): 'adult' is the site as it always was.
+export const audiences = ['kids', 'adult', 'both'];
 const accountKey = 'sg-account';
 // Set while this browser belongs to an account whose settings it has not yet seen in the database (read or saved):
 // until then a missing document means "not saved yet", never "deleted".
@@ -17,9 +19,11 @@ const browserLanguage = (navigator.language || '').toLowerCase().startsWith('pt'
 
 // progress: { <technique id>: 'learning' | 'done' }
 // lesson: the lesson builder's choices, { mod, dur, items, game }; null until something is picked.
-// belt: the belt the person says they have ('' until they pick one; one of belts in js/content.js).
+// belt: the belt the person says they have ('' until they pick one; one of belts or kidsBelts in js/content.js).
+// audience: the class they train in (one of audiences). claims: the kids' challenges they said they did,
+// { <challenge id>: <when, in milliseconds> }; only signed in (a coach answers in approvals/{uid}).
 // seenWeek: a short mark of the class last looked at on This week, for the "new" dot (js/nav.js); '' before the first visit.
-export const settings = { language: browserLanguage, theme: '', belt: '', seenWeek: '', favorites: [], progress: {}, lesson: null };
+export const settings = { language: browserLanguage, theme: '', audience: 'adult', belt: '', seenWeek: '', favorites: [], progress: {}, claims: {}, lesson: null };
 merge(readLocal());
 takeOldLesson();
 
@@ -37,15 +41,17 @@ function readLocal() {
 function merge(from, keep = false) {
   if (from.language === 'pt' || from.language === 'en') settings.language = from.language;
   if (from.theme === '' || themes.includes(from.theme)) settings.theme = from.theme;
-  if ((from.belt === '' || belts.includes(from.belt)) && !(keep && settings.belt)) settings.belt = from.belt;
+  if (audiences.includes(from.audience)) settings.audience = from.audience;
+  if ((from.belt === '' || belts.includes(from.belt) || kidsBelts.includes(from.belt)) && !(keep && settings.belt)) settings.belt = from.belt;
   // The account's mark wins even on a first sign-in: this browser may have just noted a class nobody looked at.
   if (typeof from.seenWeek === 'string' && from.seenWeek && from.seenWeek.length <= 100) settings.seenWeek = from.seenWeek;
   if (Array.isArray(from.favorites)) settings.favorites = keep ? [...new Set([...from.favorites, ...settings.favorites])] : from.favorites;
   if (from.progress && typeof from.progress === 'object') settings.progress = keep ? { ...from.progress, ...settings.progress } : from.progress;
-  if (isLesson(from.lesson)) settings.lesson = from.lesson;
+  if (isMap(from.claims)) settings.claims = keep ? { ...from.claims, ...settings.claims } : from.claims;
+  if (isMap(from.lesson)) settings.lesson = from.lesson;
 }
 
-function isLesson(value) {
+function isMap(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
@@ -53,7 +59,7 @@ function isLesson(value) {
 function takeOldLesson() {
   try {
     const old = JSON.parse(localStorage.getItem('sg-pick5'));
-    if (!settings.lesson && isLesson(old)) {
+    if (!settings.lesson && isMap(old)) {
       settings.lesson = old;
       localStorage.setItem(storageKey, JSON.stringify(saved()));
     }
@@ -66,8 +72,9 @@ function lastAccount() {
 }
 
 function saved() {
-  const { language, theme, belt, seenWeek, favorites, progress, lesson } = settings;
-  return lesson ? { language, theme, belt, seenWeek, favorites, progress, lesson } : { language, theme, belt, seenWeek, favorites, progress };
+  const { language, theme, audience, belt, seenWeek, favorites, progress, claims, lesson } = settings;
+  const kept = { language, theme, audience, belt, seenWeek, favorites, progress, claims };
+  return lesson ? { ...kept, lesson } : kept;
 }
 
 function store() {
@@ -105,6 +112,7 @@ function forgetPersonalMarks() {
   settings.belt = '';
   settings.favorites = [];
   settings.progress = {};
+  settings.claims = {};
   settings.lesson = null;
 }
 
@@ -228,4 +236,12 @@ export function markProgress(id, mark) {
   if (progress[id] === mark) delete progress[id];
   else progress[id] = mark;
   changeSettings({ progress });
+}
+
+// "I did it" on a kids' challenge, or taking it back while the coach has not answered.
+export function claimChallenge(id, claimed) {
+  const claims = { ...settings.claims };
+  if (claimed) claims[id] = Date.now();
+  else delete claims[id];
+  changeSettings({ claims });
 }

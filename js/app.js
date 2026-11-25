@@ -1,4 +1,4 @@
-import { loadContent, findTechnique, isModule } from './content.js';
+import { loadContent, findTechnique, isModule, belts, kidsBelts } from './content.js';
 import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, loadPastWeeks, loadMedia, lastSeen, saveVideo, saveDiagram, removeDiagram, saveMinBelt } from './firebase.js';
 import { settings, applyTheme, useAccount, changeSettings, toggleFavorite, markProgress } from './settings.js';
 import { state, readHash } from './state.js';
@@ -12,14 +12,39 @@ import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
 import { privacyView, privacyActions } from './privacy.js';
 import { weekOn, localDate } from './week.js';
-import { cookieBar, chooseCookies, reopenCookieChoice, startAnalytics, countView, onCookieChoiceChange } from './analytics.js';
+import { cookieBar, chooseCookies, reopenCookieChoice, startAnalytics, countView, onCookieChoiceChange, followAudience } from './analytics.js';
+import { kidsView, kidsActions, followKids, kidsPage } from './kids.js';
 import { startTvMode, openTvSheet, castToTv, copyTvAddress, sendTvLink, toggleBigScreen } from './tv.js';
 
 const $ = (id) => document.getElementById(id);
-const pages = { curriculum: curriculumView, semana: weekView, meu: treeView, lesson: lessonView, method: methodView, privacy: privacyView };
+const pages = { curriculum: curriculumView, semana: weekView, meu: treeView, kids: kidsView, lesson: lessonView, method: methodView, privacy: privacyView };
 
 function isPage(view) {
+  if (view === 'kids') return kidsPage();
   return isModule(view) || (view in pages && (view !== 'semana' || state.week));
+}
+
+// The first page: Kids for the kids class, otherwise This week when there is one, otherwise Curriculum.
+function firstPage() {
+  if (settings.audience === 'kids' && kidsPage()) return 'kids';
+  return state.week ? 'semana' : 'curriculum';
+}
+
+// The pages of the adult curriculum, which the kids class doesn't see in the navigation.
+const adultPage = (view) => isModule(view) || view === 'curriculum' || view === 'semana';
+
+// "I train in": the belt picker follows (a belt from the other track is cleared), visits stop or start being counted,
+// and the page follows: the kids class opens Kids, and a page the new class doesn't have gives way to the first page.
+async function chooseAudience(audience) {
+  const track = audience === 'kids' ? kidsBelts : belts;
+  changeSettings({ audience, belt: track.includes(settings.belt) ? settings.belt : '' });
+  state.beltFilter = '';
+  followAudience();
+  await followKids();
+  const leave = audience === 'kids' ? adultPage(state.view) : !isPage(state.view);
+  if (leave && !state.search && location.hash !== `#${firstPage()}`) location.hash = firstPage();
+  else render();
+  $('accountMenu').querySelector(`[data-audience-choice="${audience}"]`)?.focus();
 }
 
 // The page is drawn again when the site's data or the account arrive, often while someone is using it. A part whose
@@ -112,8 +137,8 @@ function route() {
   }
   // The back button, or a link to a page, closes an open technique. History has already moved, so don't move it again.
   if (panelOpen()) closePanel({ fromHistory: true });
-  // No hash is the first page: This week when there is one, otherwise Curriculum.
-  const view = target.view || (state.week ? 'semana' : 'curriculum');
+  // No hash is the first page.
+  const view = target.view || firstPage();
   if (isPage(view)) {
     const newPage = view !== state.view;
     state.view = view;
@@ -125,7 +150,7 @@ function route() {
     if (newPage) window.scrollTo(0, 0);
     return;
   }
-  if (!isPage(state.view)) state.view = state.week ? 'semana' : 'curriculum';
+  if (!isPage(state.view)) state.view = firstPage();
   render();
 }
 
@@ -244,6 +269,8 @@ const clickActions = [
     renderHeader();
     $('accountMenu').querySelector(`[data-theme-choice="${el.dataset.themeChoice}"]`)?.focus();
   }],
+  ['[data-audience-choice]', (el) => chooseAudience(el.dataset.audienceChoice)],
+  ...kidsActions(() => render()),
   ['[data-belt-choice]', (el) => {
     const belt = el.dataset.beltChoice;
     changeSettings({ belt: settings.belt === belt ? '' : belt });
@@ -357,6 +384,10 @@ async function accountChanged(user) {
   state.account = user;
   await useAccount(user);
   state.admin = user ? await isAdmin(user.email) : false;
+  // The account may say the person trains in the kids class: its challenges, its answers, and no counting.
+  followAudience();
+  await followKids();
+  if (!isPage(state.view)) state.view = firstPage();
   render();
   redrawPanel(null);
 }
@@ -370,7 +401,8 @@ async function start() {
   applyTheme();
   startTvMode();
   try {
-    await loadContent();
+    // The kids' challenges only for the kids class (or both): nothing more to load for an adult.
+    await Promise.all([loadContent(), followKids()]);
   } catch (error) {
     $('main').innerHTML = `<p class="intro" role="alert">${t('loadFailed')}</p>`;
     throw error;
@@ -395,8 +427,8 @@ async function start() {
   const [week, media] = await Promise.all([loadWeek().catch(() => null), loadMedia()]);
   useWeek(week);
   state.media = media;
-  if (state.week && (!location.hash || location.hash === '#semana')) state.view = 'semana';
-  if (!isPage(state.view)) state.view = 'curriculum';
+  if (state.week && (location.hash === '#semana' || (!location.hash && firstPage() === 'semana'))) state.view = 'semana';
+  if (!isPage(state.view)) state.view = firstPage();
   render();
   if (panelOpen()) redrawPanel(null);
 }

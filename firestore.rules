@@ -15,10 +15,13 @@ service cloud.firestore {
     }
     function validSettings() {
       let data = request.resource.data;
-      return data.keys().hasOnly(['email', 'name', 'language', 'theme', 'belt', 'seenWeek', 'favorites', 'progress', 'lesson', 'updatedAt'])
+      return data.keys().hasOnly(['email', 'name', 'language', 'theme', 'audience', 'belt', 'seenWeek', 'favorites', 'progress', 'claims', 'lesson', 'updatedAt'])
         && data.email == request.auth.token.email
         && (!('name' in data) || (data.name is string && data.name.size() <= 100))
-        && (!('belt' in data) || data.belt in ['', 'white', 'blue', 'purple', 'brown', 'black'])
+        && (!('belt' in data) || data.belt in ['', 'white', 'blue', 'purple', 'brown', 'black', 'gray-white', 'gray', 'gray-black',
+          'yellow-white', 'yellow', 'yellow-black', 'orange-white', 'orange', 'orange-black', 'green-white', 'green', 'green-black'])
+        && (!('audience' in data) || data.audience in ['adult', 'kids', 'both'])
+        && (!('claims' in data) || (data.claims is map && data.claims.size() <= 100))
         && (!('seenWeek' in data) || (data.seenWeek is string && data.seenWeek.size() <= 100))
         && data.language in ['pt', 'en']
         && data.theme in ['', 'light', 'dark', 'orange', 'gold', 'royal', 'emerald']
@@ -42,6 +45,22 @@ service cloud.firestore {
       return changed.size() == 0
         || (data.changed is string && changed.hasOnly([data.changed])
           && (!(data.changed in data.notes) || (data.notes[data.changed] is string && data.notes[data.changed].size() <= 2000)));
+    }
+    // A coach answers one kids' challenge per save (changed): approved or sent back ("Try again"), naming the claim
+    // (users/{uid}.claims) it answers; or the answer is taken back.
+    function validApprovals() {
+      let data = request.resource.data;
+      let changed = data.challenges.diff(resource == null ? {} : resource.data.challenges).affectedKeys();
+      return data.keys().hasOnly(['challenges', 'changed', 'updatedBy', 'updatedAt'])
+        && data.challenges is map && data.challenges.size() <= 100
+        && data.changed is string && changed.hasOnly([data.changed])
+        && (!(data.changed in data.challenges) || validAnswer(data.challenges[data.changed]))
+        && data.updatedBy == request.auth.token.email
+        && data.updatedAt == request.time;
+    }
+    function validAnswer(answer) {
+      return answer is map && answer.keys().hasOnly(['status', 'claim'])
+        && answer.status in ['approved', 'again'] && answer.claim is int;
     }
 
     // What the whole site shows: the week (site/week), past weeks (site/weeks), each move's video and
@@ -68,12 +87,21 @@ service cloud.firestore {
       allow read: if signedIn() && email == request.auth.token.email.lower();
     }
 
-    // Each person's name, language, theme, belt, the class they last looked at, favorites, progress and lesson plan. Only they can change them;
+    // Each person's name, language, theme, the class they train in, belt, the class of the week they last looked at,
+    // favorites, progress, the kids' challenges they claimed and lesson plan. Only they can change them;
     // coaches (admins) can see them, to follow their students.
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow delete: if isOwner(uid);
       allow create, update: if isOwner(uid) && validSettings();
+    }
+
+    // The coaches' answers to a kid's challenges. The kid reads their own; only coaches write them, so nobody can
+    // approve their own challenges. The kid may delete them with the rest of their data ("Delete my data").
+    match /approvals/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow delete: if isOwner(uid) || isAdmin();
+      allow create, update: if isAdmin() && validApprovals();
     }
 
     // A person's notes on techniques. Only they can see them: not even coaches.

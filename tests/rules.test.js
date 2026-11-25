@@ -177,6 +177,59 @@ test('the class last looked at (seenWeek) is a short text saved with the setting
   assert.equal(await write('users/student-uid', { ...settings('student@example.com'), seenWeek: 'a:b' }, 'otherStudent'), 'denied');
 });
 
+test('the class someone trains in, a kids’ belt and the challenges they claimed are saved with the settings', async () => {
+  const save = (data) => write('users/student-uid', { ...settings('student@example.com'), ...data }, 'student');
+  for (const audience of ['adult', 'kids', 'both']) assert.equal(await save({ audience }), 'allowed');
+  assert.equal(await save({ audience: 'teens' }), 'denied');
+  assert.equal(await save({ audience: '' }), 'denied');
+  for (const belt of ['gray-white', 'yellow', 'orange-black', 'green-black']) assert.equal(await save({ belt }), 'allowed');
+  assert.equal(await save({ belt: 'pink' }), 'denied');
+  assert.equal(await save({ claims: { rolamento: 1764000000000, camarao: 1764000000001 } }), 'allowed');
+  assert.equal(await save({ claims: 'rolamento' }), 'denied');
+  const tooMany = Object.fromEntries(Array.from({ length: 101 }, (_, i) => [`challenge-${i}`, 1]));
+  assert.equal(await save({ claims: tooMany }), 'denied');
+  assert.equal(await write('users/student-uid', { ...settings('student@example.com'), claims: { rolamento: 1 } }, 'otherStudent'), 'denied');
+});
+
+// The coaches' answers to a kid's challenges, saved as the site does: one challenge per save, named in changed.
+const approvalsPath = 'approvals/student-uid';
+const answer = (id, status = 'approved', extra = {}) => ({ challenges: { [id]: { status, claim: 1764000000000 } }, changed: id, ...extra });
+
+test('only a coach can approve a kid’s challenge; the kid never can, not even their own', async () => {
+  assert.equal(await write(approvalsPath, answer('rolamento', 'approved', { updatedBy: 'student@example.com' }), 'student'), 'denied', 'approving themselves');
+  assert.equal(await write(approvalsPath, answer('rolamento', 'approved', { updatedBy: 'other@example.com' }), 'otherStudent'), 'denied');
+  assert.equal(await write(approvalsPath, answer('rolamento', 'approved', { updatedBy: 'unverified@example.com' }), 'unverifiedAdmin'), 'denied');
+  assert.equal(await write(approvalsPath, answer('rolamento')), 'denied', 'signed out');
+  assert.equal(await write(approvalsPath, answer('rolamento', 'approved', { updatedBy: 'coach@example.com' }), 'admin'), 'allowed');
+  assert.equal(await write(approvalsPath, { ...answer('rolamento', 'again'), updatedBy: 'student@example.com' }, 'student'), 'denied', 'nor change an answer');
+  assert.equal(await remove(approvalsPath, 'otherStudent'), 'denied');
+});
+
+test('a kid can read their own answers, never another kid’s; coaches read them all', async () => {
+  await write(approvalsPath, answer('rolamento'), 'setup');
+  assert.equal(await read(approvalsPath, 'student'), 'allowed');
+  assert.equal(await read(approvalsPath, 'admin'), 'allowed');
+  assert.equal(await read('approvals', 'admin'), 'allowed');
+  assert.equal(await read(approvalsPath, 'otherStudent'), 'denied');
+  assert.equal(await read(approvalsPath), 'denied');
+  assert.equal(await read('approvals', 'student'), 'denied');
+  assert.equal(await remove(approvalsPath, 'student'), 'allowed', 'deleted with the rest of their data');
+});
+
+test('an answer approves or sends back one challenge per save, naming the claim, and nothing else is stored', async () => {
+  const save = (data) => write(approvalsPath, { updatedBy: 'coach@example.com', ...data }, 'admin');
+  assert.equal(await save(answer('rolamento')), 'allowed');
+  assert.equal(await save({ challenges: { rolamento: { status: 'approved', claim: 1764000000000 }, camarao: { status: 'again', claim: 7 } }, changed: 'camarao' }), 'allowed');
+  assert.equal(await save({ challenges: { camarao: { status: 'again', claim: 7 } }, changed: 'rolamento' }), 'allowed', 'taking an answer back');
+  assert.equal(await save({ challenges: { camarao: { status: 'approved', claim: 7 }, base: { status: 'approved', claim: 7 } }, changed: 'base' }), 'denied', 'two answers in one save');
+  assert.equal(await save({ challenges: { camarao: { status: 'again', claim: 7 }, base: { status: 'approved', claim: 7 } } }), 'denied', 'a change must say which challenge');
+  assert.equal(await save({ challenges: { camarao: { status: 'again', claim: 7 }, base: { status: 'done', claim: 7 } }, changed: 'base' }), 'denied', 'approved or again only');
+  assert.equal(await save({ challenges: { camarao: { status: 'again', claim: 7 }, base: { status: 'approved', claim: 'x' } }, changed: 'base' }), 'denied');
+  assert.equal(await save({ challenges: { camarao: { status: 'again', claim: 7 }, base: { status: 'approved', claim: 7, xp: 500 } }, changed: 'base' }), 'denied', 'no XP of its own');
+  assert.equal(await save({ challenges: { camarao: { status: 'again', claim: 7 } }, changed: 'camarao', note: 'extra' }), 'denied');
+  assert.equal(await save({ ...answer('base'), updatedBy: 'someone@example.com' }), 'denied', 'signed with the coach’s own email');
+});
+
 const notesPath = 'users/student-uid/private/notes';
 const manyNotes = (count) => Object.fromEntries(Array.from({ length: count }, (_, i) => [`move-${i}`, 'note']));
 

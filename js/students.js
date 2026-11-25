@@ -5,6 +5,7 @@ import { settings } from './settings.js';
 import { t, text } from './strings.js';
 import { studentList, studentOrders, marksByPart } from './roster.js';
 import { beltName, beltMark, progressMarks } from './views.js';
+import { loadKidsAnswers, kidsFacts, kidsBody, answerChallenge } from './kids-coach.js';
 
 // The admin page's Students section: each student's belt and marks, to follow their training. Read only when the
 // coach taps "Show students" (one read per student). Notes are never read: they are not in users/{uid}.
@@ -29,8 +30,10 @@ export function hideStudents(element) {
 
 const day = (millis) => new Date(millis).toLocaleDateString(settings.language === 'pt' ? 'pt-BR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
+const userOf = (uid) => view.users.find((one) => one.uid === uid);
+
 function marks(uid) {
-  const user = view.users.find((one) => one.uid === uid);
+  const user = userOf(uid);
   const groups = marksByPart(user, findTechnique, content.order);
   if (!groups.length) return html`<p class="note">${t('nothingMarked')}</p>`;
   return groups.map((group) => html`<h5>${text(content.modules[group.part].title)}</h5><ul class="student-marks">${group.techniques.map((mark) => html`<li>${text(findTechnique(mark.id).technique.n)}${
@@ -42,8 +45,8 @@ function studentRow(student) {
   const belt = student.belt ? html`${beltMark(student.belt)} ${beltName(student.belt)}` : t('noBelt');
   return html`<details class="student" data-student="${student.uid}" ${view.open.has(student.uid) ? 'open' : ''}><summary>
     <span class="student-who"><b>${student.name || student.email}</b>${student.name ? html`<span>${student.email}</span>` : ''}</span>
-    <span class="student-facts"><span>${belt}</span><span>${t('learning')}: <b>${student.learning}</b></span><span>${t('done')}: <b>${student.done}</b></span><span>${t('myTree')}: <b>${student.favorites}</b></span><span>${t('lastActive')}: ${student.lastActive ? day(student.lastActive) : t('never')}</span></span>
-    </summary><div class="student-body">${marks(student.uid)}</div></details>`;
+    <span class="student-facts"><span>${belt}</span><span>${t('learning')}: <b>${student.learning}</b></span><span>${t('done')}: <b>${student.done}</b></span><span>${t('myTree')}: <b>${student.favorites}</b></span><span>${t('lastActive')}: ${student.lastActive ? day(student.lastActive) : t('never')}</span>${kidsFacts(userOf(student.uid))}</span>
+    </summary><div class="student-body">${kidsBody(userOf(student.uid))}${marks(student.uid)}</div></details>`;
 }
 
 function list() {
@@ -70,7 +73,7 @@ async function load() {
   view.status = 'studentsLoading';
   draw();
   try {
-    view.users = await loadStudents();
+    [view.users] = await Promise.all([loadStudents(), loadKidsAnswers()]);
     view.status = '';
   } catch (error) {
     console.error(error);
@@ -80,9 +83,22 @@ async function load() {
   (slot.querySelector('#findStudent') || slot.querySelector('[data-load-students]'))?.focus();
 }
 
+// A coach's answer to a kid's challenge: saved, then the list is drawn again with the focus back in that row.
+async function answerKid(button) {
+  const row = button.closest('[data-student]').dataset.student;
+  const challenge = button.closest('[data-kid-challenge]').dataset.kidChallenge;
+  button.disabled = true;
+  await answerChallenge(button.dataset.answer);
+  draw();
+  const again = slot.querySelector(`[data-student="${row}"] [data-kid-challenge="${challenge}"] button`);
+  (again || slot.querySelector(`[data-student="${row}"] summary`))?.focus();
+}
+
 document.addEventListener('click', (event) => {
   if (!slot?.contains(event.target)) return;
   if (event.target.closest('[data-load-students]')) load();
+  const answer = event.target.closest('[data-answer]');
+  if (answer) answerKid(answer);
   const order = event.target.closest('[data-student-order]');
   if (order) {
     view.order = order.dataset.studentOrder;

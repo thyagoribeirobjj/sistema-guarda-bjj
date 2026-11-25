@@ -1,7 +1,7 @@
 // Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
 // previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the cookie bar and
-// Google Analytics (answered here, never the real one), the privacy page and "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu or has the focus somewhere,
+// Google Analytics (answered here, never the real one), the kids' class (tests/smoke-kids.mjs), the privacy page and "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu or has the focus somewhere,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page, robots.txt and the "noai"
 // tags. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm ci)
@@ -13,6 +13,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
 import { checkout } from './checkout.mjs';
+import { kidsSteps } from './smoke-kids.mjs';
 
 const options = process.argv.slice(2);
 const codeFromAt = options.indexOf('--code-from');
@@ -931,6 +932,8 @@ await step('the admin page counts nothing, even in a browser that accepted', asy
   assert.deepEqual(admin.analytics.map((request) => request.url), []);
 });
 
+await kidsSteps({ open, openLate, step, hits, analyticsCookies, online, withAnalytics });
+
 await step('the privacy page opens from the sidebar and the account menu, and says coaches see progress, not notes', async () => {
   const visit = await open('/#curriculum', 'en-US');
   await visit.locator('#sidebar a[href="#privacy"]').click();
@@ -944,6 +947,13 @@ await step('the privacy page opens from the sidebar and the account menu, and sa
   assert.match(words, /Visitor statistics and cookies/);
   assert.match(words, /optional and off until you accept/);
   assert.match(words, /What this browser keeps either way/);
+  // The kids' class: what is kept, that coaches approve it, no age asked, a parent sets it up, visits not counted.
+  assert.match(words, /For the kids class/);
+  assert.match(words, /challenges the child said they did/);
+  assert.match(words, /Coaches see and approve/);
+  assert.match(words, /never asks for an age or a birth date/);
+  assert.match(words, /parent or guardian should set up a child’s account/);
+  assert.match(words, /visits are not counted/);
   await visit.locator('#sidebar a[href="#curriculum"]').click();
   await visit.locator('main .part-card').first().waitFor();
   await visit.locator('#account').click();
@@ -1003,6 +1013,7 @@ await step('a Portuguese browser gets Portuguese, the privacy page too', async (
   await visit.locator('main h2', { hasText: 'Privacidade e seus dados' }).waitFor();
   assert.match(await visit.locator('main').textContent(), /menos as anotações/);
   assert.match(await visit.locator('main').textContent(), /Estatísticas de visitas e cookies/);
+  assert.match(await visit.locator('main').textContent(), /Para a turma kids[\s\S]*não pergunta a idade nem a data de nascimento[\s\S]*pai, mãe ou responsável[\s\S]*as visitas não são contadas/);
   assert.match(await visit.locator('main').textContent(), /opcional e fica desligado até você aceitar/);
   assert.equal(await visit.locator('[data-delete-data="ask"]').textContent(), 'Apagar deste navegador');
 });

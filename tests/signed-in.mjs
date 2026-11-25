@@ -21,6 +21,7 @@ const people = {
   student: { sub: 'student-ana', email: 'ana@example.com', email_verified: true, name: 'Ana Test' },
   other: { sub: 'student-bia', email: 'bia@example.com', email_verified: true, name: 'Bia Test' },
   newcomer: { sub: 'student-dan', email: 'dan@example.com', email_verified: true, name: 'Dan Test' },
+  kid: { sub: 'student-kai', email: 'kai@example.com', email_verified: true, name: 'Kai Test' },
   coach: { sub: 'coach-caio', email: 'caio@example.com', email_verified: true, name: 'Caio Coach' },
 };
 
@@ -154,6 +155,11 @@ function watched(page, person) {
     if (response.status() === 403 && page.tryingRefused) return;
     if ([400, 403, 404].includes(response.status()) && page.refusalsExpected) return;
     if (response.status() >= 400 && !expectedMisses.test(response.url())) problems.push(`${person.email}: ${response.status()} ${response.url()}`);
+  });
+  // The coaches' answers to the kids' challenges read by this page: one for the kids' class, none for an adult.
+  page.approvalReads = 0;
+  page.on('request', (request) => {
+    if (request.url().includes(':batchGet') && (request.postData() || '').includes('/approvals/')) page.approvalReads += 1;
   });
   page.open = async (path = '', hash = '') => {
     await page.goto(`${address}/${path}?emulators=${encodeURIComponent(JSON.stringify(person))}${hash}`);
@@ -695,6 +701,86 @@ await step('the Students list shows the student with the right counts, and never
   assert.equal(await row.locator('.student-marks li').count(), 3);
   assert.ok(!(await coach.locator('body').textContent()).includes(noteText), 'no notes on the page');
   assert.equal(await tryInPage(coach, 'loadNotes', uid.student), 'permission-denied', 'coaches cannot read notes');
+});
+
+// ---- the kids' class: a kid says "I did it", a coach approves or sends it back, and the kid sees it elsewhere ----
+let kid;
+let kidClaims;
+const kidStatus = (page, challenge) => page.locator(`[data-challenge="${challenge}"] .kid-status`).innerText();
+
+await step('a kid picks "Kids class" and says "I did it" on two challenges; both are saved to the account, one read for the answers', async () => {
+  kid = await visitor(people.kid);
+  await kid.open('', '#curriculum');
+  await kid.locator('#account').waitFor();
+  await signInOnSite(kid);
+  await kid.locator('#account').click();
+  await kid.locator('[data-audience-choice="kids"]').click();
+  await kid.locator('main [data-claim="rolamento"]').waitFor();
+  await kid.keyboard.press('Escape');
+  await kid.locator('main [data-claim="rolamento"]').click();
+  assert.equal(await kidStatus(kid, 'rolamento'), 'Waiting for coach');
+  assert.ok(await kid.evaluate(() => document.activeElement.matches('[data-unclaim="rolamento"]')), 'the focus moves to Undo');
+  await kid.locator('main [data-claim="queda-costas"]').click();
+  await kid.locator('main [data-claim="camarao"]').click();
+  await kid.locator('main [data-unclaim="camarao"]').click();
+  assert.equal(await kidStatus(kid, 'camarao'), 'To do', 'Undo takes a claim back');
+  const saved = await until(async () => {
+    const settings = await stored(`users/${uid.kid}`);
+    return settings?.audience === 'kids' && settings.claims?.rolamento && settings.claims['queda-costas'] && !settings.claims.camarao && settings;
+  }, 'the class and the claims are saved');
+  kidClaims = saved.claims;
+  assert.equal(kid.approvalReads, 1, 'the kid reads the answers once');
+  assert.equal(student.approvalReads, 0, 'an adult never reads them');
+});
+
+await step('a kid cannot approve their own challenge, nor read another kid’s answers', async () => {
+  assert.equal(await tryInPage(kid, 'saveApproval', uid.kid, 'rolamento', { status: 'approved', claim: kidClaims.rolamento }), 'permission-denied');
+  assert.equal(await tryInPage(kid, 'loadApprovals', uid.student), 'permission-denied');
+  assert.equal(await tryInPage(kid, 'loadAllApprovals'), 'permission-denied');
+  assert.equal(await stored(`approvals/${uid.kid}`), null, 'nothing was approved');
+  assert.equal(await tryInPage(kid, 'loadApprovals', uid.kid), 'allowed', 'but can read their own');
+});
+
+await step('the coach approves one challenge and sends the other back from the Students list', async () => {
+  await coach.open('admin.html');
+  await coach.locator('[data-load-students]').click();
+  const row = coach.locator(`[data-student="${uid.kid}"]`);
+  await row.waitFor();
+  assert.match(await row.locator('.student-facts').innerText(), /Kids class[\s\S]*Kids challenges: 0 done, 2 waiting/);
+  await row.locator('summary').click();
+  await row.locator('[data-kid-challenge="rolamento"] button', { hasText: 'Approve' }).click();
+  await until(async () => (await stored(`approvals/${uid.kid}`))?.challenges?.rolamento?.status === 'approved', 'the approval is saved');
+  await row.locator('[data-kid-challenge="queda-costas"] button', { hasText: 'Try again' }).click();
+  const answers = await until(async () => {
+    const saved = await stored(`approvals/${uid.kid}`);
+    return saved?.challenges?.['queda-costas']?.status === 'again' && saved;
+  }, 'the "Try again" is saved');
+  assert.deepEqual(answers.challenges, {
+    rolamento: { status: 'approved', claim: kidClaims.rolamento },
+    'queda-costas': { status: 'again', claim: kidClaims['queda-costas'] },
+  });
+  assert.equal(answers.updatedBy, people.coach.email);
+  assert.match(await row.locator('.student-facts').innerText(), /Kids challenges: 1 done, 0 waiting/);
+  assert.equal(await row.locator('[data-kid-challenge="rolamento"] .kid-status').innerText(), 'Done');
+});
+
+await step('on another device the kid sees Done, the XP and "Try again", and can say "I did it" again', async () => {
+  const pad = await visitor(people.kid);
+  await pad.open();
+  await pad.locator('#account').waitFor();
+  await signInOnSite(pad);
+  await pad.locator('#sidebar a[href="#kids"]').click();
+  await pad.locator('main [data-claim="queda-costas"]').waitFor();
+  assert.equal(await kidStatus(pad, 'rolamento'), 'Done');
+  assert.equal(await kidStatus(pad, 'queda-costas'), 'Try again');
+  assert.match(await pad.locator('main .kids-level').innerText(), /Cub · 10 XP[\s\S]*30 XP to Little tiger/);
+  assert.equal(await pad.locator('#sidebar a[href="#curriculum"]').count(), 0, 'the account’s class hides the adult curriculum here too');
+  assert.equal(pad.approvalReads, 1);
+  await pad.locator('main [data-claim="queda-costas"]').click();
+  assert.equal(await kidStatus(pad, 'queda-costas'), 'Waiting for coach');
+  await until(async () => (await stored(`users/${uid.kid}`)).claims['queda-costas'] > kidClaims['queda-costas'], 'the new claim is saved');
+  await pad.context().close();
+  await kid.context().close();
 });
 
 await step('"Delete my data" deletes the account\'s settings, notes and sign-in record, and signs out', async () => {

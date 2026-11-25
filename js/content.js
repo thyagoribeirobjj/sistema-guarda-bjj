@@ -58,6 +58,23 @@ export function findTechnique(id) {
 // Belts in order. A technique has a minimum belt only where an admin set one (site/media, techniques.<id>.minBelt);
 // without one it is for everyone.
 export const belts = ['white', 'blue', 'purple', 'brown', 'black'];
+// The kids' belts, in order, offered instead when someone trains in the kids class. White is in both.
+export const kidsBelts = ['white', 'gray-white', 'gray', 'gray-black', 'yellow-white', 'yellow', 'yellow-black',
+  'orange-white', 'orange', 'orange-black', 'green-white', 'green', 'green-black'];
+
+// The kids' worlds, challenges and levels (data/kids.json), read only by someone who trains in the kids class (or both).
+export const kids = { worlds: [], challenges: [], levels: [], loaded: false };
+let kidsLoading = null;
+
+export function loadKids() {
+  kidsLoading ||= loadJson('data/kids.json').then((file) => {
+    Object.assign(kids, { worlds: file.worlds, challenges: file.challenges, levels: file.levels, loaded: true });
+  }).catch((error) => {
+    kidsLoading = null;
+    throw error;
+  });
+  return kidsLoading;
+}
 
 // "Up to my belt": techniques with no minimum, and those whose minimum is my belt or below. No belt keeps everything.
 export function upToBelt(minBelt, belt) {

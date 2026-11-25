@@ -15,11 +15,14 @@ export const state = {
   confirmEmptyTree: false,
   beltFilter: '',
   deleting: '', // "Delete my data" on the privacy page
+  // The coaches' answers to the kids' challenges of the person signed in (js/kids.js): null until read.
+  approvals: null,
+  approvalsOf: null,
   // list: the techniques the panel's previous and next move through.
   panel: { current: null, history: [], list: [] },
 };
 
-// Pages: #curriculum, #fund, #top… (the parts of the fight), #semana, #meu (my tree), #lesson, #method, #privacy. A technique: #t-<id>.
+// Pages: #curriculum, #fund, #top… (the parts of the fight), #semana, #meu (my tree), #kids, #lesson, #method, #privacy. A technique: #t-<id>.
 export function readHash() {
   const hash = location.hash.replace(/^#/, '');
   const technique = /^t-(.+)$/.exec(hash);

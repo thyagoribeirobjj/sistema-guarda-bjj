@@ -46,12 +46,14 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `img/` | `logo.svg` (the logo and browser icon), `icon-180.png` (phone home screen), `share.png` (the 1200×630 picture shown when a link is shared). |
 | `css/theme.css` | Every color and font: dark (the default), light, and four more themes people pick in the account menu. A new theme is one block here plus its name in `themes` (`js/settings.js`), its label in `js/strings.js` and its name in `firestore.rules`. **The only file with color values**, apart from the logo and the `theme-color` tag's first-paint default (`applyTheme()` sets it from `--surface`). |
 | `css/app.css` | Components (and the admin page's tab strip). Uses the theme's variables (`var(--ink)`) only. On touch screens (`pointer: coarse`) everything people tap is at least 44px tall, and inputs are 16px so phones don't zoom in. |
+| `css/kids.css` | The kids' class: "I train in", the kids' belts, the Kids page and the coach's answers (both pages). |
 | `css/nav.css` | The site's navigation and page layout (`index.html` only): the bottom bar and part switcher under 900px, the sidebar from 900px. |
 | `js/app.js` | Starts the site: header, search box, navigation, links (`#curriculum`, `#top`, `#t-top-base`), clicks, sign-in. |
 | `js/nav.js` | The navigation, described once (see Navigation below), and the menus (the account menu and the part switcher). |
 | `js/account.js` | The header's account button (`#account`, the person's Google photo) and its menu (`#accountMenu`): sign in or out, the Coach section, the theme picker. The button always shows; without Firebase (a local preview) the menu has no sign-in. |
 | `js/views.js` | The pages: Curriculum home, this week (and past weeks), each part of the fight, my tree (favorites), method; and the search results. |
 | `js/panel.js` | The technique panel: details, share, notes, video, diagram, "where to go" links, next stage; admins attach media and set a minimum belt here. Previous / next (buttons, arrow keys, swiping) move through the list it was opened from. Opening it adds one step to the browser history and moving replaces it, so a phone's back button closes it in one press. |
+| `js/kids.js`, `js/kids-progress.js`, `js/kids-coach.js`, `js/strings-kids.js` | The kids' class (see Kids below): the Kids page and "I did it"; the game's rules without a page (statuses, XP, levels, which worlds are open; tested in `tests/kids.test.js`); the coach's "Approve" / "Try again" in the Students list; their labels. |
 | `js/notes.js` | Each person's private notes on techniques: in this browser, and in `users/{uid}/private/notes` once signed in (read the first time a technique opens, saved one note at a time). Another tab of the same browser shows a change at once. |
 | `js/media.js` | YouTube links and player, and shrinking a diagram before it's saved. |
 | `js/lesson.js` | The lesson builder. Its choices are saved in `settings.lesson`. |
@@ -66,6 +68,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/content.js`, `js/state.js` | Loads the curriculum and searches it (names first, then descriptions, key points, drills and steps); tracks which page and technique are showing. |
 | `data/content.json` | The guard modules (top, bottom), drills and the method. |
 | `data/curriculum.json` | The other parts of the fight, their order (`moduleOrder`) and the "where to go" links (`nx`). |
+| `data/kids.json` | The kids' worlds (`mark` is the world's emoji; `alwaysOpen`), challenges (task, XP and the site's technique ids in `techniques`) and XP levels. Read only for the kids class or both. |
 | `firestore.rules` | Who can read and change what in the database. |
 | `js/translation.js` | Decides, on the admin page, which fields to translate, keep or ask about (see Translation). |
 | `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `week.test.js` and `roster.test.js` check next week and the students list; `rules.test.js` checks the database rules; `smoke.mjs` uses the site in a real browser; `signed-in.mjs` uses it signed in, as made-up students and a coach, against local copies of sign-in and the database; `nightly.mjs` checks the published site every night. |
@@ -120,6 +123,8 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 | `diagrams/{id}` | A move's diagram, as a small image (`data:image/webp;base64,…`, under 900 KB) | everyone | admins |
 | `site/config` | `translatorUrl`: where the translator lives | everyone | admins |
 | `users/{uid}` | A person's `email`, `name` (from Google), `language`, `theme`, `belt` (`''` or `white`…`black`, picked by them), `seenWeek` (a short mark of the class last looked at on This week, for the "new" dot), `favorites` (their "Minha árvore", in their order), `progress` (`<id>: "learning" \| "done"`) and `lesson` (the lesson builder's choices: `mod`, `dur`, `items`, `game`) | that person and admins (coaches) | that person |
+| `users/{uid}` (kids) | Also `audience` (`'adult'`, `'kids'` or `'both'`: "I train in"; missing means adult), a kids' `belt` (`gray-white`…`green-black`) and `claims` (`<challenge id>: <when, ms>`: the kid's "I did it", at most 100) | as above | that person |
+| `approvals/{uid}` | A coach's answers to a kid's claims: `challenges: { <id>: { status: 'approved' \| 'again', claim } }` (`claim`: the claim answered), `changed` (one answer per save), `updatedBy`. Read once per visit, only for the kids class or both and signed in; the Students list reads them all when the coach taps "Show students". | that person and admins | admins only (so nobody approves themselves); the person may delete it ("Delete my data") |
 | `users/{uid}/private/notes` | Their notes: `notes: { <id>: text }` (at most 500, each under 2,000 characters), `changed` (the note the last save changed: each save changes one) | that person only, not admins | that person |
 
 - `firestore.rules` is the only thing that protects data. The page hiding a button protects nothing.
@@ -140,7 +145,7 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   database itself is switched (the old class filed in `site/weeks`, `next` becomes the week) the next time an admin
   opens or saves the admin page. `js/week.js` decides all of this. Past weeks are told apart by their date, so a
   prepared week must start after today and after this week's date (`dateProblem()`).
-- **Delete my data** (the privacy page) deletes the notes, `users/{uid}` and the person's sign-in record (Google may
+- **Delete my data** (the privacy page) deletes the notes, `approvals/{uid}`, `users/{uid}` and the person's sign-in record (Google may
   ask them to confirm it's them first). Once a device knows the account's documents exist it only updates them, never
   writes them anew, so another device still signed in finds them gone, writes nothing back and signs out. The notes
   document can only be started (created) while `users/{uid}` exists (`firestore.rules`), so a device that never read
@@ -153,6 +158,22 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 - **Keep database reads low.** The free plan allows 50,000 reads a day. `site/week`, `site/media` and `site/weeks` are kept
   in each browser for 15 minutes (`site()` in `js/firebase.js`), so a change can take that long to reach a student
   who just visited; admin pages always read fresh. Don't add a database read that runs on every visit.
+
+## Kids
+
+- **"I train in"** (account menu, above the belt): Kids class, Adult class (the default: the site as it always was) or Both
+  (a parent or a coach). Kept like the theme, in this browser and with the account (`settings.audience`). Kids class
+  shows Kids and My tree in the navigation and hides This week and the curriculum (their links still work); Both shows
+  everything. The belt picker offers the kids' belts (`kidsBelts`, `js/content.js`) for Kids class.
+- **Content is `data/kids.json`**, like the adult curriculum: every technique id there must exist (`npm test` checks).
+  A challenge opens the site's own technique sheet; never copy a technique's text into it. No uploads, videos or free
+  text from kids, no ages, no leaderboard.
+- **"I did it"** (signed in only) goes into the kid's `claims`; a coach answers in the Students list (`approvals/{uid}`).
+  Only approved challenges count, for XP and for opening the next world (2 done in the world before; `alwaysOpen`
+  worlds always). An adult's visit reads nothing more and never loads `data/kids.json`.
+- **With Kids class, nothing is counted:** no cookie bar, no "Cookies" in the menu, Google Analytics switched off and its
+  cookies deleted (`followAudience()` in `js/analytics.js`), whatever the cookie choice; the choice itself is kept.
+  The privacy page's "For the kids class" says what is kept and that a parent or guardian sets up a child's account.
 
 ## Statistics and cookies
 

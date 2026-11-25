@@ -60,3 +60,52 @@ test('"up to my belt" keeps techniques with no minimum and those at my belt or b
   assert.ok(!upToBelt('black', 'brown'));
   assert.ok(upToBelt('black', ''));
 });
+
+// ---- the kids' class (data/kids.json) ----
+const kids = read('kids.json');
+const bothLanguages = (value) => Boolean(value?.pt && value?.en);
+
+test('kids: every world and challenge has a unique id and a name in Portuguese and English', () => {
+  const worldIds = kids.worlds.map((world) => world.id);
+  const challengeIds = kids.challenges.map((challenge) => challenge.id);
+  assert.equal(new Set(worldIds).size, worldIds.length, 'world ids are unique');
+  assert.equal(new Set(challengeIds).size, challengeIds.length, 'challenge ids are unique');
+  for (const world of kids.worlds) {
+    assert.match(world.id, /^[a-z0-9]+(-[a-z0-9]+)*$/);
+    assert.ok(bothLanguages(world.n) && bothLanguages(world.d), `world ${world.id}`);
+    assert.ok(world.mark, `world ${world.id} has its mark`);
+  }
+  for (const challenge of kids.challenges) {
+    assert.match(challenge.id, /^[a-z0-9]+(-[a-z0-9]+)*$/);
+    assert.ok(bothLanguages(challenge.n) && bothLanguages(challenge.task), `challenge ${challenge.id}`);
+    assert.ok(worldIds.includes(challenge.world), `challenge ${challenge.id} is in a world that exists`);
+    assert.ok(Number.isInteger(challenge.xp) && challenge.xp > 0, `challenge ${challenge.id} gives XP`);
+  }
+});
+
+test('kids: every challenge points at techniques that exist in the site\'s curriculum', () => {
+  for (const challenge of kids.challenges) {
+    assert.ok(Array.isArray(challenge.techniques), challenge.id);
+    for (const id of challenge.techniques) assert.ok(ids.has(id), `${challenge.id} points at missing ${id}`);
+  }
+});
+
+test('kids: the whole catalog is there, every world has challenges, the last world is always open', () => {
+  assert.equal(kids.worlds.length, 8);
+  assert.equal(kids.challenges.length, 25);
+  for (const world of kids.worlds) assert.ok(kids.challenges.some((challenge) => challenge.world === world.id), `${world.id} has challenges`);
+  assert.equal(kids.worlds.at(-1).alwaysOpen, true);
+  assert.equal(kids.worlds.filter((world) => world.alwaysOpen).length, 1);
+});
+
+test('kids: levels start at 0 XP and go up, each named in both languages', () => {
+  assert.equal(kids.levels[0].xp, 0);
+  kids.levels.forEach((level, i) => {
+    assert.ok(bothLanguages(level.n));
+    if (i) assert.ok(level.xp > kids.levels[i - 1].xp);
+  });
+});
+
+test('kids: no challenge asks for a video, an upload or something written', () => {
+  for (const challenge of kids.challenges) assert.doesNotMatch(challenge.task.en, /video|record|write|upload|send/i, challenge.id);
+});
