@@ -948,6 +948,8 @@ await step('the privacy page opens from the sidebar and the account menu, and sa
   assert.match(words, /no tracking/i);
   assert.match(words, /may not be collected to train AI systems/);
   assert.match(words, /Visitor statistics and cookies/);
+  assert.match(words, /Only the people who run the site see these numbers/);
+  assert.match(words, /keeps the details of each visit for 14 months/);
   assert.match(words, /optional and off until you accept/);
   assert.match(words, /What this browser keeps either way/);
   // The kids' class: what is kept, that coaches approve it, no age asked, a parent sets it up, visits not counted.
@@ -1018,6 +1020,7 @@ await step('a Portuguese browser gets Portuguese, the privacy page too', async (
   assert.match(await visit.locator('main').textContent(), /Estatísticas de visitas e cookies/);
   assert.match(await visit.locator('main').textContent(), /Para a turma kids[\s\S]*não pergunta a idade nem a data de nascimento[\s\S]*pai, mãe ou responsável[\s\S]*as visitas não são contadas/);
   assert.match(await visit.locator('main').textContent(), /opcional e fica desligado até você aceitar/);
+  assert.match(await visit.locator('main').textContent(), /guarda os detalhes de cada visita por 14 meses/);
   assert.equal(await visit.locator('[data-delete-data="ask"]').textContent(), 'Apagar deste navegador');
 });
 
