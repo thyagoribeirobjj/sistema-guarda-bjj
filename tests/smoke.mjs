@@ -1,7 +1,7 @@
 // Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
-// previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and
-// "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu or has the focus somewhere,
+// previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the cookie bar and
+// Google Analytics (answered here, never the real one), the privacy page and "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu or has the focus somewhere,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page, robots.txt and the "noai"
 // tags. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm ci)
@@ -71,15 +71,62 @@ const firestoreValue = (value) => (typeof value === 'string' ? { stringValue: va
   : { mapValue: { fields: Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, firestoreValue(inner)])) } });
 const firestoreFields = (value) => firestoreValue(value).mapValue.fields;
 
-async function openLate(path, locale, device = {}, { stored = {}, kept = {} } = {}) {
+// Google Analytics, answered here so nothing ever reaches the real one. Every request to its hosts (and to the
+// Firebase ones its code calls) is noted in `requests`; Tag Manager's gtag.js is a small stand-in that sends each
+// event the site asks for to www.google-analytics.com as JSON, as long as gtag.js itself would (collection on,
+// analytics_storage not denied), and sets a _ga cookie the way gtag.js does once it may.
+const analyticsHosts = /googletagmanager\.com|google-analytics\.com|analytics\.google\.com|firebase\.googleapis\.com|firebaseinstallations\.googleapis\.com/;
+const fakeGtag = `(() => {
+  const layer = window.dataLayer = window.dataLayer || [];
+  const consent = {};
+  let id = '';
+  let config = {};
+  const allowed = () => id && !window['ga-disable-' + id] && consent.analytics_storage !== 'denied';
+  const cookie = (name) => { document.cookie = name + '=GA1.1.made-up; path=/; max-age=600' + (location.hostname.includes('.') ? '; domain=' + location.hostname : ''); };
+  const handle = (command) => {
+    const [kind, first, second] = Array.from(command);
+    if (kind === 'consent') Object.assign(consent, second);
+    if (kind === 'config') { id = first; config = second || {}; }
+    if (!allowed() || (kind !== 'event' && kind !== 'config')) return;
+    cookie('_ga');
+    cookie('_ga_' + id.replace(/^G-/, ''));
+    if (kind !== 'event') return;
+    const hit = { tid: id, en: first, dl: location.href, dt: document.title, ul: navigator.language, ...config, ...second };
+    fetch('https://www.google-analytics.com/g/collect?v=2', { method: 'POST', mode: 'no-cors', body: JSON.stringify(hit) });
+  };
+  layer.forEach(handle);
+  const push = layer.push.bind(layer);
+  layer.push = (...commands) => { commands.forEach(handle); return push(...commands); };
+})();`;
+
+async function routeAnalytics(context, requests, measurementId) {
+  await context.route(analyticsHosts, (route) => {
+    const request = route.request();
+    requests.push({ url: request.url(), body: request.postData() || '' });
+    const url = new URL(request.url());
+    if (url.hostname.includes('googletagmanager')) return route.fulfill({ contentType: 'text/javascript', body: fakeGtag });
+    if (url.pathname.endsWith('/webConfig')) return route.fulfill({ json: { measurementId, appId: '1:1:web:1' } });
+    if (url.hostname.startsWith('firebaseinstallations')) {
+      return route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: { name: 'installation', fid: 'cMadeUpInstallation1', refreshToken: 'made-up', authToken: { token: 'made-up', expiresIn: '604800s' } } });
+    }
+    return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+  });
+}
+
+// `config`: more Firebase settings, such as a measurementId (Google Analytics switched on). page.analytics: the
+// requests made to Google Analytics' hosts (see routeAnalytics). page.releaseNow(): let the Firebase code through
+// without waiting for the redraws (for the admin page, which has no #appTitle).
+async function openLate(path, locale, device = {}, { stored = {}, kept = {}, config = {} } = {}) {
   let release;
   const held = new Promise((resolve) => { release = resolve; });
   let noSdk;
   const sdkMissing = new Promise((resolve) => { noSdk = resolve; });
   const reads = [];
+  const analytics = [];
   const page = await open(path, locale, device, async (context) => {
     await context.addInitScript((entries) => { for (const [key, value] of entries) localStorage.setItem(key, value); }, Object.entries(kept));
-    await context.route('**/__/firebase/init.json', (route) => route.fulfill({ json: { apiKey: 'made-up', projectId: 'demo-late', appId: '1:1:web:1' } }));
+    await context.route('**/__/firebase/init.json', (route) => route.fulfill({ json: { apiKey: 'made-up', projectId: 'demo-late', appId: '1:1:web:1', ...config } }));
+    await routeAnalytics(context, analytics, config.measurementId);
     await context.route('https://www.gstatic.com/firebasejs/**', async (route) => {
       await held;
       const response = await route.fetch().catch((error) => error);
@@ -100,6 +147,8 @@ async function openLate(path, locale, device = {}, { stored = {}, kept = {} } = 
     });
   });
   page.reads = reads;
+  page.analytics = analytics;
+  page.releaseNow = () => release();
   page.release = async () => {
     await page.evaluate(() => {
       window.headerDrawn = 0;
@@ -661,6 +710,227 @@ await step('a minimum belt an admin set shows on its technique, and "up to my be
   await visit.locator('main [data-belt-filter="mine"][aria-pressed="true"]').waitFor();
 });
 
+// ---- Google Analytics and the cookie bar (js/analytics.js) ----
+// Its id comes from the site's Firebase settings; here a made-up one, and Google Analytics itself is answered by
+// routeAnalytics(), so nothing reaches the real one.
+const measurementId = 'G-MADEUP123';
+const withAnalytics = { config: { measurementId } };
+const hits = (visit) => visit.analytics.filter((request) => request.url.includes('google-analytics.com/g/collect')).map((request) => JSON.parse(request.body));
+const analyticsCookies = async (visit) => (await visit.context().cookies()).filter((cookie) => cookie.name.startsWith('_ga'));
+const online = (visit) => visit.locator('#accountMenu #signIn').waitFor({ state: 'attached' });
+const consentCommands = (visit) => visit.evaluate(() => (window.dataLayer || []).map((command) => Array.from(command)).filter(([kind]) => kind === 'consent').map(([, , settings]) => settings));
+async function until(visit, check, what) {
+  for (let tries = 0; tries < 100; tries++) {
+    if (check()) return;
+    await visit.waitForTimeout(100);
+  }
+  throw new Error(`waited for ${what}`);
+}
+
+await step('without Google Analytics switched on: no cookie bar, no "Cookies" in the menu, nothing sent', async () => {
+  const visit = await openLate('/#top', 'en-US');
+  await visit.release();
+  await visit.locator('main .tech').first().click();
+  await visit.waitForTimeout(500);
+  assert.ok(await visit.locator('#cookieBar').isHidden(), 'no cookie bar');
+  assert.equal(await visit.locator('#accountMenu #cookieChoice').count(), 0, 'no "Cookies" in the account menu');
+  assert.deepEqual(visit.analytics.map((request) => request.url), []);
+  assert.deepEqual(await analyticsCookies(visit), []);
+});
+
+await step('a page opened for the television does not ask about cookies and counts nothing', async () => {
+  const tv = await openLate('/?tv#curriculum', 'en-US', undefined, withAnalytics);
+  await tv.release();
+  await online(tv);
+  await tv.locator('main .part-card').first().waitFor();
+  await tv.waitForTimeout(500);
+  assert.ok(await tv.locator('#cookieBar').isHidden(), 'no cookie bar on the television');
+  assert.deepEqual(tv.analytics.map((request) => request.url), [], 'and nothing goes to Google Analytics');
+  assert.deepEqual(await analyticsCookies(tv), []);
+});
+
+await step('on a phone, with Google Analytics switched on: the bar asks first, above the bottom bar; nothing is sent before a choice or after "Reject"', async () => {
+  const phone = await openLate('/#top', 'en-US', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }, withAnalytics);
+  await phone.release();
+  const bar = phone.locator('#cookieBar');
+  await bar.waitFor();
+  assert.match(await bar.textContent(), /Google Analytics/);
+  assert.equal(await bar.locator('[data-cookies="accepted"]').textContent(), 'Accept');
+  assert.equal(await bar.locator('[data-cookies="rejected"]').textContent(), 'Reject');
+  assert.equal(await bar.locator('a[href="#privacy"]').count(), 1, 'a link to the privacy page');
+  const [barBox, bottomBox] = [await bar.boundingBox(), await phone.locator('#bottomBar').boundingBox()];
+  assert.ok(barBox.y + barBox.height <= bottomBox.y + 0.5, `the bar sits above the bottom bar, not over it (${JSON.stringify([barBox, bottomBox])})`);
+  // Not a dialog: the site works around it.
+  await phone.locator('main .tech').first().tap();
+  await phone.locator('#panelClose').tap();
+  await phone.locator('#bottomBar a[href="#curriculum"]').tap();
+  await phone.locator('main .part-card').first().waitFor();
+  await phone.waitForTimeout(500);
+  assert.deepEqual(phone.analytics.map((request) => request.url), [], 'nothing goes to Google Analytics before a choice');
+  assert.deepEqual(await analyticsCookies(phone), [], 'and no _ga cookie');
+  assert.equal(await phone.evaluate(() => 'dataLayer' in window || 'gtag' in window), false, "Google Analytics' code is not even loaded");
+  assert.ok(!(await phone.evaluate(async () => (await indexedDB.databases()).map((database) => database.name))).includes('firebase-installations-database'), 'nor its install id');
+  await bar.locator('[data-cookies="rejected"]').tap();
+  assert.ok(await bar.isHidden(), 'the bar goes away');
+  await phone.locator('main .part-card').first().tap();
+  await phone.locator('main .tech').first().tap();
+  await phone.reload();
+  await online(phone);
+  await phone.waitForTimeout(800);
+  assert.ok(await bar.isHidden(), 'and stays away after a reload');
+  assert.deepEqual(phone.analytics.map((request) => request.url), [], 'nothing is sent after "Reject"');
+  assert.deepEqual(await analyticsCookies(phone), []);
+  await phone.goto(`${address}/#curriculum`);
+  await phone.locator('#account').tap();
+  await phone.locator('#accountMenu #cookieChoice').tap();
+  await bar.waitFor();
+  assert.equal(await bar.locator('[data-cookies="rejected"]').getAttribute('aria-pressed'), 'true', '"Cookies" shows the choice made');
+  assert.equal(await bar.locator('[data-cookies="accepted"]').getAttribute('aria-pressed'), 'false');
+  assert.match(await bar.textContent(), /Now: rejected/);
+  await bar.locator('[data-cookies="rejected"]').tap();
+  assert.ok(await bar.isHidden());
+  assert.deepEqual(phone.analytics.map((request) => request.url), []);
+});
+
+await step('after "Accept": a page view for the part and for each technique opened, nothing personal and no ads; "Reject" from the menu stops it and deletes the cookies', async () => {
+  const visit = await openLate('/#top', 'en-US', {}, withAnalytics);
+  await visit.release();
+  await visit.fill('#search', 'secret search words');
+  await visit.fill('#search', '');
+  await visit.locator('#cookieBar [data-cookies="accepted"]').click();
+  assert.ok(await visit.locator('#cookieBar').isHidden());
+  await until(visit, () => hits(visit).some((hit) => hit.en === 'page_view' && hit.page_location.endsWith('/#top')), 'a page view for #top');
+  const technique = 'top-base';
+  await visit.locator(`main [data-technique="${technique}"]`).first().click();
+  await until(visit, () => hits(visit).some((hit) => hit.page_location.endsWith(`/#t-${technique}`)), 'a page view for the technique');
+  const opened = hits(visit).find((hit) => hit.page_location.endsWith(`/#t-${technique}`));
+  assert.equal(opened.en, 'page_view');
+  assert.equal(opened.page_title, (await visit.locator('#panelTitle').textContent()).trim());
+  assert.equal(hits(visit).filter((hit) => hit.en === 'page_view').length, 2, 'one page view each');
+  for (const hit of hits(visit)) {
+    assert.equal(hit.tid, measurementId);
+    for (const key of ['user_id', 'uid', 'email', 'name']) assert.equal(hit[key], undefined, `no ${key}`);
+    assert.doesNotMatch(JSON.stringify(hit), /@|secret search/, 'no email, no search words');
+    assert.equal(hit.allow_google_signals, false);
+    assert.equal(hit.allow_ad_personalization_signals, false);
+  }
+  const consents = await consentCommands(visit);
+  assert.ok(consents.length && consents.every((consent) => consent.ad_storage === 'denied' && consent.ad_user_data === 'denied' && consent.ad_personalization === 'denied'), 'advertising stays denied');
+  assert.ok((await analyticsCookies(visit)).length, 'gtag.js may set its cookies now');
+  await visit.locator('#panelClose').click();
+  const beforeReload = hits(visit).length;
+  await visit.reload();
+  await until(visit, () => hits(visit).length > beforeReload, 'a page view after a reload: "Accept" is remembered');
+  assert.ok(await visit.locator('#cookieBar').isHidden());
+  await visit.locator('#account').click();
+  await visit.locator('#accountMenu #cookieChoice').click();
+  assert.equal(await visit.locator('#cookieBar [data-cookies="accepted"]').getAttribute('aria-pressed'), 'true');
+  await visit.locator('#cookieBar [data-cookies="rejected"]').click();
+  assert.deepEqual(await analyticsCookies(visit), [], 'the _ga cookies are deleted');
+  assert.equal(await visit.evaluate((id) => window[`ga-disable-${id}`], measurementId), true, 'collection is switched off');
+  assert.equal((await consentCommands(visit)).at(-1).analytics_storage, 'denied');
+  const sent = visit.analytics.length;
+  await visit.locator('main .tech').nth(1).click();
+  await visit.locator('#panelClose').click();
+  await visit.locator('#sidebar a[href="#curriculum"]').click();
+  await visit.locator('main .part-card').first().waitFor();
+  await visit.waitForTimeout(800);
+  assert.equal(visit.analytics.length, sent, 'nothing more is sent');
+  await visit.reload();
+  await online(visit);
+  await visit.locator('main .part-card').first().click();
+  await visit.locator('main .tech').first().click();
+  await visit.waitForTimeout(800);
+  assert.equal(visit.analytics.length, sent, 'nor after a reload');
+  assert.deepEqual(await analyticsCookies(visit), []);
+  assert.ok(await visit.locator('#cookieBar').isHidden());
+});
+
+await step('"Reject" in one tab stops the counting in another tab of the same browser too', async () => {
+  const first = await openLate('/#top', 'en-US', {}, withAnalytics);
+  await first.release();
+  await first.locator('#cookieBar [data-cookies="accepted"]').click();
+  const second = await first.context().newPage();
+  await second.goto(`${address}/#curriculum`);
+  await until(second, () => hits(first).some((hit) => hit.page_location.endsWith('/#curriculum')), 'a page view from the second tab');
+  await first.locator('#account').click();
+  await first.locator('#accountMenu #cookieChoice').click();
+  await first.locator('#cookieBar [data-cookies="rejected"]').click();
+  assert.deepEqual(await analyticsCookies(first), [], 'the _ga cookies are deleted');
+  await second.waitForTimeout(300);
+  const sent = first.analytics.length;
+  await second.locator('main .part-card').first().click();
+  await second.locator('main .tech').first().click();
+  await second.locator('#panelClose').click();
+  await second.locator('main .tech').nth(1).click();
+  await second.waitForTimeout(800);
+  assert.equal(first.analytics.length, sent, 'the other tab sends nothing more');
+  assert.deepEqual(await analyticsCookies(second), [], 'nor sets its cookies again');
+  assert.equal(await second.evaluate((id) => window[`ga-disable-${id}`], measurementId), true, 'its collection is switched off');
+  // And the other way: "Accept" in one tab is followed by the other one.
+  await first.locator('#account').click();
+  await first.locator('#accountMenu #cookieChoice').click();
+  await first.locator('#cookieBar [data-cookies="accepted"]').click();
+  await second.locator('#panelClose').click();
+  await second.locator('main .tech').nth(2).click();
+  await until(second, () => first.analytics.length > sent, 'the other tab counting again after "Accept"');
+});
+
+await step('"Reject" pressed while the Google Analytics code is still loading: it is never started, nothing goes to Google', async () => {
+  const visit = await openLate('/#top', 'en-US', {}, withAnalytics);
+  let arrived;
+  const loaded = new Promise((resolve) => { arrived = resolve; });
+  await visit.context().route('**/firebase-analytics.js', async (route) => {
+    await visit.waitForTimeout(2500); // a slow phone
+    await route.fallback();
+    arrived();
+  });
+  await visit.release();
+  await visit.locator('#cookieBar [data-cookies="accepted"]').click();
+  await visit.locator('#account').click();
+  await visit.locator('#accountMenu #cookieChoice').click();
+  await visit.locator('#cookieBar [data-cookies="rejected"]').click();
+  await loaded;
+  await visit.locator('main .tech').first().click();
+  await visit.waitForTimeout(1500);
+  assert.deepEqual(visit.analytics.map((request) => request.url), [], 'no request to Google Analytics, Tag Manager or Firebase installations');
+  assert.deepEqual(await analyticsCookies(visit), []);
+  assert.ok(!(await visit.evaluate(async () => (await indexedDB.databases()).map((database) => database.name))).includes('firebase-installations-database'), 'no install id kept');
+});
+
+await step('"Clear this browser" forgets the cookie choice, so the bar asks again', async () => {
+  const visit = await openLate('/#privacy', 'en-US', {}, withAnalytics);
+  await visit.release();
+  await visit.locator('#cookieBar [data-cookies="rejected"]').click();
+  assert.ok(await visit.locator('#cookieBar').isHidden());
+  await visit.locator('[data-delete-data="ask"]').click();
+  await visit.locator('[data-delete-data="yes"]').click();
+  await visit.locator('#cookieBar [data-cookies="accepted"][aria-pressed="false"]').waitFor();
+  assert.equal(await visit.evaluate(() => localStorage.getItem('sg-cookies')), null);
+  assert.deepEqual(visit.analytics.map((request) => request.url), []);
+});
+
+await step('a Portuguese browser gets the cookie bar in Portuguese', async () => {
+  const visit = await openLate('/#top', 'pt-BR', {}, withAnalytics);
+  await visit.release();
+  const bar = visit.locator('#cookieBar');
+  await bar.waitFor();
+  assert.match(await bar.textContent(), /Podemos contar as visitas com o Google Analytics\?/);
+  assert.equal(await bar.locator('[data-cookies="accepted"]').textContent(), 'Aceitar');
+  assert.equal(await bar.locator('[data-cookies="rejected"]').textContent(), 'Recusar');
+  assert.equal(await bar.locator('a[href="#privacy"]').textContent(), 'Saiba mais');
+  await visit.locator('#account').click();
+  assert.equal((await visit.locator('#accountMenu #cookieChoice').textContent()).trim(), 'Cookies');
+});
+
+await step('the admin page counts nothing, even in a browser that accepted', async () => {
+  const admin = await openLate('/admin.html', 'en-US', {}, { ...withAnalytics, kept: { 'sg-cookies': 'accepted' } });
+  admin.releaseNow();
+  await admin.locator('main :is(p, form, h2)').first().waitFor();
+  await admin.waitForTimeout(1500);
+  assert.deepEqual(admin.analytics.map((request) => request.url), []);
+});
+
 await step('the privacy page opens from the sidebar and the account menu, and says coaches see progress, not notes', async () => {
   const visit = await open('/#curriculum', 'en-US');
   await visit.locator('#sidebar a[href="#privacy"]').click();
@@ -671,6 +941,9 @@ await step('the privacy page opens from the sidebar and the account menu, and sa
   assert.match(words, /except your notes/);
   assert.match(words, /no tracking/i);
   assert.match(words, /may not be collected to train AI systems/);
+  assert.match(words, /Visitor statistics and cookies/);
+  assert.match(words, /optional and off until you accept/);
+  assert.match(words, /What this browser keeps either way/);
   await visit.locator('#sidebar a[href="#curriculum"]').click();
   await visit.locator('main .part-card').first().waitFor();
   await visit.locator('#account').click();
@@ -729,6 +1002,8 @@ await step('a Portuguese browser gets Portuguese, the privacy page too', async (
   const visit = await open('/#privacy', 'pt-BR');
   await visit.locator('main h2', { hasText: 'Privacidade e seus dados' }).waitFor();
   assert.match(await visit.locator('main').textContent(), /menos as anotações/);
+  assert.match(await visit.locator('main').textContent(), /Estatísticas de visitas e cookies/);
+  assert.match(await visit.locator('main').textContent(), /opcional e fica desligado até você aceitar/);
   assert.equal(await visit.locator('[data-delete-data="ask"]').textContent(), 'Apagar deste navegador');
 });
 

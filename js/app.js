@@ -12,6 +12,7 @@ import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
 import { privacyView, privacyActions } from './privacy.js';
 import { weekOn, localDate } from './week.js';
+import { cookieBar, chooseCookies, reopenCookieChoice, startAnalytics, countView, onCookieChoiceChange } from './analytics.js';
 import { startTvMode, openTvSheet, castToTv, copyTvAddress, sendTvLink, toggleBigScreen } from './tv.js';
 
 const $ = (id) => document.getElementById(id);
@@ -75,11 +76,21 @@ function mainView() {
   return isModule(state.view) ? moduleView(state.view) : pages[state.view]();
 }
 
+// The cookie bar, while there is a choice to make (js/analytics.js).
+function renderCookieBar() {
+  const bar = String(cookieBar());
+  $('cookieBar').setAttribute('aria-label', t('cookies'));
+  draw($('cookieBar'), bar);
+  $('cookieBar').hidden = !bar;
+}
+
 function render() {
   noteWeekSeen();
   renderHeader();
   renderNavigation();
   draw($('main'), mainView());
+  renderCookieBar();
+  if (!state.search) countView(state.view, $('main').querySelector('h2')?.textContent || document.title);
 }
 
 function search(words) {
@@ -246,6 +257,13 @@ const clickActions = [
   // A note typed just now is saved to the account before signing out clears it from this device.
   ['#signOut', async () => { closeMenus(true); await sendWaiting(); signOut(); }],
   ...privacyActions(() => render()),
+  ['[data-cookies]', (el) => { chooseCookies(el.dataset.cookies); renderCookieBar(); }],
+  ['#cookieChoice', () => {
+    closeMenus();
+    reopenCookieChoice();
+    renderCookieBar();
+    $('cookieBar').querySelector('[aria-pressed="true"], button')?.focus();
+  }],
   ['#copyPlan', () => navigator.clipboard.writeText(planText()).then(
     () => { $('copyStatus').textContent = t('copied'); },
     () => { $('copyStatus').textContent = t('copyFailed'); },
@@ -369,7 +387,10 @@ async function start() {
     redrawPanel(null);
     return;
   }
+  onCookieChoiceChange(renderCookieBar);
+  startAnalytics();
   renderHeader();
+  renderCookieBar();
   onAccountChange(accountChanged);
   const [week, media] = await Promise.all([loadWeek().catch(() => null), loadMedia()]);
   useWeek(week);

@@ -4,10 +4,11 @@ import { t } from './strings.js';
 import { intro } from './views.js';
 import { deleteMyData } from './firebase.js';
 import { leaveAccount, clearThisBrowser, useAccount } from './settings.js';
+import { forgetCookieChoice } from './analytics.js';
 
 // The privacy page (#privacy): what is kept, who sees it, and "Delete my data". Keep its words true to the code:
-// firestore.rules says who can read what, and js/settings.js and js/notes.js what is kept.
-const sections = ['SignedOut', 'Kept', 'Who', 'Notes', 'Where', 'Ads'];
+// firestore.rules says who can read what, js/settings.js and js/notes.js what is kept, js/analytics.js what is counted.
+const sections = ['SignedOut', 'Kept', 'Who', 'Notes', 'Where', 'Ads', 'Stats', 'Storage'];
 
 // state.deleting: '' | 'ask' | 'working' | 'deleted' | 'cleared' | 'failed'
 function deleteBlock() {
@@ -25,7 +26,9 @@ export function privacyView() {
 
 // Signed in: the notes, the account's settings and the sign-in record are deleted, which signs out and clears this browser.
 // Signed out: only this browser holds anything, so it is cleared.
+// Either way the cookie choice is forgotten (the bar asks again), so a "Reject" never quietly turns into a yes.
 async function deleteEverything(render) {
+  forgetCookieChoice();
   if (!state.account) {
     clearThisBrowser();
     state.deleting = 'cleared';
