@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { upToBelt } from '../js/content.js';
+import { gameProblems, clockGame, gameLength } from '../js/game-clock.js';
 
 const read = (name) => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url), 'utf8'));
 const content = read('content.json');
@@ -108,4 +109,14 @@ test('kids: levels start at 0 XP and go up, each named in both languages', () =>
 
 test('kids: no challenge asks for a video, an upload or something written', () => {
   for (const challenge of kids.challenges) assert.doesNotMatch(challenge.task.en, /video|record|write|upload|send/i, challenge.id);
+});
+
+test('every game has the timing the TV clock runs: parts, rounds, rest, get ready, switching roles', () => {
+  assert.equal(games.length, 13);
+  for (const { item } of games) {
+    assert.deepEqual(gameProblems(clockGame(item)), [], item.id);
+    assert.ok(gameLength(item) <= 30 * 60, `${item.id} runs more than half an hour`);
+    for (const name of ['start', 'top', 'bottom']) assert.ok(item[name].pt && item[name].en, `${item.id}: ${name} in both languages`);
+    for (const part of item.parts) assert.ok(part.label.pt && part.label.en && part.say.pt && part.say.en, `${item.id}: a part in both languages`);
+  }
 });

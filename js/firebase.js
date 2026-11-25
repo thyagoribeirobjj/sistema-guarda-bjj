@@ -14,7 +14,9 @@ let fb = {};
 let firebaseApp = null;
 let measurementId = '';
 
-export async function startFirebase() {
+// realtime: the TV screen (js/tv-screen.js) only. It needs the database's live updates, which only the full database
+// code has, and never signs in; every other page loads the smaller code (firestore-lite) and sign-in.
+export async function startFirebase({ realtime = false } = {}) {
   try {
     // Firebase Hosting serves this project's public settings here. A local preview has none,
     // so the site still works there, just without sign-in or the database.
@@ -23,16 +25,16 @@ export async function startFirebase() {
     const config = testPerson ? { apiKey: 'test', projectId: 'demo-sistema-guarda' } : await response.json();
     config.authDomain = location.host;
 
-    const [app, authSdk, store] = await Promise.all(
-      ['firebase-app.js', 'firebase-auth.js', 'firebase-firestore-lite.js'].map((file) => import(sdk + file)),
-    );
+    const files = realtime ? ['firebase-app.js', 'firebase-firestore.js'] : ['firebase-app.js', 'firebase-auth.js', 'firebase-firestore-lite.js'];
+    const [app, ...parts] = await Promise.all(files.map((file) => import(sdk + file)));
+    const [authSdk, store] = realtime ? [null, parts[0]] : parts;
     fb = { ...authSdk, ...store };
     firebaseApp = app.initializeApp(config);
     measurementId = config.measurementId || '';
-    auth = authSdk.getAuth(firebaseApp);
+    auth = authSdk ? authSdk.getAuth(firebaseApp) : null;
     db = store.getFirestore(firebaseApp);
     if (testPerson) {
-      authSdk.connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+      if (auth) authSdk.connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
       store.connectFirestoreEmulator(db, '127.0.0.1', 8080);
     }
     return true;
@@ -51,6 +53,11 @@ export function analyticsId() {
 // Google Analytics' code, loaded only for someone who accepted it (js/analytics.js decides when).
 export async function loadAnalytics() {
   return { sdk: await import(sdk + 'firebase-analytics.js'), app: firebaseApp };
+}
+
+// For js/firebase-tv.js, the database calls of the games on the TV, kept in a file of their own.
+export function database() {
+  return { db, fb, auth };
 }
 
 export function onAccountChange(callback) {
@@ -96,7 +103,7 @@ function kept(name) {
   try { return JSON.parse(localStorage.getItem(`sg-site-${name}`)); } catch { return null; }
 }
 
-function forget(name) {
+export function forget(name) {
   try { localStorage.removeItem(`sg-site-${name}`); } catch {}
 }
 
@@ -104,7 +111,7 @@ export function lastSeen(name) {
   return kept(name)?.value ?? null;
 }
 
-async function site(name, fresh) {
+export async function site(name, fresh) {
   const copy = kept(name);
   const age = copy ? Date.now() - copy.at : -1;
   if (!fresh && age >= 0 && age < keepMinutes * 60000) return copy.value;

@@ -1,7 +1,7 @@
 // Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
 // previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the cookie bar and
-// Google Analytics (answered here, never the real one), the kids' class (tests/smoke-kids.mjs), the privacy page and "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu or has the focus somewhere,
+// Google Analytics (answered here, never the real one), the kids' class (tests/smoke-kids.mjs), the TV screen of the games on the TV (tests/smoke-tv.mjs), the privacy page and "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu or has the focus somewhere,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page, robots.txt and the "noai"
 // tags. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm ci)
@@ -14,6 +14,7 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
 import { checkout } from './checkout.mjs';
 import { kidsSteps } from './smoke-kids.mjs';
+import { tvSteps } from './smoke-tv.mjs';
 
 const options = process.argv.slice(2);
 const codeFromAt = options.indexOf('--code-from');
@@ -934,6 +935,7 @@ await step('the admin page counts nothing, even in a browser that accepted', asy
 });
 
 await kidsSteps({ open, openLate, step, hits, analyticsCookies, online, withAnalytics });
+await tvSteps({ open, step, routeAnalytics, measurementId });
 
 await step('the privacy page opens from the sidebar and the account menu, and says coaches see progress, not notes', async () => {
   const visit = await open('/#curriculum', 'en-US');

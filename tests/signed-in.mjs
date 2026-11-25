@@ -10,6 +10,7 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { localDate, nextMonday } from '../js/week.js';
+import { tvSteps } from './signed-in-tv.mjs';
 
 const project = 'demo-sistema-guarda';
 const firestore = `http://${process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080'}`;
@@ -23,6 +24,7 @@ const people = {
   newcomer: { sub: 'student-dan', email: 'dan@example.com', email_verified: true, name: 'Dan Test' },
   kid: { sub: 'student-kai', email: 'kai@example.com', email_verified: true, name: 'Kai Test' },
   coach: { sub: 'coach-caio', email: 'caio@example.com', email_verified: true, name: 'Caio Coach' },
+  coach2: { sub: 'coach-duda', email: 'duda@example.com', email_verified: true, name: 'Duda Coach' },
 };
 
 // ---- the site, served from this folder ----
@@ -120,8 +122,8 @@ const translations = [];
 // Not the site's fault: no icon file, a video thumbnail.
 const expectedMisses = /favicon\.ico|ytimg\.com/;
 
-async function visitor(person, { locale = 'en-US', today } = {}) {
-  const context = await browser.newContext({ locale });
+async function visitor(person, { locale = 'en-US', today, device = {} } = {}) {
+  const context = await browser.newContext({ locale, ...device });
   if (today) await context.clock.setFixedTime(new Date(`${today}T12:00:00`));
   // The translator is answered here: the made-up texts never leave this computer.
   await context.route(translatorUrl, async (route) => {
@@ -866,6 +868,8 @@ await step('"Delete my data" deletes the account\'s settings, notes and sign-in 
   assert.equal(await stored(`users/${uid.student}`), null, 'nothing was brought back');
   assert.equal(await stored(`users/${uid.student}/private/notes`), null);
 });
+
+await tvSteps({ visitor, step, until, stored, seed, address, people });
 
 await browser.close();
 server.close();

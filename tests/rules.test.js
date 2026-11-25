@@ -1,6 +1,7 @@
 // Runs firestore.rules in the local Firestore emulator: `npm test` starts it.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { tvRuleTests } from './rules-tv.mjs';
 
 const project = 'demo-sistema-guarda';
 const emulator = `http://${process.env.FIRESTORE_EMULATOR_HOST}`;
@@ -28,8 +29,9 @@ function token(person) {
 }
 
 function toValue(value) {
+  if (value === null) return { nullValue: null };
   if (typeof value === 'string') return { stringValue: value };
-  if (typeof value === 'number') return { integerValue: String(value) };
+  if (typeof value === 'number') return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
   if (typeof value === 'boolean') return { booleanValue: value };
   if (Array.isArray(value)) return { arrayValue: { values: value.map(toValue) } };
   return { mapValue: { fields: toFields(value) } };
@@ -303,3 +305,5 @@ test('a diagram must be a small image', async () => {
   assert.equal(await save({ image: 'data:text/html;base64,PHNjcmlwdD4=' }), 'denied');
   assert.equal(await save({ image: image(100), note: 'extra field' }), 'denied');
 });
+
+tvRuleTests({ test, assert, read, write, remove });

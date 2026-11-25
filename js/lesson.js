@@ -3,32 +3,41 @@ import { content } from './content.js';
 import { settings, changeSettings } from './settings.js';
 import { t, text } from './strings.js';
 import { intro } from './views.js';
+import { minutes, allGames, gameId, gameChoice, chosenGame as lessonGame, planBlocks as lessonBlocks, withClock } from './plan.js';
+import { coachGames } from './coach-games.js';
+import { state } from './state.js';
+import { designerCard } from './designer.js';
 
 // The coach's lesson builder: any part of the fight, one level for everyone. The choices are saved with the
 // person's other settings (settings.lesson), in this browser and in their account once signed in.
 let pick = { mod: '', dur: '60', items: [], game: '' };
 let pickedFrom;
 
-function remember() {
+// Also before the TV remote opens, so it runs the plan shown here.
+export function remember() {
   const { mod, dur, items, game } = pick;
   changeSettings({ lesson: { mod, dur, items, game } });
   pickedFrom = settings.lesson;
 }
 
 let firstVisit = true;
-const minutes = { 60: [10, 5, 20, 15, 7, 3], 90: [15, 5, 30, 20, 15, 5] };
-
-function allGames() {
-  return content.order.flatMap((key) => (content.modules[key].games || []).map((game, i) => ({ key: `${key}:${i}`, game, moduleKey: key })));
-}
 
 function option(value, label, selected) {
   return html`<option value="${value}" ${selected ? 'selected' : ''}>${label}</option>`;
 }
 
-function chosenGame() {
-  const games = allGames();
-  return games.find((g) => g.key === pick.game) || games.find((g) => g.moduleKey === pick.mod) || games[0];
+const chosenGame = () => lessonGame(pick, coachGames.games);
+
+// The coaches' own games, read once the lesson builder opens, join the list where it is: the page isn't drawn again
+// under the coach, only the new choices are added (and the plan, if its game is one of them).
+export function showCoachGames() {
+  const select = document.getElementById('selGame');
+  if (!select) return;
+  const listed = new Set([...select.options].map((entry) => entry.value));
+  const added = allGames(coachGames.games).filter((entry) => !listed.has(entry.id));
+  if (!added.length) return;
+  select.insertAdjacentHTML('beforeend', String(html`${added.map((entry) => gameChoice(entry, entry.id === pick.game))}`));
+  if (added.some((entry) => entry.id === pick.game)) redrawPlan();
 }
 
 export function lessonView() {
@@ -42,7 +51,9 @@ export function lessonView() {
   if (!content.modules[pick.mod]) Object.assign(pick, { mod: content.order[0], items: [] });
   if (firstVisit && !pick.items.length) pick.items = ['0-0', '0-1', '1-0'];
   firstVisit = false;
-  pick.game = chosenGame()?.key || '';
+  // A coach's game isn't known until site/games is read: the choice waits for it rather than being replaced.
+  pick.game = gameId(pick.game);
+  if (!pick.game.startsWith('coach-') || coachGames.loaded) pick.game = chosenGame()?.id || '';
   const module = content.modules[pick.mod];
   const picks = module.stages.map((stage, si) => html`<div class="grp">${text(stage.name)}</div>${stage.items.map((item, ii) => {
     const key = `${si}-${ii}`;
@@ -53,34 +64,12 @@ export function lessonView() {
       <div class="field"><label for="selMod">${t('partOfFight')}</label><select id="selMod">${content.order.map((key) => option(key, text(content.modules[key].title), pick.mod === key))}</select></div>
       <div class="field"><label for="selDur">${t('length')}</label><select id="selDur">${option('60', '60 min', pick.dur === '60')}${option('90', '90 min', pick.dur === '90')}</select></div>
       <div class="field"><span class="lbl">${t('techniquesLabel')}</span><div class="picks" id="picks">${picks}</div></div>
-      <div class="field"><label for="selGame">${t('game')}</label><select id="selGame">${allGames().map((g) => option(g.key, `${text(g.game.n)} · ${text(content.modules[g.moduleKey].title)}`, pick.game === g.key))}</select></div>
-    </div><div class="plan" id="plan">${planCard()}</div></div>`;
+      <div class="field"><label for="selGame">${t('game')}</label><select id="selGame">${allGames(coachGames.games).map((entry) => gameChoice(entry, pick.game === entry.id))}</select></div>
+      ${state.admin ? html`<div class="actions"><button type="button" class="chipbtn" data-designer="open">${t('designGame')}</button><a class="chipbtn plain" href="admin.html#tv" data-lesson-to-tv>${t('runOnTv')}</a></div>` : ''}
+    </div><div class="plan" id="plan">${planCard()}</div></div>${state.admin ? designerCard() : ''}`;
 }
 
-function planBlocks() {
-  const module = content.modules[pick.mod];
-  const chosen = pick.items.map((key) => {
-    const [si, ii] = key.split('-').map(Number);
-    const stage = module.stages[si];
-    return stage?.items[ii] ? { item: stage.items[ii], stage } : null;
-  }).filter(Boolean);
-  const game = chosenGame()?.game;
-  const time = minutes[pick.dur];
-  const drill = (language) => `${content.drill.b?.[language] || ''} ${content.drill.a?.[language] || ''}`.trim();
-  return [
-    { minutes: time[0], title: { pt: 'Aquecimento', en: 'Warm-up' }, text: { pt: 'Fuga de quadril, ponte, quedas (ukemi) e levantada técnica.', en: 'Hip escapes, bridges, breakfalls (ukemi) and technical stand-up.' } },
-    { minutes: time[1], title: { pt: 'Conceito', en: 'Concept' }, text: chosen.length ? chosen[0].stage.goal : { pt: 'Escolha técnicas ao lado.', en: 'Pick techniques alongside.' } },
-    { minutes: time[2], title: { pt: 'Técnicas', en: 'Techniques' }, list: chosen.length ? chosen.map((x) => text(x.item.n) + (x.item.t ? `: ${text(x.item.t)}` : '')) : [t('noneChosen')], text: { pt: drill('pt'), en: drill('en') } },
-    { minutes: time[3], title: { pt: `Jogo: ${game ? text(game.n) : ''}`, en: `Game: ${game ? text(game.n) : ''}` }, text: game?.win },
-    { minutes: time[4], title: { pt: 'Xadrez BJJ ou ao vivo', en: 'BJJ chess or live' }, text: { pt: 'Xadrez BJJ com 3 a 5 movimentos ou rounds ao vivo começando na posição da aula.', en: 'BJJ chess with 3 to 5 moves or live rounds starting from the class position.' } },
-    { minutes: time[5], title: { pt: 'Registro', en: 'Log' }, text: { pt: content.method.log.q.map((q) => q.pt).join(' '), en: content.method.log.q.map((q) => q.en).join(' ') } },
-  ];
-}
-
-function withClock(blocks) {
-  let clock = 0;
-  return blocks.map((block) => ({ ...block, start: clock, end: (clock += block.minutes) }));
-}
+const planBlocks = () => lessonBlocks(pick, coachGames.games);
 
 function planCard() {
   const blocks = withClock(planBlocks()).map((block) => html`<div class="block"><div class="t">${block.start}–${block.end}</div><div><h4>${text(block.title)} · ${block.minutes} min</h4>${block.list ? html`<ul>${block.list.map((line) => html`<li>${line}</li>`)}</ul>` : ''}${text(block.text) ? html`<p>${text(block.text)}</p>` : ''}</div></div>`);
