@@ -52,7 +52,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/account.js` | The header's account button (`#account`, the person's Google photo) and its menu (`#accountMenu`): sign in or out, the Coach section, the theme picker. The button always shows; without Firebase (a local preview) the menu has no sign-in. |
 | `js/views.js` | The pages: Curriculum home, this week (and past weeks), each part of the fight, my tree (favorites), method; and the search results. |
 | `js/panel.js` | The technique panel: details, share, notes, video, diagram, "where to go" links, next stage; admins attach media and set a minimum belt here. Previous / next (buttons, arrow keys, swiping) move through the list it was opened from. Opening it adds one step to the browser history and moving replaces it, so a phone's back button closes it in one press. |
-| `js/notes.js` | Each person's private notes on techniques: in this browser, and in `users/{uid}/private/notes` once signed in (read the first time a technique opens, saved one note at a time). |
+| `js/notes.js` | Each person's private notes on techniques: in this browser, and in `users/{uid}/private/notes` once signed in (read the first time a technique opens, saved one note at a time). Another tab of the same browser shows a change at once. |
 | `js/media.js` | YouTube links and player, and shrinking a diagram before it's saved. |
 | `js/lesson.js` | The lesson builder. Its choices are saved in `settings.lesson`. |
 | `js/admin.js` | The admin page: set this week's class, or prepare next week's with a start date; start from a past week. A new week moves the last one into past weeks. |
@@ -179,7 +179,7 @@ whether it was translated automatically or corrected by hand (nothing when that 
   The steps where the site's data arrives late load the real Firebase code from www.gstatic.com, so the smoke check
   needs an internet connection; without one those steps fail and say so.
 - `npm run signed-in` (Java too) starts local copies of sign-in and the database, serves the site itself and uses it
-  signed in: a student's settings, marks and notes following them, signing out, "Delete my data", another student
+  signed in: a student's settings, marks and notes following them (and between two tabs), signing out, "Delete my data", another student
   being refused, and the coach saving a week, next week taking over, starting from a past week and the Students list.
   The people are made up and the translator is answered by the test, never called. When you change something people
   do signed in, add a step there.

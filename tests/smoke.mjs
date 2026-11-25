@@ -1,7 +1,7 @@
 // Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
 // previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and
-// "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types or uses a menu,
+// "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu or has the focus somewhere,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page, robots.txt and the "noai"
 // tags. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm ci)
@@ -454,6 +454,33 @@ await step('the site arriving late with a video for the open technique leaves th
   await visit.keyboard.press('Space');
   assert.ok(await visit.locator('#panel').isVisible(), 'so the next key presses the mark and does not close the technique');
   assert.equal(await visit.locator(`#panel ${mark}`).getAttribute('aria-pressed'), 'true');
+});
+
+await step('the site arriving late and changing the page leaves the focus on the same control', async () => {
+  // A class this week (a new link in the navigation) and a minimum belt in this part (a mark on the move):
+  // the sidebar, the bottom bar, the page and the account menu are all drawn again with something new in them.
+  const technique = 'top-base';
+  const stored = {
+    'site/week': firestoreFields({ weekOf: '2026-11-23', title: { pt: 'Postura', en: 'Posture' }, note: { pt: '', en: '' }, techniques: [technique] }),
+    'site/media': firestoreFields({ techniques: { [technique]: { minBelt: 'blue' } } }),
+  };
+  const phone = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true };
+  for (const [selector, device, changed] of [
+    ['#sidebar a[href="#top"]', {}, '#sidebar a[href="#semana"]'],
+    [`main [data-technique="${technique}"]`, {}, `main [data-technique="${technique}"] .belt`],
+    ['#accountMenu [data-theme-choice="light"]', {}, '#accountMenu #signIn'],
+    ['#bottomBar a[href="#meu"]', phone, '#bottomBar a[href="#semana"]'],
+  ]) {
+    const visit = await openLate('/#top', 'en-US', device, { stored });
+    await visit.locator('main .tech').first().waitFor();
+    if (selector.startsWith('#accountMenu')) await visit.locator('#account').click();
+    await visit.locator(selector).focus();
+    await visit.release();
+    await visit.locator(changed).waitFor({ state: 'attached' });
+    assert.ok(await visit.evaluate((wanted) => document.activeElement.matches(wanted), selector), `the focus stays on ${selector}`);
+    if (selector.startsWith('#accountMenu')) assert.ok(await visit.locator('#accountMenu').isVisible(), 'the account menu stays open');
+    await visit.context().close();
+  }
 });
 
 await step('a technique opened before the site is online shows its diagram once it is, read once', async () => {

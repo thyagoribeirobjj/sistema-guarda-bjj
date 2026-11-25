@@ -20,6 +20,8 @@ let settingsExist = false;
 const afterSettings = new Set(); // technique ids waiting for the settings
 let loading = null;
 let reading = false;
+// This browser joined an account's notes, and it is not known yet whether that account is signed in (awaitAccount).
+let accountUnknown = false;
 let changedWhileLoading = new Set();
 const waiting = new Map(); // technique id → timer of a save not sent yet
 // Counts the times the notes were replaced other than by typing in this page (forgotten, another account, the
@@ -46,11 +48,23 @@ export function notesEpoch() {
   return epoch;
 }
 
+// An open note box is filled again at once (js/app.js), so no key typed into it brings back what was forgotten.
 export function forgetNotes() {
   epoch++;
   notes = {};
   storeLocal();
   try { localStorage.removeItem(joinedKey); } catch {}
+  notesReplaced();
+}
+
+function notesReplaced() {
+  document.dispatchEvent(new CustomEvent('notes-changed'));
+}
+
+// js/app.js, while Firebase starts (waiting true) and if it can't (false). In a browser that joined an account, a
+// note typed before the account arrives would be replaced by the account's note unseen, so the box waits.
+export function awaitAccount(waiting) {
+  accountUnknown = waiting && Boolean(joinedAccount());
 }
 
 export function noteOf(id) {
@@ -82,6 +96,7 @@ export function useNotesAccount(person, previous, settingsSaved) {
   if (usedFor !== was) epoch++;
   const joined = joinedAccount();
   if (!person) {
+    accountUnknown = false;
     if (previous || joined || was) forgetNotes();
     return;
   }
@@ -89,10 +104,10 @@ export function useNotesAccount(person, previous, settingsSaved) {
   user = person;
 }
 
-// While the account's notes are being read the note box can't be typed in: a note typed now would replace the one
-// the account holds without it ever being shown.
+// While the account's notes are being read (or it is not known yet whose they are) the note box can't be typed in:
+// a note typed now would replace the one the account holds without it ever being shown.
 export function notesLoading() {
-  return reading;
+  return reading || accountUnknown;
 }
 
 // Called when a technique opens. Resolves once the account's notes are read (or could not be).
@@ -106,6 +121,7 @@ async function join(uid) {
   changedWhileLoading = new Set();
   let fromAccount;
   reading = true;
+  accountUnknown = false;
   try {
     fromAccount = await loadNotes(uid);
   } catch (error) {
@@ -176,6 +192,7 @@ async function settingsGone(uid) {
 
 // The account is being deleted: drop what is waiting and write nothing more to it.
 export function leaveNotesAccount() {
+  accountUnknown = false;
   for (const timer of waiting.values()) clearTimeout(timer);
   waiting.clear();
   afterSettings.clear();
@@ -193,3 +210,20 @@ export function sendWaiting() {
 }
 
 addEventListener('pagehide', sendWaiting);
+
+// Another tab of this browser changed the notes (typed, cleared, signed out): this tab takes them, so an open box shows
+// them and the next note typed here doesn't store this tab's older copy over them. One exception: a note typed here and
+// not sent to the account yet stays as typed. It is newer than anything the other tab stored before it, it is under
+// the person's fingers, and its save is about to go out; replacing it would lose keys. Nothing is stored back here,
+// so two tabs never bounce a note between them; the next key typed here stores it.
+addEventListener('storage', (event) => {
+  if (event.key !== storageKey && event.key !== null) return;
+  const theirs = readLocal();
+  for (const id of [...waiting.keys(), ...afterSettings]) {
+    if (notes[id]) theirs[id] = notes[id];
+    else delete theirs[id];
+  }
+  epoch++;
+  notes = theirs;
+  notesReplaced();
+});

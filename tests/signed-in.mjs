@@ -133,7 +133,15 @@ async function visitor(person, { locale = 'en-US', today } = {}) {
     problems.push(`the real translator was called: ${route.request().url()}`);
     return route.abort();
   });
-  const page = await context.newPage();
+  return watched(await context.newPage(), person);
+}
+
+// Another tab of the same browser: the same person, sign-in and notes kept in this browser.
+function anotherTab(page, person) {
+  return page.context().newPage().then((tab) => watched(tab, person));
+}
+
+function watched(page, person) {
   page.on('pageerror', (error) => problems.push(`${person.email}: ${error.message}`));
   page.on('console', (message) => {
     // A step that makes saving fail on purpose expects the site to report it.
@@ -302,6 +310,48 @@ await step('a note changed on another device is shown, not typed over, when the 
   }
 });
 
+await step('a device that joined the account cannot type in a note until it knows who is signed in', async () => {
+  // Text typed before then would be replaced by the account's note without ever being shown.
+  const kept = await student.evaluate(() => JSON.parse(localStorage.getItem('sg-notes')));
+  let release;
+  const held = new Promise((resolve) => { release = resolve; });
+  // A request held back may be cut off by the page leaving: then there is nothing to let through.
+  await student.route('https://www.gstatic.com/firebasejs/**', async (route) => { await held; await route.continue().catch(() => {}); });
+  try {
+    await student.goto('about:blank');
+    await student.open('', '#top');
+    await student.locator(`main [data-technique="${fromOtherDevice}"]`).first().click();
+    const box = student.locator('#noteBox');
+    assert.notEqual(await box.getAttribute('readonly'), null, 'read-only until the account arrives');
+    assert.equal(await box.getAttribute('placeholder'), 'Carregando…', 'it says it is loading (the student reads Portuguese)');
+    await box.click();
+    await student.keyboard.type('typed too early');
+    assert.equal(await box.inputValue(), kept[fromOtherDevice], 'nothing typed');
+    release();
+    await student.locator('#account[aria-label*="Test"]').waitFor();
+    await until(async () => (await box.getAttribute('readonly')) === null, 'then it can be typed in');
+    assert.equal(await box.inputValue(), kept[fromOtherDevice], 'and shows the note');
+  } finally {
+    release();
+    await student.unroute('https://www.gstatic.com/firebasejs/**');
+  }
+  // When Firebase can't start, nobody can be signed in on this visit: the box can be typed in.
+  student.failuresExpected = true;
+  await student.route('https://www.gstatic.com/firebasejs/**', (route) => route.abort());
+  try {
+    await student.goto('about:blank');
+    await student.open('', '#top');
+    await student.locator(`main [data-technique="${fromOtherDevice}"]`).first().click();
+    await until(async () => (await student.locator('#noteBox').getAttribute('readonly')) === null, 'the box can be typed in when Firebase fails to start');
+  } finally {
+    await student.unroute('https://www.gstatic.com/firebasejs/**');
+    student.failuresExpected = false;
+  }
+  await student.goto('about:blank');
+  await student.open('', '#top');
+  await student.locator('#account[aria-label*="Test"]').waitFor();
+});
+
 await step('and on another device once signed in, from the account', async () => {
   laptop = await visitor(people.student);
   await laptop.open('', '#meu');
@@ -394,6 +444,50 @@ await step('another student cannot read the first student\'s settings, notes or 
   await other.context().close();
 });
 
+await step('a note changed or cleared in another tab shows here, and this tab never writes its older copy back', async () => {
+  const notesPath = `users/${uid.other}/private/notes`;
+  const tabA = await visitor(people.other);
+  await tabA.open('', '#top');
+  await tabA.locator('#account').waitFor();
+  await signInOnSite(tabA);
+  await openTechnique(tabA, first);
+  await tabA.locator('#noteBox').fill('Typed in tab A');
+  await until(async () => (await stored(notesPath))?.notes?.[first] === 'Typed in tab A', 'tab A saves the note');
+  const tabB = await anotherTab(tabA, people.other);
+  await tabB.open('', '#top');
+  await tabB.locator('#account[aria-label*="Test"]').waitFor();
+  await openTechnique(tabB, first);
+  await until(async () => (await tabB.locator('#noteBox').inputValue()) === 'Typed in tab A', 'tab B shows the note');
+  await tabB.locator('#noteBox').fill('Changed in tab B');
+  await until(async () => (await tabA.locator('#noteBox').inputValue()) === 'Changed in tab B', 'tab A shows the note changed in tab B');
+  // A note typed in tab A on another technique keeps tab B's change, here and in the account.
+  await tabA.locator('#panelClose').click();
+  await openTechnique(tabA, second);
+  await tabA.locator('#noteBox').fill('Second note, tab A');
+  await until(async () => (await stored(notesPath))?.notes?.[second] === 'Second note, tab A', 'tab A saves its other note');
+  const local = await tabA.evaluate(() => JSON.parse(localStorage.getItem('sg-notes')));
+  assert.deepEqual(local, { [first]: 'Changed in tab B', [second]: 'Second note, tab A' }, 'tab A did not write its older copy back');
+  assert.equal((await stored(notesPath)).notes[first], 'Changed in tab B');
+  // Cleared in tab B: tab A shows it gone.
+  await tabA.locator('#panelClose').click();
+  await openTechnique(tabA, first);
+  await tabB.locator('#noteBox').fill('');
+  await until(async () => (await tabA.locator('#noteBox').inputValue()) === '', 'tab A shows the note cleared in tab B');
+  await until(async () => !(first in ((await stored(notesPath))?.notes || {})), 'the account has it cleared');
+  // Typing in tab A that is not saved yet stays when another tab stores this note meanwhile.
+  await tabA.locator('#noteBox').click();
+  await tabA.keyboard.type('Still typing in A');
+  await tabB.evaluate((id) => {
+    const notes = JSON.parse(localStorage.getItem('sg-notes'));
+    localStorage.setItem('sg-notes', JSON.stringify({ ...notes, [id]: 'Stored by B meanwhile' }));
+  }, first);
+  await tabA.waitForTimeout(100);
+  assert.equal(await tabA.locator('#noteBox').inputValue(), 'Still typing in A', 'the typing in tab A stays');
+  assert.ok(await tabA.evaluate(() => document.activeElement.id === 'noteBox'), 'with the focus');
+  await until(async () => (await stored(notesPath))?.notes?.[first] === 'Still typing in A', 'and is saved');
+  await tabA.context().close();
+});
+
 await step('a first sign-in whose first save fails loses nothing: the next visit saves it all', async () => {
   const newcomer = await visitor(people.newcomer);
   await newcomer.open('', '#top');
@@ -426,6 +520,35 @@ await step('a first sign-in whose first save fails loses nothing: the next visit
   assert.match(await newcomer.locator('#account').getAttribute('aria-label'), /Dan Test/, 'still signed in');
   assert.equal(await newcomer.locator('#noteBox').inputValue(), noteBeforeSignIn);
   await newcomer.context().close();
+});
+
+await step('a device that finds the account deleted empties the note box at once, even when signing out fails', async () => {
+  const device = await visitor(people.newcomer);
+  await device.open('', '#top');
+  await device.locator('#account').waitFor();
+  await signInOnSite(device);
+  await openTechnique(device, first);
+  await until(async () => (await device.locator('#noteBox').inputValue()) === noteBeforeSignIn, 'the device has the note');
+  // "Delete my data" on another device.
+  for (const path of [`users/${uid.newcomer}/private/notes`, `users/${uid.newcomer}`]) {
+    const removed = await fetch(`${documents}/${path}`, { method: 'DELETE', headers: owner });
+    assert.ok(removed.ok, `deleting ${path}: ${removed.status}`);
+  }
+  // Signing out can't finish here: the browser's sign-in store refuses to forget the person.
+  await device.evaluate(() => { IDBObjectStore.prototype.delete = () => { throw new Error('held back by the test'); }; });
+  device.refusalsExpected = true;
+  device.failuresExpected = true;
+  await device.locator('#noteBox').click();
+  await device.keyboard.press('End');
+  await device.keyboard.type(' (typed while it was deleted)');
+  await until(() => device.evaluate(() => localStorage.getItem('sg-account') === null), 'the device forgets the account');
+  await until(async () => (await device.locator('#noteBox').inputValue()) === '', 'the box no longer shows the deleted note');
+  assert.ok(await device.evaluate(() => document.activeElement.id === 'noteBox'), 'and keeps the focus');
+  await device.keyboard.press('x');
+  assert.deepEqual(await device.evaluate(() => JSON.parse(localStorage.getItem('sg-notes'))), { [first]: 'x' }, 'the next key saves only itself');
+  await new Promise((done) => setTimeout(done, 1000));
+  assert.equal(await stored(`users/${uid.newcomer}/private/notes`), null, 'nothing was brought back');
+  await device.context().close();
 });
 
 let coach;
