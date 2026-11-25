@@ -59,9 +59,10 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/week.js` | Decides which class is "this week" on a given day (a prepared week takes over on its start date) and what the admin page writes when it does. Tested in `tests/week.test.js`. |
 | `js/students.js`, `js/roster.js` | The admin page's Students section (read only when the coach taps "Show students"); `roster.js` counts, sorts, finds and groups (tested in `tests/roster.test.js`). Never shows notes. |
 | `js/privacy.js` | The privacy page (`#privacy`) and "Delete my data". Its words must stay true to the code and `firestore.rules`. |
+| `js/analytics.js` | Visitor statistics (Google Analytics, through Firebase) and the cookie bar. See Statistics and cookies below. |
 | `js/strings.js` | Every button and label, in PT and EN. |
 | `js/settings.js` | Each person's language, theme, belt, favorites, progress ("Drilling" / "Got it" per move) and lesson builder choices. |
-| `js/firebase.js` | Sign-in and **every** database call. Nothing else talks to Firebase. For `tests/signed-in.mjs` only, a page opened from this computer with `?emulators=<made-up person>` uses the local emulators and signs that person in; the published site never does. |
+| `js/firebase.js` | Sign-in and **every** database call. Nothing else talks to Firebase (it also hands `js/analytics.js` the Analytics id and loads its code). For `tests/signed-in.mjs` only, a page opened from this computer with `?emulators=<made-up person>` uses the local emulators and signs that person in; the published site never does. |
 | `js/content.js`, `js/state.js` | Loads the curriculum and searches it (names first, then descriptions, key points, drills and steps); tracks which page and technique are showing. |
 | `data/content.json` | The guard modules (top, bottom), drills and the method. |
 | `data/curriculum.json` | The other parts of the fight, their order (`moduleOrder`) and the "where to go" links (`nx`). |
@@ -153,6 +154,24 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   in each browser for 15 minutes (`site()` in `js/firebase.js`), so a change can take that long to reach a student
   who just visited; admin pages always read fresh. Don't add a database read that runs on every visit.
 
+## Statistics and cookies
+
+- **Google Analytics, only after "Accept".** The measurement id comes from the site's own Firebase settings
+  (`/__/firebase/init.json` gains `measurementId` once Analytics is switched on in the Firebase console, which is John's).
+  Without it there is no cookie bar, no "Cookies" in the account menu and nothing is loaded. Never hard-code an id.
+- With an id and no choice yet, a bar above the phone's bottom bar (a small card on desktop) asks, with "Accept" and
+  "Reject" and a link to the privacy page. Until "Accept", the analytics code is not even imported: nothing goes to
+  Google Analytics or Tag Manager and no cookie is set. The choice is this browser's (`sg-cookies`), never the account's.
+- "Cookies" in the account menu opens the same bar, showing the choice. "Reject" switches collection off at once
+  (`setAnalyticsCollectionEnabled(false)`, consent `denied`) and deletes the `_ga…` cookies. "Clear this browser" and
+  "Delete my data" forget the choice, so the bar asks again: a "Reject" never quietly becomes a yes.
+- **What is counted:** a page view when the part of the site changes and when a technique opens (its link and name),
+  plus what Google Analytics notes by itself (language, device, country). Never a name, email, account id, belt, notes,
+  progress or search words, and never `setUserId`. Advertising stays off: `ad_storage`, `ad_user_data` and
+  `ad_personalization` denied, Google signals and ad personalization off. The admin page is never counted.
+- `tests/smoke.mjs` answers Google Analytics itself (`routeAnalytics()`), so the tests never send anything to the real one.
+  If what is counted changes, change the privacy page ("Visitor statistics and cookies") with it.
+
 ## Videos, diagrams and translation
 
 - **Videos are YouTube links, never files.** Upload to YouTube as *Unlisted*, then paste the link on the move's
@@ -185,7 +204,7 @@ whether it was translated automatically or corrected by hand (nothing when that 
   do signed in, add a step there.
 - Every pull request runs the tests, then opens the site in Chrome and uses it (`tests/smoke.mjs`: the sidebar,
   Curriculum home, a technique, search, progress, the tree, sharing, the coach's tools from the account menu, the
-  phone's bottom bar and part switcher, previous / next in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and "Clear this
+  phone's bottom bar and part switcher, previous / next in a technique, notes, the "new" dot on This week, the belt filter, the cookie bar and Google Analytics (answered by the test), the privacy page and "Clear this
   browser", a prepared next week taking over on its date, both languages, the admin page, `robots.txt` and the `noai`
   tags; on the published site also the `X-Robots-Tag` headers). It then runs the same check again at the real address
   (`npm run smoke:real`): Chrome opens https://sistemaguarda.com, but every file of the site comes from the pull request's

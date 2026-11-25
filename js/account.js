@@ -5,6 +5,7 @@ import { state } from './state.js';
 import { t } from './strings.js';
 import { coachMenu } from './nav.js';
 import { beltName } from './views.js';
+import { cookiesOffered } from './analytics.js';
 
 // The header's account button and its menu: sign in or out, the coach's tools, the belt and theme pickers, privacy.
 // Without Firebase (a local preview) the menu has no sign-in, only the coach's tools and the themes.
@@ -34,7 +35,11 @@ export function accountButton() {
   return account.photoURL ? html`${letter}<img src="${account.photoURL}" alt="" referrerpolicy="no-referrer">` : letter;
 }
 
-const privacyLink = () => html`<a role="menuitem" href="#privacy">${shieldIcon}${t('privacy')}</a>`;
+const cookieIcon = html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 4 4 0 0 1-5-5 4 4 0 0 1-4-4z"/><path d="M8.5 13.5h.01M12 17h.01M15.5 14.5h.01"/></svg>`;
+
+// "Cookies" reopens the cookie bar; only when the site counts visits at all (js/analytics.js).
+const privacyLink = () => html`<a role="menuitem" href="#privacy">${shieldIcon}${t('privacy')}</a>${
+  cookiesOffered() ? html`<button type="button" role="menuitem" id="cookieChoice">${cookieIcon}${t('cookies')}</button>` : ''}`;
 
 export function accountMenu() {
   const account = state.account;

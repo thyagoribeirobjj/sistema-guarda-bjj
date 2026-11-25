@@ -11,6 +11,8 @@ const testPerson = ['localhost', '127.0.0.1'].includes(location.hostname) ? new 
 let auth = null;
 let db = null;
 let fb = {};
+let firebaseApp = null;
+let measurementId = '';
 
 export async function startFirebase() {
   try {
@@ -25,7 +27,8 @@ export async function startFirebase() {
       ['firebase-app.js', 'firebase-auth.js', 'firebase-firestore-lite.js'].map((file) => import(sdk + file)),
     );
     fb = { ...authSdk, ...store };
-    const firebaseApp = app.initializeApp(config);
+    firebaseApp = app.initializeApp(config);
+    measurementId = config.measurementId || '';
     auth = authSdk.getAuth(firebaseApp);
     db = store.getFirestore(firebaseApp);
     if (testPerson) {
@@ -37,6 +40,17 @@ export async function startFirebase() {
     console.error(error);
     return false;
   }
+}
+
+// The Google Analytics id from the site's own Firebase settings: there only once Analytics is switched on in the
+// Firebase console, '' until then (and in a local preview).
+export function analyticsId() {
+  return measurementId;
+}
+
+// Google Analytics' code, loaded only for someone who accepted it (js/analytics.js decides when).
+export async function loadAnalytics() {
+  return { sdk: await import(sdk + 'firebase-analytics.js'), app: firebaseApp };
 }
 
 export function onAccountChange(callback) {

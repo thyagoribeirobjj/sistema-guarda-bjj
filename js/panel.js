@@ -7,6 +7,7 @@ import { heart, techniqueChip, progressMarks, beltName, minBeltOf } from './view
 import { noteOf, noteLength, readNotes, notesLoading, notesEpoch } from './notes.js';
 import { videoPreview } from './media.js';
 import { loadDiagram } from './firebase.js';
+import { countTechnique } from './analytics.js';
 
 // The technique, big; below it, the branches to where you can go next.
 const panel = () => document.getElementById('panel');
@@ -115,6 +116,7 @@ export function openPanel(id, { remember = true, focus = '#panelClose', list } =
   state.panel.current = id;
   const notesRead = readNotes();
   const markup = String(panelContent(id));
+  if (!again) countTechnique(id, text(findTechnique(id).technique.n));
   // The technique already showing, drawn again (the site's data arriving late, say), is left alone when nothing changed.
   // Only the notes replaced (another tab typed one, say): only the note box is filled again, so a video playing or a
   // link half typed in the sheet stays.
