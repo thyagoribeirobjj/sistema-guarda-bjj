@@ -12,6 +12,7 @@ import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
 import { privacyView, privacyActions } from './privacy.js';
 import { weekOn, localDate } from './week.js';
+import { startTvMode, openTvSheet, castToTv, copyTvAddress, sendTvLink, toggleBigScreen } from './tv.js';
 
 const $ = (id) => document.getElementById(id);
 const pages = { curriculum: curriculumView, semana: weekView, meu: treeView, lesson: lessonView, method: methodView, privacy: privacyView };
@@ -197,6 +198,11 @@ const clickActions = [
   }],
   ['[data-past-weeks]', showPastWeeks],
   ['[data-share]', (el) => shareTechnique(el.dataset.share)],
+  ['[data-tv]', () => { closeMenus(); openTvSheet(); }],
+  ['[data-tv-cast]', castToTv],
+  ['[data-tv-copy]', copyTvAddress],
+  ['[data-tv-send]', sendTvLink],
+  ['[data-tv-big]', toggleBigScreen],
   ['[data-step]', (el) => stepPanel(Number(el.dataset.step))],
   ['[data-where-group]', (el) => pickWhereGroup(el.dataset.whereGroup)],
   // A technique opened from the page moves, with next and previous, through the others there (or in its week).
@@ -300,6 +306,8 @@ document.addEventListener('note-not-saved', (event) => {
 });
 
 document.addEventListener('keydown', (event) => {
+  // The TV sheet is a <dialog>: Escape closes it by itself, and nothing behind it.
+  if ($('tvSheet').open) return;
   const menuOpen = Boolean(openedMenu());
   if (menuOpen && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
     event.preventDefault();
@@ -342,6 +350,7 @@ function useWeek(stored) {
 
 async function start() {
   applyTheme();
+  startTvMode();
   try {
     await loadContent();
   } catch (error) {

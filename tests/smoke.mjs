@@ -197,6 +197,21 @@ await step('an open technique has a share button', async () => {
   await page.locator('#panelClose').click();
 });
 
+await step('"Show on the TV" opens from a technique with this page\'s address, and ?tv draws the page large', async () => {
+  await page.locator(`main [data-technique="${id}"]`).first().click();
+  await page.locator('#panel [data-tv]').click();
+  const sheet = page.locator('#tvSheet');
+  await sheet.waitFor();
+  assert.match(await sheet.locator('.tv-address').textContent(), new RegExp(`#t-${id}$`));
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'hidden' });
+  assert.ok(await page.locator('#panel').isVisible(), 'Escape closes only the TV sheet');
+  await page.locator('#panelClose').click();
+  const tvPage = await open('/?tv#curriculum', 'en-US');
+  await tvPage.waitForFunction(() => document.documentElement.classList.contains('tv'));
+  await tvPage.context().close();
+});
+
 await step('"Where to go" is subdivided by what the next move does, one group open at a time', async () => {
   await page.locator('#sidebar a[href="#top"]').click();
   await page.locator('main [data-technique="top-base"]').click();
