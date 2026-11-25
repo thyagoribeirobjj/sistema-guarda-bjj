@@ -296,6 +296,7 @@ await step('Method and the lesson builder open from the account menu', async () 
   await page.locator('#account').click();
   await page.locator('#accountMenu a[href="#method"]').click();
   await page.locator('main .principles').first().waitFor();
+  assert.ok((await page.locator('main .mstep').first().boundingBox()).height > 60, 'the method steps stand as cards, not as the panel\u2019s round buttons');
   assert.equal(await page.locator('#accountMenu').isVisible(), false);
   await page.locator('#account').click();
   await page.locator('#accountMenu a[href="#lesson"]').click();

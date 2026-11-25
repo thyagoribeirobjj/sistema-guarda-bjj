@@ -86,10 +86,10 @@ html.panel-open{overflow:hidden}
 .tech .rel{color:var(--muted);font-size:11px;font-weight:600}
 /* method */
 .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px}
-.step{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;border-top:4px solid var(--accent)}
-.step .n{font-family:var(--display);font-size:30px;line-height:1;color:var(--accent)}
-.step h4{margin:4px 0 4px;font-size:16px}
-.step p{margin:0;color:var(--muted);font-size:14px}
+.mstep{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;border-top:4px solid var(--accent)}
+.mstep .n{font-family:var(--display);font-size:30px;line-height:1;color:var(--accent)}
+.mstep h4{margin:4px 0 4px;font-size:16px}
+.mstep p{margin:0;color:var(--muted);font-size:14px}
 .ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:28px;background:var(--surface)}
 .ladder>div{padding:12px 14px;border-right:1px solid var(--line);min-width:0}
 .ladder>div:last-child{border-right:0}
