@@ -116,8 +116,14 @@ export function openPanel(id, { remember = true, focus = '#panelClose', list } =
   const notesRead = readNotes();
   const markup = String(panelContent(id));
   // The technique already showing, drawn again (the site's data arriving late, say), is left alone when nothing changed.
-  if (!again || markup !== drawnMarkup || !boxCurrent(id)) drawPanel(id, markup, again, focus);
-  else if (state.media[id]?.diagram) showDiagram(id);
+  // Only the notes replaced (another tab typed one, say): only the note box is filled again, so a video playing or a
+  // link half typed in the sheet stays.
+  if (!again || markup !== drawnMarkup) drawPanel(id, markup, again, focus);
+  else {
+    const box = document.getElementById('noteBox');
+    if (box && !boxCurrent(id)) fillNoteBox(box, id);
+    if (state.media[id]?.diagram) showDiagram(id);
+  }
   // Opening a technique adds one step to the browser's history, so the phone's back button closes it.
   // Moving between techniques inside the panel replaces that step. { panel: true } marks a step the site added.
   if (location.hash !== `#t-${id}`) {

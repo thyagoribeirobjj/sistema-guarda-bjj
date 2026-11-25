@@ -478,6 +478,34 @@ await step('the site arriving late with a video for the open technique leaves th
   assert.equal(await visit.locator(`#panel ${mark}`).getAttribute('aria-pressed'), 'true');
 });
 
+await step('a note typed in another tab leaves a video playing here, and still shows here', async () => {
+  const technique = 'top-base';
+  const visit = await openLate('/#top', 'en-US', {}, { stored: { 'site/media': firestoreFields({ techniques: { [technique]: { video: 'dQw4w9WgXcQ' } } }) } });
+  await visit.context().route(/youtube-nocookie\.com|youtube\.com/, (route) => route.fulfill({ contentType: 'text/html', body: '<p>player</p>' }));
+  await visit.release();
+  await visit.locator(`main [data-technique="${technique}"]`).first().click();
+  await visit.locator('#panel [data-play]').click();
+  await visit.locator('#panel iframe').evaluate((player) => { player.dataset.playing = 'yes'; });
+  const other = await visit.context().newPage();
+  await other.goto(`${address}/#top`);
+  const elsewhere = other.locator(`main [data-technique]:not([data-technique="${technique}"])`).first();
+  const noted = await elsewhere.getAttribute('data-technique');
+  await elsewhere.click();
+  await other.locator(`#noteBox[data-note="${noted}"]`).click();
+  await other.keyboard.type('abc');
+  await visit.waitForFunction((id) => JSON.parse(localStorage.getItem('sg-notes') || '{}')[id] === 'abc', noted);
+  assert.equal(await visit.locator('#panel iframe[data-playing="yes"]').count(), 1, 'the video keeps playing');
+  assert.equal(await visit.locator('#panel [data-play]').count(), 0, 'and is not put back behind its play button');
+  // A note on this technique, typed in the other tab, still shows here, and the video still plays.
+  await other.locator('#panelClose').click();
+  await other.locator(`main [data-technique="${technique}"]`).first().click();
+  await other.locator('#noteBox').click();
+  await other.keyboard.type('Base wide');
+  await visit.waitForFunction(() => document.getElementById('noteBox').value === 'Base wide');
+  assert.equal(await visit.locator('#panel iframe[data-playing="yes"]').count(), 1, 'the video keeps playing');
+  await visit.context().close();
+});
+
 await step('the site arriving late and changing the page leaves the focus on the same control', async () => {
   // A class this week (a new link in the navigation) and a minimum belt in this part (a mark on the move):
   // the sidebar, the bottom bar, the page and the account menu are all drawn again with something new in them.
