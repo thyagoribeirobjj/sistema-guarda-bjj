@@ -176,6 +176,8 @@ whether it was translated automatically or corrected by hand (nothing when that 
 - Run `npm ci` once (it installs the test tools at the versions in `package-lock.json`). `npm test` runs every test
   (it needs Node 22 and Java 21). `npm start` serves the site at http://localhost:8000; then `npm run smoke` uses it in
   Chrome. Locally there is no sign-in or database: every page works except "Esta semana" and the admin page.
+  The steps where the site's data arrives late load the real Firebase code from www.gstatic.com, so the smoke check
+  needs an internet connection; without one those steps fail and say so.
 - `npm run signed-in` (Java too) starts local copies of sign-in and the database, serves the site itself and uses it
   signed in: a student's settings, marks and notes following them, signing out, "Delete my data", another student
   being refused, and the coach saving a week, next week taking over, starting from a past week and the Students list.

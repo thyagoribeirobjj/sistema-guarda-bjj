@@ -126,21 +126,47 @@ export function openPanel(id, { remember = true, focus = '#panelClose', list } =
 }
 
 // Drawn again, the same technique keeps where the sheet was scrolled to and a note being typed: the same box,
-// its focus and caret.
+// its focus and caret. focus null: nobody asked for this redraw (the account or the site's data arriving), so the
+// focus stays on the same control in the new sheet, or on the sheet itself, never on a button it did not choose.
 function drawPanel(id, markup, again, focus) {
-  const typingNote = again && document.activeElement?.id === 'noteBox' ? document.activeElement : null;
+  const active = again && panel().contains(document.activeElement) ? document.activeElement : null;
+  const typingNote = active?.id === 'noteBox' ? active : null;
+  const same = focus === null && active && !typingNote ? sameControl(active) : null;
   const scrolled = panel().scrollTop;
   drawnMarkup = markup;
   panel().innerHTML = markup;
-  if (typingNote) panel().querySelector('#noteBox').replaceWith(typingNote);
-  else panel().querySelector('#noteBox').value = noteOf(id);
+  const box = panel().querySelector('#noteBox');
+  if (typingNote) {
+    // While the account's notes are read the box can't be typed in, kept or not (js/notes.js). A box that couldn't
+    // be typed in has nothing typed since: it shows the note as it is now.
+    if (typingNote.readOnly && !box.readOnly) typingNote.value = noteOf(id);
+    typingNote.readOnly = box.readOnly;
+    typingNote.placeholder = box.placeholder;
+    box.replaceWith(typingNote);
+  } else box.value = noteOf(id);
   panel().hidden = false;
   scrim().hidden = false;
   document.documentElement.classList.add('panel-open');
   panel().scrollTop = again ? scrolled : 0;
   if (state.media[id]?.diagram) showDiagram(id);
   if (typingNote) typingNote.focus({ preventScroll: true });
-  else (panel().querySelector(focus) || panel().querySelector('#panelClose')).focus();
+  else if (focus !== null || !again) (panel().querySelector(focus || '#panelClose') || panel().querySelector('#panelClose')).focus();
+  else if (active) {
+    same?.()?.focus({ preventScroll: true });
+    // Nothing the same, or it can't take the focus now (the last technique's "next", say): the sheet keeps it.
+    if (!panel().contains(document.activeElement)) panel().focus({ preventScroll: true });
+  }
+}
+
+// The control in the redrawn sheet that does what this one did: the same id, or the same data-* attributes (the
+// same progress mark, the same technique link), counted in order when several match.
+function sameControl(element) {
+  const data = [...element.attributes].filter(({ name }) => name.startsWith('data-'));
+  const selector = element.id ? `#${CSS.escape(element.id)}`
+    : data.length ? element.localName + data.map(({ name, value }) => `[${name}="${CSS.escape(value)}"]`).join('') : '';
+  if (!selector) return null;
+  const at = [...panel().querySelectorAll(selector)].indexOf(element);
+  return () => panel().querySelectorAll(selector)[at];
 }
 
 export function techniquesIn(element) {
@@ -154,7 +180,7 @@ export function stepPanel(step) {
   if (target) openPanel(target, { remember: false, focus: `[data-step="${step}"]:not(:disabled)` });
 }
 
-// Redraws the open technique; focus says which button keeps the keyboard focus.
+// Redraws the open technique; focus says which button keeps the keyboard focus, null where it already is.
 export function redrawPanel(focus = '[data-favorite]') {
   if (state.panel.current) openPanel(state.panel.current, { remember: false, focus });
 }

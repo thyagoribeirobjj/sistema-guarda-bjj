@@ -265,6 +265,38 @@ await step('they come back after a reload', async () => {
   assert.equal(await student.locator('#noteBox').inputValue(), noteText);
 });
 
+await step('a note changed on another device is shown, not typed over, when the box is in use while the notes load', async () => {
+  const newer = 'Frames first, then hips (changed on the phone)';
+  const notesPath = `users/${uid.student}/private/notes`;
+  const before = await stored(notesPath);
+  const changed = await fetch(`${documents}/${notesPath}?updateMask.fieldPaths=notes&updateMask.fieldPaths=changed`, { method: 'PATCH', headers: owner,
+    body: JSON.stringify({ fields: toValue({ notes: { ...before.notes, [fromOtherDevice]: newer }, changed: fromOtherDevice }).mapValue.fields }) });
+  assert.ok(changed.ok, `changing the note as the other device: ${changed.status}`);
+  // The Firebase code is held back, so the account arrives while the student is already typing in the box,
+  // and the account's notes are slow, so they are still being read when the next keys come.
+  let release;
+  const held = new Promise((resolve) => { release = resolve; });
+  await student.route('https://www.gstatic.com/firebasejs/**', async (route) => { await held; await route.continue(); });
+  await student.route(/documents:batchGet/, async (route) => {
+    if (route.request().postData()?.includes('private/notes')) await new Promise((done) => setTimeout(done, 1500));
+    await route.continue();
+  });
+  await student.goto('about:blank');
+  await student.open('', '#top');
+  await student.locator(`main [data-technique="${fromOtherDevice}"]`).first().click();
+  await student.locator('#noteBox').click();
+  await student.keyboard.type('typed before the account arrived');
+  release();
+  await student.locator('#account[aria-label*="Test"]').waitFor();
+  await student.keyboard.type(' and while its notes load');
+  await until(async () => (await student.locator('#noteBox').inputValue()) === newer, 'the note from the other device is shown');
+  assert.ok(await student.evaluate(() => document.activeElement.id === 'noteBox' && !document.activeElement.readOnly), 'the box keeps the focus and can be typed in again');
+  await new Promise((done) => setTimeout(done, 1500)); // longer than a note waits before it is saved
+  assert.equal((await stored(notesPath)).notes[fromOtherDevice], newer, 'the account keeps the newer note');
+  await student.unroute('https://www.gstatic.com/firebasejs/**');
+  await student.unroute(/documents:batchGet/);
+});
+
 await step('and on another device once signed in, from the account', async () => {
   laptop = await visitor(people.student);
   await laptop.open('', '#meu');

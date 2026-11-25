@@ -37,17 +37,40 @@ async function open(path, locale, device = {}, prepare = async () => {}) {
 
 // On the published site the account, the week and the videos arrive a moment after the page shows, and the page is
 // drawn again then, often while someone is already using it. This opens a page that waits for them until release():
-// made-up Firebase settings, the Firebase code held back, and a database that answers that nothing is stored.
+// made-up Firebase settings, the Firebase code held back, and a database that holds only what `stored` gives, in the
+// database's own form ({ 'site/media': fields }); anything else is "nothing stored". `kept`: what this browser
+// already keeps ({ localStorage key: value }) when the page opens.
 // release() returns once the page has been drawn again for all three (the header is drawn three more times).
-async function openLate(path, locale, device = {}) {
+// The Firebase code itself still comes from www.gstatic.com, so these steps need an internet connection.
+const firestoreValue = (value) => (typeof value === 'string' ? { stringValue: value }
+  : Array.isArray(value) ? { arrayValue: { values: value.map(firestoreValue) } }
+  : { mapValue: { fields: Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, firestoreValue(inner)])) } });
+const firestoreFields = (value) => firestoreValue(value).mapValue.fields;
+
+async function openLate(path, locale, device = {}, { stored = {}, kept = {} } = {}) {
   let release;
   const held = new Promise((resolve) => { release = resolve; });
+  let noSdk;
+  const sdkMissing = new Promise((resolve) => { noSdk = resolve; });
   const page = await open(path, locale, device, async (context) => {
+    await context.addInitScript((entries) => { for (const [key, value] of entries) localStorage.setItem(key, value); }, Object.entries(kept));
     await context.route('**/__/firebase/init.json', (route) => route.fulfill({ json: { apiKey: 'made-up', projectId: 'demo-late', appId: '1:1:web:1' } }));
-    await context.route('https://www.gstatic.com/firebasejs/**', async (route) => { await held; await route.continue(); });
+    await context.route('https://www.gstatic.com/firebasejs/**', async (route) => {
+      await held;
+      const response = await route.fetch().catch((error) => error);
+      if (response instanceof Error || !response.ok()) {
+        noSdk(response instanceof Error ? response.message.split('\n')[0] : `HTTP ${response.status()}`);
+        return route.abort();
+      }
+      return route.fulfill({ response });
+    });
     await context.route(/firestore\.googleapis\.com/, (route) => {
       const documents = JSON.parse(route.request().postData() || '{}').documents || [];
-      route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: documents.map((missing) => ({ missing, readTime: new Date().toISOString() })) });
+      const now = new Date().toISOString();
+      route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: documents.map((name) => {
+        const fields = Object.entries(stored).find(([where]) => name.endsWith(`/documents/${where}`))?.[1];
+        return fields ? { found: { name, fields, createTime: now, updateTime: now }, readTime: now } : { missing: name, readTime: now };
+      }) });
     });
   });
   page.release = async () => {
@@ -56,7 +79,10 @@ async function openLate(path, locale, device = {}) {
       new MutationObserver((changes) => { window.headerDrawn += changes.length; }).observe(document.getElementById('appTitle'), { childList: true });
     });
     release();
-    await page.waitForFunction(() => window.headerDrawn >= 3);
+    await Promise.race([
+      page.waitForFunction(() => window.headerDrawn >= 3),
+      sdkMissing.then((why) => { throw new Error(`no internet connection? The Firebase code could not be loaded from www.gstatic.com (${why}); this step needs it`); }),
+    ]);
   };
   return page;
 }
@@ -408,6 +434,40 @@ await step('on a phone: the site arriving late keeps the part menu open and its 
   const href = await other.getAttribute('href');
   await other.click({ timeout: 5000 });
   await phone.waitForFunction((hash) => location.hash === hash, href);
+});
+
+await step('the site arriving late with a video for the open technique leaves the focus where it was', async () => {
+  const technique = 'top-base';
+  const visit = await openLate('/#top', 'en-US', {}, { stored: { 'site/media': firestoreFields({ techniques: { [technique]: { video: 'dQw4w9WgXcQ' } } }) } });
+  await visit.locator(`main [data-technique="${technique}"]`).first().click();
+  const mark = `[data-progress="${technique}:learning"]`;
+  await visit.locator(`#panel ${mark}`).focus();
+  assert.equal(await visit.locator('#panel [data-play]').count(), 0, 'no video before the site arrives');
+  await visit.release();
+  await visit.locator('#panel [data-play]').waitFor();
+  assert.ok(await visit.evaluate((selector) => document.activeElement.matches(`#panel ${selector}`), mark), 'the focus stays on the progress mark');
+  await visit.keyboard.press('Space');
+  assert.ok(await visit.locator('#panel').isVisible(), 'so the next key presses the mark and does not close the technique');
+  assert.equal(await visit.locator(`#panel ${mark}`).getAttribute('aria-pressed'), 'true');
+});
+
+await step('the site arriving late shows the lesson plan the settings hold', async () => {
+  // This browser was signed in before, and the account turns out to be signed out: its lesson leaves the device.
+  // site/week arrives too, so the page really is drawn again.
+  const week = { weekOf: '2026-11-23', title: { pt: 'Postura', en: 'Posture' }, note: { pt: '', en: '' }, techniques: ['top-base'] };
+  const visit = await openLate('/#lesson', 'en-US', {}, { stored: { 'site/week': firestoreFields(week) }, kept: { 'sg-account': 'someone-signed-in-before' } });
+  await visit.locator('#selMod').waitFor();
+  const parts = await visit.locator('#selMod option').evaluateAll((options) => options.map((option) => option.value));
+  await visit.selectOption('#selMod', parts[1]);
+  await visit.selectOption('#selMod', parts[0]);
+  await visit.selectOption('#selDur', '90');
+  await visit.locator('#plan .meta', { hasText: '90 min' }).waitFor();
+  await visit.release();
+  await visit.locator('#sidebar a[href="#semana"]').waitFor();
+  const lesson = await visit.evaluate(() => JSON.parse(localStorage.getItem('sg-settings')).lesson || null);
+  assert.equal(lesson, null, 'the lesson left this device');
+  assert.equal(await visit.locator('#selDur').inputValue(), '60', 'the length shown is the one the settings hold');
+  assert.match(await visit.locator('#plan .meta').textContent(), /^60 min$/, 'and so is the plan');
 });
 
 await step('a new class gets a dot on This week until it is opened; a first visit has none', async () => {
