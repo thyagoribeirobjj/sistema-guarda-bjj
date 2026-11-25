@@ -197,6 +197,19 @@ await step('an open technique has a share button', async () => {
   await page.locator('#panelClose').click();
 });
 
+await step('"Where to go" is subdivided by what the next move does, one group open at a time', async () => {
+  await page.locator('#sidebar a[href="#top"]').click();
+  await page.locator('main [data-technique="top-base"]').click();
+  const tabs = page.locator('#panel .gtab');
+  assert.ok((await tabs.count()) > 1, 'more than one group');
+  const first = await page.locator('#panel [role="tabpanel"] [data-technique]').first().getAttribute('data-technique');
+  await tabs.nth(1).click();
+  assert.equal(await tabs.nth(1).getAttribute('aria-selected'), 'true');
+  const second = await page.locator('#panel [role="tabpanel"] [data-technique]').first().getAttribute('data-technique');
+  assert.notEqual(second, first, 'the open group shows its own techniques');
+  await page.locator('#panelClose').click();
+});
+
 await step('search finds a technique by a word in its description', async () => {
   const guard = await (await get('/data/content.json')).json();
   const techniques = Object.values(guard.modules).flatMap((module) => module.stages.flatMap((stage) => stage.items)).filter((item) => item.id);

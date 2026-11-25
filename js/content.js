@@ -2,6 +2,9 @@
 // (the other parts of the fight, their order, and the links between techniques).
 export const content = { modules: {}, order: [], drill: null, method: null };
 
+// The groups "where to go" is subdivided into, in the order the panel shows them.
+export const whereGroups = ['trans', 'sub', 'pos', 'esc', 'def', 'train'];
+
 const places = new Map();
 
 async function loadJson(path) {
@@ -33,6 +36,16 @@ export async function loadContent() {
     const place = places.get(id);
     if (place) place.technique.links = links.filter(([target]) => places.has(target));
   }
+  // What each move is for (the curriculum's "ty"): it subdivides "where to go" in the panel.
+  for (const [id, type] of Object.entries(curriculum.ty || {})) {
+    const place = places.get(id);
+    if (place) place.technique.group = type === 'drill' || type === 'conc' ? 'train' : whereGroups.includes(type) ? type : 'pos';
+  }
+}
+
+// The group a technique belongs to in "where to go"; one with none set controls the position.
+export function groupOf(id) {
+  return places.get(id)?.technique.group || 'pos';
 }
 
 export function findTechnique(id) {

@@ -31,6 +31,14 @@ test('shared techniques and "where to go" links point at techniques that exist',
   }
 });
 
+test('"where to go" groups name techniques that exist, with a known kind of move', () => {
+  const kinds = ['trans', 'sub', 'pos', 'esc', 'def', 'drill', 'conc'];
+  for (const [id, kind] of Object.entries(curriculum.ty || {})) {
+    assert.ok(ids.has(id), `group for missing ${id}`);
+    assert.ok(kinds.includes(kind), `unknown group ${kind} for ${id}`);
+  }
+});
+
 test('the tab order lists every module', () => {
   for (const [key] of modules) assert.ok(curriculum.moduleOrder.includes(key), `${key} is not in moduleOrder`);
 });
