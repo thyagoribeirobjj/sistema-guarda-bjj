@@ -63,12 +63,93 @@ service cloud.firestore {
         && answer.status in ['approved', 'again'] && answer.claim is int;
     }
 
+    // ---- the games on the TV (js/game-clock.js describes a game, with the same limits) ----
+    // A text in both languages, each at most `longest` characters. The rules may evaluate only 1,000 expressions per
+    // save and a game has many texts, so each check is kept short (and a game has at most 6 parts).
+    function validText(value, longest) {
+      return value.keys().hasOnly(['pt', 'en']) && value.pt.size() <= longest && value.en.size() <= longest;
+    }
+    function validPart(part) {
+      return part.keys().hasOnly(['label', 'seconds', 'say'])
+        && validText(part.label, 60) && validText(part.say, 300)
+        && part.seconds is int && part.seconds >= 5 && part.seconds <= 1800;
+    }
+    // Each part checked in turn (the rules have no loops).
+    function validParts(parts) {
+      return parts is list && parts.size() >= 1 && parts.size() <= 6 && validPart(parts[0])
+        && (parts.size() < 2 || validPart(parts[1])) && (parts.size() < 3 || validPart(parts[2]))
+        && (parts.size() < 4 || validPart(parts[3])) && (parts.size() < 5 || validPart(parts[4]))
+        && (parts.size() < 6 || validPart(parts[5]));
+    }
+    function validGame(game) {
+      return game.keys().hasOnly(['n', 'start', 'top', 'bottom', 'parts', 'rounds', 'rest', 'ready', 'switch'])
+        && validText(game.n, 80) && validText(game.start, 200) && validText(game.top, 200) && validText(game.bottom, 200)
+        && validParts(game.parts)
+        && game.rounds is int && game.rounds >= 1 && game.rounds <= 20
+        && game.rest is int && game.rest >= 0 && game.rest <= 600
+        && game.ready is int && game.ready >= 0 && game.ready <= 60
+        && game.switch is bool;
+    }
+    // The coaches' own games: one game added, changed or deleted per save (changed), at most 50.
+    function validCoachGames() {
+      let data = request.resource.data;
+      let changed = data.games.diff(resource == null ? {} : resource.data.games).affectedKeys();
+      return data.keys().hasOnly(['games', 'changed', 'updatedBy', 'updatedAt'])
+        && data.games is map && data.games.size() <= 50
+        && data.changed is string && data.changed.matches('coach-[a-z0-9]{8}') && changed.hasOnly([data.changed])
+        && (!(data.changed in data.games) || validGame(data.games[data.changed]))
+        && data.updatedBy == request.auth.token.email
+        && data.updatedAt == request.time;
+    }
+    // What a TV shows, by name: a game (a curriculum game's id, or a coach's game in site/games), or a lesson plan
+    // (the lesson builder's choices, as in the settings). The TV builds the steps itself from the site's own files.
+    function validShow(show) {
+      return show.keys().hasOnly(['game', 'lesson']) && show.size() == 1
+        && (!('game' in show) || (show.game is string && show.game.size() <= 80))
+        && (!('lesson' in show) || (show.lesson.keys().hasOnly(['mod', 'dur', 'items', 'game'])
+          && show.lesson.mod is string && show.lesson.mod.size() <= 40 && show.lesson.dur in ['60', '90']
+          && show.lesson.items is list && show.lesson.items.size() <= 200
+          && show.lesson.game is string && show.lesson.game.size() <= 80));
+    }
+    function validClock(clock) {
+      return clock.keys().hasOnly(['running', 'step', 'left', 'added'])
+        && clock.running is bool
+        && clock.step is int && clock.step >= 0 && clock.step <= 300
+        && clock.left is number && clock.left >= 0 && clock.left <= 36000
+        && clock.added is number && clock.added >= 0 && clock.added <= 36000;
+    }
+    function validSession() {
+      let data = request.resource.data;
+      let fields = ['name', 'language', 'show', 'clock', 'beeps', 'stamp', 'updatedAt'];
+      return data.keys().hasOnly(fields) && data.keys().hasAll(fields)
+        && data.name is string && data.name.size() <= 40
+        && data.language in ['pt', 'en']
+        && (data.show == null || validShow(data.show))
+        && validClock(data.clock)
+        && data.beeps is bool
+        && data.stamp is string && data.stamp.size() <= 40
+        && data.updatedAt == request.time;
+    }
+
     // What the whole site shows: the week (site/week), past weeks (site/weeks), each move's video and
-    // diagram flag (site/media), and settings such as the translator's address (site/config).
-    // Everyone reads, admins write.
+    // diagram flag (site/media), the coaches' own games (site/games) and settings such as the translator's address
+    // (site/config). Everyone reads, admins write; the games only in their own shape.
     match /site/{document} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin() && document != 'games';
+    }
+    match /site/games {
+      allow create, update: if isAdmin() && validCoachGames();
+      allow delete: if isAdmin();
+    }
+
+    // What one TV shows and its clock, named by the code the TV shows (js/tv-code.js). Anyone may read one by its
+    // code (the TV never signs in, and never writes); nobody can list them, so a code is only known to who sees
+    // the TV. Only admins (coaches) start, change and end them.
+    match /tv/{code} {
+      allow get: if true;
+      allow delete: if isAdmin();
+      allow create, update: if isAdmin() && code.matches('[2-9A-HJKMNP-Z]{4}') && validSession();
     }
 
     // One diagram per move, as a small image stored in the document. Everyone reads, admins write.
