@@ -1,0 +1,92 @@
+/* The games on the TV: the TV screen (/?tv#screen), the coach's phone remote (admin page, "Run on the TV") and the
+   game designer (lesson builder). Colors come from theme.css. */
+
+/* ---- the TV screen: every size is a share of the screen (--u), so it fills a 16:9 TV without scrolling ---- */
+html.tv-screen,html.tv-screen body{height:100%;overflow:hidden}
+html.tv-screen body>:not(#tvScreen){display:none!important}
+html.tv-screen body::before{display:none}
+.tvscreen{position:fixed;inset:0;container-type:size;background:var(--bg);color:var(--ink)}
+.tvs{--u:min(1cqw,1.778cqh);--phase:var(--tv-ready);position:absolute;inset:0;display:grid;overflow:hidden}
+.tvs-game[data-kind="work"],.tvs-game[data-kind="block"]{--phase:var(--tv-work)}
+.tvs-game[data-kind="rest"]{--phase:var(--tv-rest)}
+.tvs-game[data-kind="done"]{--phase:var(--tv-done)}
+.tvs-game{grid-template-rows:auto minmax(0,1fr) auto auto}
+.tvs-top{display:flex;justify-content:space-between;align-items:baseline;gap:calc(2*var(--u));padding:calc(2*var(--u)) calc(3*var(--u)) 0;font-family:var(--display);text-transform:uppercase}
+.tvs-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:calc(4.2*var(--u));font-weight:700;line-height:1.1}
+.tvs-round{font-size:calc(3*var(--u));font-weight:700;color:var(--muted);white-space:nowrap}
+.tvs-mid{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:calc(3*var(--u));padding:0 calc(3*var(--u));min-height:0}
+.tvs-clock{font:700 calc(21*var(--u))/.85 var(--display);font-variant-numeric:tabular-nums;color:var(--phase)}
+.tvs-game.last .tvs-clock{animation:tvs-flash 1s steps(2,end) infinite}
+@keyframes tvs-flash{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.tvs-game.last .tvs-clock{animation:none;text-decoration:underline}}
+.tvs-now{display:grid;gap:var(--u);min-width:0}
+.tvs-phase{font:700 calc(5*var(--u))/1 var(--display);text-transform:uppercase;color:var(--phase)}
+.tvs-say{font-size:calc(2.5*var(--u));line-height:1.25;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
+.tvs-sides{display:grid;grid-template-columns:1fr 1fr;gap:calc(1.5*var(--u));padding:0 calc(3*var(--u)) calc(1.5*var(--u))}
+.tvs-side{min-width:0;padding:calc(1.1*var(--u)) calc(1.5*var(--u));background:var(--surface);border-left:calc(.5*var(--u)) solid var(--phase)}
+.tvs-side b{display:block;font:700 calc(1.9*var(--u))/1.1 var(--display);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.tvs-side span{font-size:calc(2.15*var(--u));line-height:1.2}
+.tvs-foot{display:grid;gap:calc(.8*var(--u));padding:0 calc(3*var(--u)) calc(2*var(--u))}
+.tvs-bar{display:flex;gap:calc(.4*var(--u));height:calc(1.1*var(--u))}
+.tvs-bar i{position:relative;flex:var(--w) 1 0;min-width:2px;overflow:hidden;background:var(--surface-2)}
+.tvs-bar i.past{background:var(--muted)}
+.tvs-bar i.now::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--p,0%);background:var(--phase)}
+.tvs-next{display:flex;justify-content:space-between;gap:calc(2*var(--u));font-size:calc(1.9*var(--u));color:var(--muted)}
+.tvs-next b{color:var(--ink);font-weight:600}
+.tvs-wait{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto;align-content:center;align-items:center;gap:calc(1.5*var(--u)) calc(4*var(--u));padding:calc(4*var(--u)) calc(6*var(--u))}
+.tvs-name{grid-column:1/-1;font:700 calc(3*var(--u))/1 var(--display);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.tvs-code{font:700 calc(22*var(--u))/.85 var(--display);letter-spacing:.06em;color:var(--tv-ready)}
+.tvs-how{grid-column:1;margin:0;max-width:30em;font-size:calc(2.4*var(--u));line-height:1.3}
+.tvs-qr{grid-column:2;grid-row:2/4;width:calc(20*var(--u));height:auto}
+.tvs-qr-light{fill:var(--qr-light)}
+.tvs-qr-dark{fill:var(--qr-dark)}
+.tvs-sound{position:absolute;top:calc(.8*var(--u));left:50%;transform:translateX(-50%);padding:calc(.6*var(--u)) calc(1.6*var(--u));border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:600 calc(1.8*var(--u)) var(--body);cursor:pointer}
+.tvs-sound:focus-visible{outline:calc(.3*var(--u)) solid var(--tv-ready)}
+.tvs-sound-note{position:absolute;top:calc(.8*var(--u));left:50%;transform:translateX(-50%);margin:0;font-size:calc(1.5*var(--u));color:var(--muted);white-space:nowrap}
+/* A screen standing up (a phone, a tablet): one column, sized by the width. */
+@container (orientation:portrait){
+  .tvs{--u:min(2.2cqw,1cqh)}
+  .tvs-wait{grid-template-columns:minmax(0,1fr);grid-template-rows:none}
+  .tvs-qr{grid-column:1;grid-row:auto;width:calc(36*var(--u))}
+  .tvs-mid,.tvs-sides{grid-template-columns:minmax(0,1fr)}
+}
+
+/* ---- the coach's phone remote (admin page) ---- */
+.remote-section{padding-block:24px 64px}
+.remote{display:grid;gap:8px;max-width:560px}
+.remote .field{margin-bottom:8px}
+.remote-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) auto;gap:0 10px;align-items:end}
+.remote-pair .primary{margin-bottom:8px}
+@media (max-width:480px){.remote-pair{grid-template-columns:minmax(0,1fr)}}
+.remote input,.designer input:not([type=checkbox]),.designer textarea{width:100%;min-width:0;font:500 15px var(--body);padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.remote .code-input{font:700 26px/1 var(--display);letter-spacing:.2em;text-transform:uppercase}
+.remote-clock{display:grid;gap:10px;margin-top:6px;padding-top:12px;border-top:1px solid var(--line)}
+.remote-now{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.remote-now span:first-child{font:700 52px/1 var(--display);font-variant-numeric:tabular-nums}
+.remote-now span:last-child{font:700 18px/1.1 var(--display);text-transform:uppercase;color:var(--muted)}
+.remote-go{width:100%;padding:20px;border-radius:12px;font-size:20px}
+.remote-keys{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.remote-keys .chipbtn{min-height:48px;border-radius:10px;font-size:15px}
+
+/* ---- the game designer (lesson builder, admins) ---- */
+.designer{margin-top:16px}
+.designer-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.designer-head h3{margin:0;font-family:var(--display);font-size:26px;text-transform:uppercase}
+.designer h4{margin:12px 0 8px;font-size:15px}
+.designer .note{margin:4px 0 12px}
+.designer textarea{min-height:60px;resize:vertical}
+.design-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 10px}
+.design-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 10px;align-items:end;margin-top:12px}
+.design-parts{display:grid;gap:8px}
+.design-part{display:grid;grid-template-columns:minmax(0,1fr) 92px auto;gap:0 8px;align-items:end;padding:10px 10px 2px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.design-part .field{margin-bottom:8px}
+.design-part>.chipbtn{margin-bottom:8px}
+.design-say{grid-column:1/-1}
+.designer .check{display:flex;gap:8px;align-items:center;margin:4px 0;font-size:14px}
+.designer .check input{width:20px;height:20px}
+.design-total{margin:10px 0 0;font:700 22px/1 var(--display);text-transform:uppercase;letter-spacing:.04em}
+@media (max-width:520px){.design-two{grid-template-columns:minmax(0,1fr)}.design-three .field>label{letter-spacing:.02em}.design-part{grid-template-columns:minmax(0,1fr) auto}.design-part>.field:first-child{grid-column:1/-1}}
+@media (pointer:coarse){
+  .remote input,.designer input:not([type=checkbox]),.designer textarea{min-height:44px;font-size:16px}
+  .designer .check{min-height:44px}
+}

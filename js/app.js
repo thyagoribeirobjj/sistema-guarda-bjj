@@ -9,12 +9,14 @@ import { bottomBar, sidebar, partSwitcher, toggleParts, openMenu, closeMenus, op
 import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram, stepPanel, techniquesIn, typing, sameControl, pickWhereGroup } from './panel.js';
 import { changeNote, sendWaiting, awaitAccount } from './notes.js';
 import { youtubeId, videoPlayer, shrinkImage } from './media.js';
-import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
+import { lessonView, planText, changeLesson, redrawPlan, showCoachGames, remember as rememberLesson } from './lesson.js';
+import { designerActions, designerInput, designerChange } from './designer.js';
+import { coachGames, followCoachGames } from './coach-games.js';
 import { privacyView, privacyActions } from './privacy.js';
 import { weekOn, localDate } from './week.js';
 import { cookieBar, chooseCookies, reopenCookieChoice, startAnalytics, countView, onCookieChoiceChange, followAudience } from './analytics.js';
 import { kidsView, kidsActions, followKids, kidsPage } from './kids.js';
-import { startTvMode, openTvSheet, castToTv, copyTvAddress, sendTvLink, toggleBigScreen } from './tv.js';
+import { startTvMode, openTvSheet, castToTv, copyTvAddress, sendTvLink, toggleBigScreen, tvScreenAsked } from './tv.js';
 
 const $ = (id) => document.getElementById(id);
 const pages = { curriculum: curriculumView, semana: weekView, meu: treeView, kids: kidsView, lesson: lessonView, method: methodView, privacy: privacyView };
@@ -57,6 +59,13 @@ async function chooseAudience(audience) {
 const drawn = new WeakMap();
 const mainEdits = new MutationObserver(() => drawn.delete($('main')));
 mainEdits.observe($('main'), { childList: true, subtree: true, characterData: true, attributes: true });
+// #main was changed in place to match what it would be drawn as (typing in the game designer, games joining a list):
+// it counts as drawn, so the next draw doesn't replace it under the person.
+function adoptMain() {
+  mainEdits.takeRecords();
+  drawn.set($('main'), String(mainView()));
+}
+
 function draw(element, markup) {
   const value = String(markup);
   if (mainEdits.takeRecords().length) drawn.delete($('main'));
@@ -109,6 +118,17 @@ function renderCookieBar() {
   $('cookieBar').hidden = !bar;
 }
 
+// The coaches' own games (site/games): read once the lesson builder opens, never on an ordinary visit. They join the
+// game lists where they are.
+function followLessonGames() {
+  if (state.view !== 'lesson' || state.search || !state.online || coachGames.loaded) return;
+  followCoachGames({ fresh: state.admin }).then(() => {
+    if (state.view !== 'lesson' || state.search) return;
+    showCoachGames();
+    adoptMain();
+  });
+}
+
 function render() {
   noteWeekSeen();
   renderHeader();
@@ -116,6 +136,7 @@ function render() {
   draw($('main'), mainView());
   renderCookieBar();
   if (!state.search) countView(state.view, $('main').querySelector('h2')?.textContent || document.title);
+  followLessonGames();
 }
 
 function search(words) {
@@ -126,6 +147,11 @@ function search(words) {
 }
 
 function route() {
+  // The TV screen is its own page: another link opens the site itself.
+  if (document.documentElement.classList.contains('tv-screen')) {
+    if (!tvScreenAsked()) location.reload();
+    return;
+  }
   const target = readHash();
   const place = target.technique && findTechnique(target.technique);
   if (place) {
@@ -271,6 +297,9 @@ const clickActions = [
   }],
   ['[data-audience-choice]', (el) => chooseAudience(el.dataset.audienceChoice)],
   ...kidsActions(() => render()),
+  ...designerActions(() => render()),
+  // The TV remote runs the plan shown here, so it is kept first.
+  ['[data-lesson-to-tv]', rememberLesson],
   ['[data-belt-choice]', (el) => {
     const belt = el.dataset.beltChoice;
     changeSettings({ belt: settings.belt === belt ? '' : belt });
@@ -332,6 +361,10 @@ document.addEventListener('change', (event) => {
     changeMedia(minBeltId, 'minBelt', async () => { await saveMinBelt(minBeltId, event.target.value); return event.target.value || null; });
     return;
   }
+  if (designerChange(event.target)) {
+    render();
+    return;
+  }
   const redraw = changeLesson(event.target);
   if (redraw === true) render();
   else if (redraw === false) redrawPlan();
@@ -340,6 +373,7 @@ document.addEventListener('change', (event) => {
 document.addEventListener('input', (event) => {
   if (event.target.id === 'search') search(event.target.value);
   if (event.target.dataset.note) changeNote(event.target.dataset.note, event.target.value);
+  if (designerInput(event.target)) adoptMain();
 });
 
 // The notes were replaced other than by typing here (another tab, forgotten): an open note box shows them now.
@@ -400,6 +434,10 @@ function useWeek(stored) {
 async function start() {
   applyTheme();
   startTvMode();
+  if (tvScreenAsked()) {
+    const { startTvScreen } = await import('./tv-screen.js');
+    return startTvScreen();
+  }
   try {
     // The kids' challenges only for the kids class (or both): nothing more to load for an adult.
     await Promise.all([loadContent(), followKids()]);

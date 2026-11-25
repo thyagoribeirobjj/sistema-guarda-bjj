@@ -1,9 +1,11 @@
 import { settings } from './settings.js';
 import { kidsStrings } from './strings-kids.js';
+import { tvStrings } from './strings-tv.js';
 
 // Button and label text. Curriculum text lives in data/content.json and data/curriculum.json.
 export const strings = {
   ...kidsStrings,
+  ...tvStrings,
   title: { pt: 'Sistema Guarda', en: 'Guard System' },
   navigation: { pt: 'Navegação', en: 'Navigation' },
   curriculum: { pt: 'Currículo', en: 'Curriculum' },

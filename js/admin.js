@@ -6,6 +6,7 @@ import { t, text } from './strings.js';
 import { translatedFields, translationPlan, answerPlan, handFixedAfter, writtenAfter, translationLabel } from './translation.js';
 import { localDate, firstStart, dateProblem, classOf, switchOver, worthArchiving } from './week.js';
 import { showStudents, hideStudents } from './students.js';
+import { openRemote, closeRemote, remoteAsked } from './remote.js';
 
 // The admin page: set this week's class, or prepare next week's, which takes this week's place on its start date
 // (js/week.js decides). A new week moves the last one into past weeks. Only people listed in admins/{email} can
@@ -14,6 +15,7 @@ import { showStudents, hideStudents } from './students.js';
 // field and can be corrected by hand; a hand-made correction is never replaced without asking (js/translation.js).
 const main = document.getElementById('main');
 const studentsSlot = document.getElementById('students');
+const remoteSlot = document.getElementById('remote');
 const emptyClass = () => ({ weekOf: '', title: {}, note: {}, techniques: [], handFixed: [] });
 // Two forms: this week ('week') and next week ('next'). For each, what is saved (null: next week not prepared),
 // what is in the form now, and the basis the translation decisions compare with: the saved class, or the past week
@@ -37,6 +39,8 @@ function page(body) {
 
 function message(textKey, extra = '') {
   hideStudents(studentsSlot);
+  closeRemote(remoteSlot);
+  main.hidden = false;
   page(html`<p class="sect-sub">${t(textKey)}</p>${extra}`);
 }
 
@@ -112,6 +116,7 @@ function showForm(email, status = '') {
   const languageButtons = ['pt', 'en'].map((language) => html`<button type="button" class="chipbtn" data-writing="${language}" aria-pressed="${writingIn === language}">${language.toUpperCase()}</button>`);
   const formButtons = ['week', 'next'].map((which) => html`<button type="button" class="chipbtn" data-form="${which}" aria-pressed="${showing === which}">${t(which === 'week' ? 'thisWeekForm' : 'nextWeekForm')}</button>`);
   page(html`<p class="sect-sub">${t('adminLead')}</p>${accountLine(email)}
+    <p class="actions"><a class="chipbtn plain" href="#tv">📺 ${t('runOnTv')}</a></p>
     <div class="filters admin-forms" role="group">${formButtons}</div>${nextWeekStatus()}
     <form class="form card" id="weekForm">
       <div class="field"><span class="lbl">${t('writingIn')}</span><div class="filters" role="group">${languageButtons}</div></div>
@@ -397,13 +402,27 @@ async function start() {
   if (!(await startFirebase())) return message('liveOnly');
   onAccountChange(async (user) => {
     await useAccount(user);
+    delete main.dataset.email;
     if (!user) return message('adminSignIn', html`<button type="button" class="primary" id="signIn">${t('signInWithGoogle')}</button>`);
     if (!(await isAdmin(user.email))) return message('notAdmin', accountLine(user.email));
     main.dataset.email = user.email;
-    hideStudents(studentsSlot);
-    await openWeek(user.email);
-    showStudents(studentsSlot);
+    await showPage(user.email);
   });
+  // "Run on the TV" and back: the remote (js/remote.js) or this week's class, once the admin is known.
+  window.addEventListener('hashchange', () => { if (main.dataset.email) showPage(main.dataset.email); });
+}
+
+async function showPage(email) {
+  hideStudents(studentsSlot);
+  if (remoteAsked()) {
+    main.hidden = true;
+    await openRemote(remoteSlot);
+    return;
+  }
+  closeRemote(remoteSlot);
+  main.hidden = false;
+  await openWeek(email);
+  showStudents(studentsSlot);
 }
 
 start();

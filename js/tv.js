@@ -8,6 +8,11 @@ const sheet = () => document.getElementById('tvSheet');
 const canCast = 'PresentationRequest' in window;
 const device = /iPhone|iPad|Macintosh/.test(navigator.userAgent) ? 'apple' : /Android/.test(navigator.userAgent) ? 'android' : 'computer';
 
+// The TV screen of the games on the TV (js/tv-screen.js): its own address, /?tv#screen.
+export function tvScreenAsked() {
+  return new URLSearchParams(location.search).has('tv') && location.hash === '#screen';
+}
+
 export function startTvMode() {
   document.documentElement.classList.toggle('tv', new URLSearchParams(location.search).has('tv'));
 }
@@ -30,6 +35,8 @@ function sheetContent() {
     <section class="tv-way"><h3>${t('tvBrowser')}</h3><p>${t('tvBrowserHow')}</p><p class="tv-address">${address}</p>
       <div class="actions"><button type="button" class="chipbtn" data-tv-copy>${t('copyLink')}</button>${
         navigator.share ? html`<button type="button" class="chipbtn" data-tv-send>${t('tvSendLink')}</button>` : ''}</div></section>
+    <section class="tv-way"><h3>${t('tvGameClock')}</h3><p>${t('tvGameClockHow')}</p><p class="tv-clock-address">${location.host}/?tv#screen</p>
+      <div class="actions"><a class="chipbtn plain" href="/?tv#screen" data-tv-screen>${t('tvOpenClock')}</a></div></section>
     <button type="button" class="chipbtn" data-tv-big aria-pressed="${bigScreen()}">${t('tvBig')}</button>
     <p class="status" id="tvStatus" role="status"></p>`;
 }

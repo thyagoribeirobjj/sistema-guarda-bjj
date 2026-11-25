@@ -9,6 +9,9 @@
   /* Belt colors are the same in every theme; each mark has a border so white and black show on any background. */
   --belt-white: #F7F7F4; --belt-blue: #1E56C8; --belt-purple: #6B2FA3; --belt-brown: #6E4424; --belt-black: #111111;
   --belt-gray: #8E8E93; --belt-yellow: #F2C14E; --belt-orange: #EF8A2B; --belt-green: #2E9E57;
+  /* The game clock on the TV (css/tv.css), the same in every theme so it reads from across the mats: amber is get
+     ready, red is work, blue is rest, green is done. The pairing square is black on white for phone cameras. */
+  --tv-ready: #E2A72E; --tv-work: #E5383B; --tv-rest: #3D8BD4; --tv-done: #3AA66A; --qr-dark: #000000; --qr-light: #FFFFFF;
 }
 :root, [data-theme="dark"] {
   color-scheme: dark;
