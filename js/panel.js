@@ -116,8 +116,14 @@ export function openPanel(id, { remember = true, focus = '#panelClose', list } =
   const notesRead = readNotes();
   const markup = String(panelContent(id));
   // The technique already showing, drawn again (the site's data arriving late, say), is left alone when nothing changed.
-  if (!again || markup !== drawnMarkup || !boxCurrent(id)) drawPanel(id, markup, again, focus);
-  else if (state.media[id]?.diagram) showDiagram(id);
+  // Only the notes replaced (another tab typed one, say): only the note box is filled again, so a video playing or a
+  // link half typed in the sheet stays.
+  if (!again || markup !== drawnMarkup) drawPanel(id, markup, again, focus);
+  else {
+    const box = document.getElementById('noteBox');
+    if (box && !boxCurrent(id)) fillNoteBox(box, id);
+    if (state.media[id]?.diagram) showDiagram(id);
+  }
   // Opening a technique adds one step to the browser's history, so the phone's back button closes it.
   // Moving between techniques inside the panel replaces that step. { panel: true } marks a step the site added.
   if (location.hash !== `#t-${id}`) {
@@ -154,7 +160,7 @@ function drawPanel(id, markup, again, focus) {
   const active = again && panel().contains(document.activeElement) ? document.activeElement : null;
   const typingNote = active?.id === 'noteBox' ? active : null;
   const keepBox = typingNote && boxCurrent(id);
-  const same = focus === null && active && !typingNote ? sameControl(active) : null;
+  const same = focus === null && active && !typingNote ? sameControl(active, panel()) : null;
   const scrolled = panel().scrollTop;
   drawnMarkup = markup;
   panel().innerHTML = markup;
@@ -179,15 +185,16 @@ function drawPanel(id, markup, again, focus) {
   }
 }
 
-// The control in the redrawn sheet that does what this one did: the same id, or the same data-* attributes (the
-// same progress mark, the same technique link), counted in order when several match.
-function sameControl(element) {
-  const data = [...element.attributes].filter(({ name }) => name.startsWith('data-'));
+// The control in root, once redrawn, that does what this one did: the same id, or the same data-* attributes and
+// link (the same progress mark, the same technique, the same page), counted in order when several match.
+// Also used for the main page (js/app.js).
+export function sameControl(element, root) {
+  const data = [...element.attributes].filter(({ name }) => name.startsWith('data-') || name === 'href');
   const selector = element.id ? `#${CSS.escape(element.id)}`
     : data.length ? element.localName + data.map(({ name, value }) => `[${name}="${CSS.escape(value)}"]`).join('') : '';
   if (!selector) return null;
-  const at = [...panel().querySelectorAll(selector)].indexOf(element);
-  return () => panel().querySelectorAll(selector)[at];
+  const at = [...root.querySelectorAll(selector)].indexOf(element);
+  return () => root.querySelectorAll(selector)[at];
 }
 
 export function techniquesIn(element) {

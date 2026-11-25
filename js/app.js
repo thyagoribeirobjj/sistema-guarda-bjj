@@ -6,8 +6,8 @@ import { t, text } from './strings.js';
 import { moduleView, curriculumView, weekView, treeView, methodView, searchView } from './views.js';
 import { accountButton, accountMenu } from './account.js';
 import { bottomBar, sidebar, partSwitcher, toggleParts, openMenu, closeMenus, openedMenu, moveInMenu, noteWeekSeen } from './nav.js';
-import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram, stepPanel, techniquesIn, typing } from './panel.js';
-import { changeNote, sendWaiting } from './notes.js';
+import { openPanel, redrawPanel, panelBack, closePanel, panelOpen, forgetDiagram, stepPanel, techniquesIn, typing, sameControl } from './panel.js';
+import { changeNote, sendWaiting, awaitAccount } from './notes.js';
 import { youtubeId, videoPlayer, shrinkImage } from './media.js';
 import { lessonView, planText, changeLesson, redrawPlan } from './lesson.js';
 import { privacyView, privacyActions } from './privacy.js';
@@ -25,6 +25,8 @@ function isPage(view) {
 // Only menus opening and closing change the header and the navigation in between, and an open menu is meant to stay.
 // #main is also changed directly (the lesson plan, a status line) and holds form controls: after any of that, its
 // next draw is a real one, so what it shows always follows the state.
+// A part that does change keeps the keyboard focus on the same control in its new markup, as the technique panel does;
+// an open menu with nothing the same keeps it on its first item.
 const drawn = new WeakMap();
 const mainEdits = new MutationObserver(() => drawn.delete($('main')));
 mainEdits.observe($('main'), { childList: true, subtree: true, characterData: true, attributes: true });
@@ -33,8 +35,14 @@ function draw(element, markup) {
   if (mainEdits.takeRecords().length) drawn.delete($('main'));
   if (drawn.get(element) === value) return;
   drawn.set(element, value);
+  const active = document.activeElement;
+  const focused = active !== element && element.contains(active);
+  const same = focused ? sameControl(active, element) : null;
   element.innerHTML = value;
   mainEdits.takeRecords();
+  if (!focused) return;
+  same?.()?.focus({ preventScroll: true });
+  if (!element.contains(document.activeElement) && element.matches('[role="menu"]:not([hidden])')) element.querySelector('[role^="menuitem"]')?.focus();
 }
 
 function renderHeader() {
@@ -282,6 +290,9 @@ document.addEventListener('input', (event) => {
   if (event.target.dataset.note) changeNote(event.target.dataset.note, event.target.value);
 });
 
+// The notes were replaced other than by typing here (another tab, forgotten): an open note box shows them now.
+document.addEventListener('notes-changed', () => redrawPanel(null));
+
 document.addEventListener('note-not-saved', (event) => {
   const box = $('noteBox');
   if (box?.dataset.note === event.detail) $('noteStatus').textContent = t('noteNotSaved');
@@ -339,10 +350,15 @@ async function start() {
   // The last copy this browser saw shows at once; a newer one replaces it below.
   useWeek(lastSeen('week'));
   state.media = lastSeen('media')?.techniques || {};
+  awaitAccount(true);
   route();
 
   state.online = await startFirebase();
-  if (!state.online) return;
+  if (!state.online) {
+    awaitAccount(false);
+    redrawPanel(null);
+    return;
+  }
   renderHeader();
   onAccountChange(accountChanged);
   const [week, media] = await Promise.all([loadWeek().catch(() => null), loadMedia()]);

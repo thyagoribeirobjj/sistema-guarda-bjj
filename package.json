@@ -5,6 +5,7 @@
   "scripts": {
     "start": "python3 -m http.server 8000",
     "smoke": "node tests/smoke.mjs",
+    "smoke:real": "node tests/smoke.mjs https://sistemaguarda.com --code-from .",
     "test": "firebase emulators:exec --only firestore --project demo-sistema-guarda \"node --test tests/*.test.js\"",
     "signed-in": "firebase emulators:exec --only auth,firestore --project demo-sistema-guarda \"node tests/signed-in.mjs\""
   },

@@ -74,6 +74,7 @@ npm ci             # once: the test tools
 npm start          # http://localhost:8000
 npm test           # needs Node 22 and Java 21
 npm run smoke -- http://localhost:8000   # uses the site in Chrome (while npm start runs)
+npm run smoke:real # the same at https://sistemaguarda.com, with this folder's files and the real (signed-out) database
 npm run signed-in  # uses it signed in, against local copies of sign-in and the database
 ```
 

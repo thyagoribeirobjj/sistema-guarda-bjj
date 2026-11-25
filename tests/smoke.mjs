@@ -1,22 +1,44 @@
 // Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
 // previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the privacy page and
-// "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types or uses a menu,
+// "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu or has the focus somewhere,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page, robots.txt and the "noai"
 // tags. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm ci)
+//   npm run smoke:real                           this checkout's code at https://sistemaguarda.com, before it is published
+// With --code-from <folder>, the browser opens the address given, but every file of the site (pages, code, styles, data,
+// images, robots.txt) comes from that folder, answered as Firebase Hosting would answer once it is published (see
+// tests/checkout.mjs), headers from its firebase.json included. Firebase's own paths (/__/) and the real sign-in and
+// database still answer from the internet: signed out, only reading.
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
+import { checkout } from './checkout.mjs';
 
-const address = (process.argv[2] || 'http://localhost:8000').replace(/\/$/, '');
+const options = process.argv.slice(2);
+const codeFromAt = options.indexOf('--code-from');
+const codeFrom = codeFromAt >= 0 ? options.splice(codeFromAt, 2)[1] : null;
+const address = (options[0] || 'http://localhost:8000').replace(/\/$/, '');
 const published = !/localhost|127\.0\.0\.1/.test(address);
+const fromCheckout = codeFrom ? await checkout(codeFrom) : null;
+const origin = new URL(address).origin;
 const browser = await chromium.launch({ channel: process.env.SMOKE_BROWSER || 'chrome' });
 const problems = [];
 // Not the site's fault: no icon file, no Firebase settings in a local preview, a video removed from YouTube.
 const expectedMisses = /favicon\.ico|\/__\/firebase\/|ytimg\.com/;
 
+// One of the site's files, as the browser would get it (from the checkout under --code-from).
+async function get(path) {
+  if (!fromCheckout) return fetch(address + path);
+  const { status, headers, body } = await fromCheckout(new URL(path, address).pathname);
+  return new Response(body, { status, headers });
+}
+
 async function open(path, locale, device = {}, prepare = async () => {}) {
   const context = await browser.newContext({ locale, ...device });
+  if (fromCheckout) {
+    await context.route((url) => url.origin === origin && !url.pathname.startsWith('/__/'),
+      async (route) => route.fulfill(await fromCheckout(new URL(route.request().url()).pathname)));
+  }
   await prepare(context);
   const page = await context.newPage();
   page.on('pageerror', (error) => problems.push(`${path}: ${error.message}`));
@@ -176,7 +198,7 @@ await step('an open technique has a share button', async () => {
 });
 
 await step('search finds a technique by a word in its description', async () => {
-  const guard = await (await fetch(`${address}/data/content.json`)).json();
+  const guard = await (await get('/data/content.json')).json();
   const techniques = Object.values(guard.modules).flatMap((module) => module.stages.flatMap((stage) => stage.items)).filter((item) => item.id);
   const names = techniques.map((item) => `${item.n.pt} ${item.n.en}`.toLowerCase()).join(' ');
   let found;
@@ -456,6 +478,61 @@ await step('the site arriving late with a video for the open technique leaves th
   assert.equal(await visit.locator(`#panel ${mark}`).getAttribute('aria-pressed'), 'true');
 });
 
+await step('a note typed in another tab leaves a video playing here, and still shows here', async () => {
+  const technique = 'top-base';
+  const visit = await openLate('/#top', 'en-US', {}, { stored: { 'site/media': firestoreFields({ techniques: { [technique]: { video: 'dQw4w9WgXcQ' } } }) } });
+  await visit.context().route(/youtube-nocookie\.com|youtube\.com/, (route) => route.fulfill({ contentType: 'text/html', body: '<p>player</p>' }));
+  await visit.release();
+  await visit.locator(`main [data-technique="${technique}"]`).first().click();
+  await visit.locator('#panel [data-play]').click();
+  await visit.locator('#panel iframe').evaluate((player) => { player.dataset.playing = 'yes'; });
+  const other = await visit.context().newPage();
+  await other.goto(`${address}/#top`);
+  const elsewhere = other.locator(`main [data-technique]:not([data-technique="${technique}"])`).first();
+  const noted = await elsewhere.getAttribute('data-technique');
+  await elsewhere.click();
+  await other.locator(`#noteBox[data-note="${noted}"]`).click();
+  await other.keyboard.type('abc');
+  await visit.waitForFunction((id) => JSON.parse(localStorage.getItem('sg-notes') || '{}')[id] === 'abc', noted);
+  assert.equal(await visit.locator('#panel iframe[data-playing="yes"]').count(), 1, 'the video keeps playing');
+  assert.equal(await visit.locator('#panel [data-play]').count(), 0, 'and is not put back behind its play button');
+  // A note on this technique, typed in the other tab, still shows here, and the video still plays.
+  await other.locator('#panelClose').click();
+  await other.locator(`main [data-technique="${technique}"]`).first().click();
+  await other.locator('#noteBox').click();
+  await other.keyboard.type('Base wide');
+  await visit.waitForFunction(() => document.getElementById('noteBox').value === 'Base wide');
+  assert.equal(await visit.locator('#panel iframe[data-playing="yes"]').count(), 1, 'the video keeps playing');
+  await visit.context().close();
+});
+
+await step('the site arriving late and changing the page leaves the focus on the same control', async () => {
+  // A class this week (a new link in the navigation) and a minimum belt in this part (a mark on the move):
+  // the sidebar, the bottom bar, the page and the account menu are all drawn again with something new in them.
+  const technique = 'top-base';
+  const stored = {
+    'site/week': firestoreFields({ weekOf: '2026-11-23', title: { pt: 'Postura', en: 'Posture' }, note: { pt: '', en: '' }, techniques: [technique] }),
+    'site/media': firestoreFields({ techniques: { [technique]: { minBelt: 'blue' } } }),
+  };
+  const phone = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true };
+  for (const [selector, device, changed] of [
+    ['#sidebar a[href="#top"]', {}, '#sidebar a[href="#semana"]'],
+    [`main [data-technique="${technique}"]`, {}, `main [data-technique="${technique}"] .belt`],
+    ['#accountMenu [data-theme-choice="light"]', {}, '#accountMenu #signIn'],
+    ['#bottomBar a[href="#meu"]', phone, '#bottomBar a[href="#semana"]'],
+  ]) {
+    const visit = await openLate('/#top', 'en-US', device, { stored });
+    await visit.locator('main .tech').first().waitFor();
+    if (selector.startsWith('#accountMenu')) await visit.locator('#account').click();
+    await visit.locator(selector).focus();
+    await visit.release();
+    await visit.locator(changed).waitFor({ state: 'attached' });
+    assert.ok(await visit.evaluate((wanted) => document.activeElement.matches(wanted), selector), `the focus stays on ${selector}`);
+    if (selector.startsWith('#accountMenu')) assert.ok(await visit.locator('#accountMenu').isVisible(), 'the account menu stays open');
+    await visit.context().close();
+  }
+});
+
 await step('a technique opened before the site is online shows its diagram once it is, read once', async () => {
   // This browser's copy of the site's media is old but says the technique has a diagram, so the sheet has a place
   // for it before the database is there; the database says so too.
@@ -641,7 +718,7 @@ await step('the admin page loads', async () => {
 });
 
 await step('AI crawlers are asked to stay out; search engines may list the pages', async () => {
-  const response = await fetch(`${address}/robots.txt`);
+  const response = await get('/robots.txt');
   assert.equal(response.status, 200, 'robots.txt is published');
   const robots = (await response.text()).replace(/\r\n/g, '\n');
   for (const bot of ['GPTBot', 'ClaudeBot', 'CCBot', 'Google-Extended', 'PerplexityBot', 'Bytespider', 'Applebot-Extended', 'Meta-ExternalAgent']) {
@@ -651,12 +728,12 @@ await step('AI crawlers are asked to stay out; search engines may list the pages
   assert.match(robots, /^Content-Signal: search=yes, ai-train=no, ai-input=no$/m);
   assert.match(robots, /User-agent: \*\n(?:.*\n)*?Disallow: \/data\/\nDisallow: \/admin\.html\nAllow: \/\n/);
   for (const [path, words] of [['/', 'noai, noimageai'], ['/admin.html', 'noindex, noai, noimageai']]) {
-    const html = await (await fetch(address + path)).text();
+    const html = await (await get(path)).text();
     assert.ok(html.includes(`<meta name="robots" content="${words}">`), `${path} asks for ${words}`);
   }
-  // The headers come from firebase.json, so only the published site sends them.
+  // The headers come from firebase.json, so only the published site sends them; with --code-from, the checkout's.
   if (published) {
-    const tag = async (path) => (await fetch(address + path)).headers.get('x-robots-tag');
+    const tag = async (path) => (await get(path)).headers.get('x-robots-tag');
     assert.equal(await tag('/'), 'noai, noimageai');
     assert.equal(await tag('/admin.html'), 'noindex, noai, noimageai');
     assert.equal(await tag('/data/content.json'), 'noindex, noai, noimageai');
