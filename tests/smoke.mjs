@@ -207,10 +207,9 @@ await step('"Show on the TV" opens from a technique with this page\'s address, a
   await sheet.waitFor({ state: 'hidden' });
   assert.ok(await page.locator('#panel').isVisible(), 'Escape closes only the TV sheet');
   await page.locator('#panelClose').click();
-  const tvPage = await browser.newPage();
-  await tvPage.goto(`${address}/?tv#curriculum`);
+  const tvPage = await open('/?tv#curriculum', 'en-US');
   await tvPage.waitForFunction(() => document.documentElement.classList.contains('tv'));
-  await tvPage.close();
+  await tvPage.context().close();
 });
 
 await step('"Where to go" is subdivided by what the next move does, one group open at a time', async () => {
