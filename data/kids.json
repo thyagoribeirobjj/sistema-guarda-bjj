@@ -48,8 +48,8 @@
     {
       "xp": 550,
       "n": {
-        "pt": "Lenda",
-        "en": "Legend"
+        "pt": "Mestre",
+        "en": "Master"
       }
     }
   ],
@@ -94,7 +94,7 @@
       "id": "w4",
       "mark": "🚀",
       "n": {
-        "pt": "Passagem de guarda",
+        "pt": "Passador",
         "en": "Guard passer"
       },
       "d": {
@@ -110,7 +110,7 @@
         "en": "Side control"
       },
       "d": {
-        "pt": "Cole no chão e não deixe a outra pessoa sair.",
+        "pt": "Cole no chão e não deixe ele sair.",
         "en": "Stick to the mat and don't let them out."
       }
     },
@@ -118,8 +118,8 @@
       "id": "w6",
       "mark": "👑",
       "n": {
-        "pt": "Montada poderosa",
-        "en": "Mighty mount"
+        "pt": "Rei da montada",
+        "en": "King of the mount"
       },
       "d": {
         "pt": "Suba, mantenha e saia por baixo.",
@@ -142,12 +142,12 @@
       "id": "w8",
       "mark": "✨",
       "n": {
-        "pt": "Hora de ensinar",
+        "pt": "Professor mirim",
         "en": "Little coach"
       },
       "d": {
-        "pt": "Crie, explique e ajude a turma. Sempre aberto!",
-        "en": "Create, explain and help your class. Always open!"
+        "pt": "Crie, explique e ajude os colegas. Sempre aberto!",
+        "en": "Create, explain and help your friends. Always open!"
       },
       "alwaysOpen": true
     }
@@ -157,7 +157,7 @@
       "id": "rolamento",
       "world": "w1",
       "n": {
-        "pt": "Rolamento nota 10",
+        "pt": "Mestre do rolamento",
         "en": "Roll master"
       },
       "task": {
@@ -205,7 +205,7 @@
       "id": "levanta",
       "world": "w1",
       "n": {
-        "pt": "Levantada relâmpago",
+        "pt": "Levanta, guerreiro!",
         "en": "Up, warrior!"
       },
       "task": {
@@ -225,7 +225,7 @@
         "en": "Tree base"
       },
       "task": {
-        "pt": "No jogo, a sua dupla empurra e puxa por 30 segundos e você não cai.",
+        "pt": "No jogo, o colega empurra e puxa por 30 segundos e você não cai.",
         "en": "In a game, your partner pushes and pulls for 30 seconds and you don't fall."
       },
       "xp": 15,
@@ -289,7 +289,7 @@
         "en": "Iron closed guard"
       },
       "task": {
-        "pt": "Segure a guarda fechada por 30 segundos sem a sua dupla passar.",
+        "pt": "Segure a guarda fechada por 30 segundos sem o colega passar.",
         "en": "Keep your closed guard for 30 seconds without your partner passing."
       },
       "xp": 15,
@@ -337,7 +337,7 @@
         "en": "Triangle"
       },
       "task": {
-        "pt": "Pratique 10 triângulos devagar com a sua dupla e mostre para quem dá a aula.",
+        "pt": "Pratique 10 triângulos devagar com o colega e mostre ao professor.",
         "en": "Practice 10 slow triangles with a partner and show your coach."
       },
       "xp": 25,
@@ -349,8 +349,8 @@
       "id": "postura",
       "world": "w4",
       "n": {
-        "pt": "Postura de rocha",
-        "en": "Rock-solid posture"
+        "pt": "Postura de rei",
+        "en": "King's posture"
       },
       "task": {
         "pt": "Mantenha a postura dentro da guarda por 30 segundos.",
@@ -365,7 +365,7 @@
       "id": "toreando",
       "world": "w4",
       "n": {
-        "pt": "Olé, toreando!",
+        "pt": "Toureiro",
         "en": "Bullfighter"
       },
       "task": {
@@ -513,7 +513,7 @@
         "en": "Explain a technique"
       },
       "task": {
-        "pt": "Explique a sua técnica favorita, passo a passo, para quem dá a aula.",
+        "pt": "Explique a sua técnica favorita, passo a passo, para o professor.",
         "en": "Explain your favorite technique, step by step, to your coach."
       },
       "xp": 20,
@@ -523,12 +523,12 @@
       "id": "ajude",
       "world": "w8",
       "n": {
-        "pt": "Ajude alguém",
+        "pt": "Ajude um amigo",
         "en": "Help a friend"
       },
       "task": {
-        "pt": "Ensine uma técnica para alguém mais novo da turma, com quem dá a aula olhando.",
-        "en": "Teach a technique to someone younger in your class while your coach watches."
+        "pt": "Ensine uma técnica para um colega mais novo, com o professor olhando.",
+        "en": "Teach a technique to a younger friend while your coach watches."
       },
       "xp": 20,
       "techniques": []
@@ -541,7 +541,7 @@
         "en": "Create your jiu-jitsu"
       },
       "task": {
-        "pt": "Faça um desenho ou invente uma história sobre jiu-jitsu e mostre para quem dá a aula.",
+        "pt": "Faça um desenho ou invente uma história sobre jiu-jitsu e mostre ao professor.",
         "en": "Make a drawing or a story about jiu-jitsu and show it to your coach."
       },
       "xp": 15,

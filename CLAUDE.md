@@ -106,12 +106,9 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 - Curriculum wording goes in the `data/` files. Button and label wording goes in `js/strings.js`.
 - Every text has both languages: `{ "pt": "…", "en": "…" }`. Show it with `text(value)`; show a label with `t('key')`.
 - Thyago may give you text in one language only. Write it in that language and fill in the other yourself.
-- **Words that fit everyone.** Never assume the gender of a training partner, student, coach or child. English: "your
-  partner", "they", "the person on top", "the coach". Portuguese: rewrite the sentence instead of picking a gender:
-  "a outra pessoa", "quem está por baixo", "a sua dupla", "a turma", "estudante", "quem dá a aula", "responsável".
-  No invented forms (todes, alunxs) and no doubles like aluno(a). `tests/wording.test.js` fails if he/his/her or
-  words like "o aluno", "o parceiro", "o adversário", "ele", "o professor" come back; a real exception (an "ele" that
-  is a thing, like Google Analytics) goes in its short allow-list with the reason.
+- **English says "their".** In English never write he, his, him, she or her for a training partner, student, coach or
+  child: use "their", "your partner", "the person on top". `tests/wording.test.js` fails if one comes back.
+  Portuguese keeps its usual forms ("o professor", "o aluno", "ele"); that is the head coach's choice.
 
 ## Content (`data/content.json`, `data/curriculum.json`)
 
