@@ -2622,7 +2622,7 @@
     },
     "back_over_arms": {
       "title": {
-        "pt": "Agarrado por trás, por cima dos braços",
+        "pt": "Agarrão por trás, por cima dos braços",
         "en": "Grabbed from behind, over the arms"
       },
       "text": {
@@ -2632,7 +2632,7 @@
     },
     "back_under_arms": {
       "title": {
-        "pt": "Agarrado por trás, por baixo dos braços",
+        "pt": "Agarrão por trás, por baixo dos braços",
         "en": "Grabbed from behind, under the arms"
       },
       "text": {
@@ -2642,7 +2642,7 @@
     },
     "over_arms_front": {
       "title": {
-        "pt": "Agarrado pela frente, por cima dos braços",
+        "pt": "Agarrão pela frente, por cima dos braços",
         "en": "Grabbed from the front, over the arms"
       },
       "text": {
@@ -4464,7 +4464,7 @@
             "en": "Defense against a front bear hug under the arms: set your base, push the attacker's chin or face with your forearm to make space and break their posture, then take them down or get out."
           },
           "k": {
-            "pt": "Quadril para trás e base larga para não ser levantado.",
+            "pt": "Quadril para trás e base larga para não sair do chão.",
             "en": "Hips back and a wide base so you aren't lifted."
           }
         },
@@ -8516,7 +8516,7 @@
             "Lesson 6"
           ],
           "d": {
-            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a dupla tenta escapar e você troca de posição para segurar.",
+            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a sua dupla tenta escapar e você troca de posição para segurar.",
             "en": "Side control 1 to 5 drill: moving from one position to the next without losing pressure. With reaction, your partner tries to escape and you switch positions to hold."
           },
           "k": {
@@ -8545,7 +8545,7 @@
             "Lesson 6"
           ],
           "d": {
-            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a dupla tenta escapar e você troca de posição para segurar.",
+            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a sua dupla tenta escapar e você troca de posição para segurar.",
             "en": "Side control 1 to 5 drill: moving from one position to the next without losing pressure. With reaction, your partner tries to escape and you switch positions to hold."
           },
           "k": {
@@ -8977,7 +8977,7 @@
             "Fundamentals week 3"
           ],
           "d": {
-            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a dupla tenta escapar e você troca de posição para segurar.",
+            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a sua dupla tenta escapar e você troca de posição para segurar.",
             "en": "Side control 1 to 5 drill: moving from one position to the next without losing pressure. With reaction, your partner tries to escape and you switch positions to hold."
           },
           "k": {
@@ -9032,7 +9032,7 @@
             "Fundamentals week 3"
           ],
           "d": {
-            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a dupla tenta escapar e você troca de posição para segurar.",
+            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a sua dupla tenta escapar e você troca de posição para segurar.",
             "en": "Side control 1 to 5 drill: moving from one position to the next without losing pressure. With reaction, your partner tries to escape and you switch positions to hold."
           },
           "k": {
@@ -9119,7 +9119,7 @@
             "Fundamentals week 3"
           ],
           "d": {
-            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a dupla tenta escapar e você troca de posição para segurar.",
+            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a sua dupla tenta escapar e você troca de posição para segurar.",
             "en": "Side control 1 to 5 drill: moving from one position to the next without losing pressure. With reaction, your partner tries to escape and you switch positions to hold."
           },
           "k": {
@@ -9148,7 +9148,7 @@
             "Fundamentals week 3"
           ],
           "d": {
-            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a dupla tenta escapar e você troca de posição para segurar.",
+            "pt": "Drill do side control 1 a 5: passar de uma posição para a outra sem perder a pressão. Com reação, a sua dupla tenta escapar e você troca de posição para segurar.",
             "en": "Side control 1 to 5 drill: moving from one position to the next without losing pressure. With reaction, your partner tries to escape and you switch positions to hold."
           },
           "k": {
@@ -10108,7 +10108,7 @@
             "en": "Upa-vira (bridge and roll): trap the wrist, elbow and foot on the same side, bridge as high as you can and roll to land inside your partner's guard."
           },
           "k": {
-            "pt": "Ponte apoiado nas costas, não na cabeça.",
+            "pt": "Ponte com o apoio nas costas, não na cabeça.",
             "en": "Bridge off your upper back, not your head."
           }
         },
@@ -10198,7 +10198,7 @@
             "en": "Upa-vira (bridge and roll): trap the wrist, elbow and foot on the same side, bridge as high as you can and roll to land inside your partner's guard."
           },
           "k": {
-            "pt": "Ponte apoiado nas costas, não na cabeça.",
+            "pt": "Ponte com o apoio nas costas, não na cabeça.",
             "en": "Bridge off your upper back, not your head."
           }
         },
@@ -10720,7 +10720,7 @@
             "en": "Escaping the bottom turtle: protect your neck with elbows tight and roll back or sit through to recover guard before your partner gets their hooks in."
           },
           "k": {
-            "pt": "Nunca fique parado na tartaruga.",
+            "pt": "Nunca pare de se mexer na tartaruga.",
             "en": "Never stay still in the turtle."
           }
         },
@@ -10749,7 +10749,7 @@
             "en": "Escaping the bottom turtle: protect your neck with elbows tight and roll back or sit through to recover guard before your partner gets their hooks in."
           },
           "k": {
-            "pt": "Nunca fique parado na tartaruga.",
+            "pt": "Nunca pare de se mexer na tartaruga.",
             "en": "Never stay still in the turtle."
           }
         },
@@ -10775,7 +10775,7 @@
             "en": "Escaping the bottom turtle: protect your neck with elbows tight and roll back or sit through to recover guard before your partner gets their hooks in."
           },
           "k": {
-            "pt": "Nunca fique parado na tartaruga.",
+            "pt": "Nunca pare de se mexer na tartaruga.",
             "en": "Never stay still in the turtle."
           }
         },
@@ -11656,7 +11656,7 @@
             {
               "lv": "b",
               "n": {
-                "pt": "Agarrado por trás, por baixo dos braços",
+                "pt": "Agarrão por trás, por baixo dos braços",
                 "en": "Grabbed from behind, under the arms"
               },
               "d": {
@@ -11692,7 +11692,7 @@
                 ]
               ],
               "t": {
-                "pt": "Quadril para trás e base larga para não ser levantado.",
+                "pt": "Quadril para trás e base larga para não sair do chão.",
                 "en": "Hips back and a wide base so you aren't lifted."
               },
               "id": "pe-defense-against-a-front-bear-hug-under-the-arms"
@@ -11700,7 +11700,7 @@
             {
               "lv": "b",
               "n": {
-                "pt": "Agarrado por trás, por cima dos braços",
+                "pt": "Agarrão por trás, por cima dos braços",
                 "en": "Grabbed from behind, over the arms"
               },
               "d": {
@@ -13279,7 +13279,7 @@
                 "en": "Escaping the bottom turtle: protect your neck with elbows tight and roll back or sit through to recover guard before your partner gets their hooks in."
               },
               "t": {
-                "pt": "Nunca fique parado na tartaruga.",
+                "pt": "Nunca pare de se mexer na tartaruga.",
                 "en": "Never stay still in the turtle."
               },
               "rec": 1,

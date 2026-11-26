@@ -1290,7 +1290,7 @@
       "games": [
         {
           "n": {
-            "pt": "Guardião da postura",
+            "pt": "Postura firme",
             "en": "Posture keeper"
           },
           "d": {
@@ -1492,7 +1492,7 @@
           },
           "mine": 1,
           "d": {
-            "pt": "Cada jogador tem 3 movimentos, um por vez e em câmera lenta, para melhorar a posição e finalizar.",
+            "pt": "Cada pessoa tem 3 movimentos, um por vez e em câmera lenta, para melhorar a posição e finalizar.",
             "en": "Each player gets 3 moves, one at a time and in slow motion, to improve position and submit."
           },
           "who": {
@@ -1523,18 +1523,18 @@
           "parts": [
             {
               "label": {
-                "pt": "Primeiro jogador · 3 movimentos",
+                "pt": "Primeira pessoa · 3 movimentos",
                 "en": "First player · 3 moves"
               },
               "seconds": 30,
               "say": {
-                "pt": "Três movimentos, um por vez, em câmera lenta. A dupla só observa.",
+                "pt": "Três movimentos, um por vez, em câmera lenta. A outra pessoa só observa.",
                 "en": "Three moves, one at a time, in slow motion. The other player only watches."
               }
             },
             {
               "label": {
-                "pt": "Segundo jogador · 3 movimentos",
+                "pt": "Segunda pessoa · 3 movimentos",
                 "en": "Second player · 3 moves"
               },
               "seconds": 30,
@@ -1675,7 +1675,7 @@
               "lv": "b",
               "mine": 1,
               "n": {
-                "pt": "Braços acima da sua cabeça",
+                "pt": "Braços da outra pessoa acima da sua cabeça",
                 "en": "Their arms above your head"
               },
               "d": {
@@ -1883,7 +1883,7 @@
                   "Your partner sits back: uncross your legs and slide the collar hand down behind their elbow."
                 ],
                 [
-                  "Levante apoiado no próprio cotovelo, depois com o braço esticado.",
+                  "Levante com o apoio no próprio cotovelo, depois com o braço esticado.",
                   "Come up on your elbow, then onto your straight arm."
                 ],
                 [
@@ -2435,7 +2435,7 @@
                   "Trap the wrist (no thumb), the elbow and the foot on the same side."
                 ],
                 [
-                  "Faça a ponte apoiado nas costas, não na cabeça.",
+                  "Faça a ponte com o apoio nas costas, não na cabeça.",
                   "Bridge off your upper back, not your head."
                 ],
                 [
@@ -2649,7 +2649,7 @@
                 "en": "If your partner is mounted with a headlock, trap their triceps and same-side foot, brace your other hand under their waist, pin their arm with your head and bridge to roll."
               },
               "t": {
-                "pt": "Faça a ponte apoiado nas costas, não na cabeça.",
+                "pt": "Faça a ponte com o apoio nas costas, não na cabeça.",
                 "en": "Bridge off your upper back, not your head."
               },
               "id": "bottom-upa-vs-headlock-in-mount"
@@ -3364,18 +3364,18 @@
           "parts": [
             {
               "label": {
-                "pt": "Primeiro jogador · 3 movimentos",
+                "pt": "Primeira pessoa · 3 movimentos",
                 "en": "First player · 3 moves"
               },
               "seconds": 30,
               "say": {
-                "pt": "Três movimentos, um por vez, em câmera lenta. A dupla só observa.",
+                "pt": "Três movimentos, um por vez, em câmera lenta. A outra pessoa só observa.",
                 "en": "Three moves, one at a time, in slow motion. The other player only watches."
               }
             },
             {
               "label": {
-                "pt": "Segundo jogador · 3 movimentos",
+                "pt": "Segunda pessoa · 3 movimentos",
                 "en": "Second player · 3 moves"
               },
               "seconds": 30,
@@ -3500,18 +3500,18 @@
           "parts": [
             {
               "label": {
-                "pt": "Primeiro jogador · 3 movimentos",
+                "pt": "Primeira pessoa · 3 movimentos",
                 "en": "First player · 3 moves"
               },
               "seconds": 20,
               "say": {
-                "pt": "3 movimentos em 20 segundos. A dupla espera.",
+                "pt": "3 movimentos em 20 segundos. A outra pessoa espera.",
                 "en": "3 moves in 20 seconds. The other waits."
               }
             },
             {
               "label": {
-                "pt": "Segundo jogador · 3 movimentos",
+                "pt": "Segunda pessoa · 3 movimentos",
                 "en": "Second player · 3 moves"
               },
               "seconds": 20,

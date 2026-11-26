@@ -15,6 +15,9 @@ const portugueseWords = new RegExp(`(?<![\\p{L}-])(${[
   'o professor', 'os professores', 'seus professores', 'do professor', 'ao professor', 'pelo professor', 'professor mirim',
   'o colega', 'os colegas', 'um colega', 'bem-vind[oa]s?', 'o de cima', 'o de baixo', 'ajoelhado', 'sentado', 'sozinho ou',
   'mestre', 'rei', 'guerreiro', 'toureiro', 'pai', 'mãe', 'um adulto', 'conectado como',
+  'jogador(es)?', 'jogadoras?', 'guardi(ão|ã|ões|ãs)', 'todos(?! os)',
+  // Adjectives that would describe the reader as a man: "fique parado", "ser levantado", "apoiado nas costas", "agarrado".
+  'fique parad[oa]', 'ficar parad[oa]', 'ser levantad[oa]', 'apoiad[oa] nas costas', 'apoiad[oa] no próprio', 'agarrad[oa]s?',
 ].join('|')})(?![\\p{L}-])`, 'iu');
 
 // Real exceptions: here "ele" is a thing, not a person.
@@ -69,7 +72,29 @@ test('Portuguese never needs a gendered word for a person (aluno, parceiro, adve
   assert.deepEqual(found.map(({ file, path, pt }) => `${file} ${path.join('.')}: ${pt}`), []);
 });
 
+// "A dupla" alone means the pair; when only one person waits or watches, the text names "a outra pessoa" or "a sua dupla".
+const pairActsAlone = /(?<!sua )(?<![\p{L}])a dupla (só )?(espera|observa|aguarda|tenta)/iu;
+
+test('Portuguese never says "a dupla" when only one of the two waits, watches or tries', () => {
+  const found = everyText.filter(({ pt }) => pairActsAlone.test(pt));
+  assert.deepEqual(found.map(({ file, path, pt }) => `${file} ${path.join('.')}: ${pt}`), []);
+});
+
+test('the name "their arms above your head" says whose arms they are, in Portuguese too', () => {
+  const content = JSON.parse(readText('data/content.json'));
+  const named = [...pairs(content)].find(({ path }) => path.at(-1) === 'n' && path.length > 1
+    && path.slice(0, -1).reduce((item, key) => item[key], content).id === 'bottom-his-arms-above-your-head');
+  assert.match(named.pt, /outra pessoa|sua dupla|quem está por cima/, named.pt);
+});
+
 test('the wording check catches the words it is meant to', () => {
+  for (const words of ['Primeiro jogador · 3 movimentos', 'Guardião da postura', 'Nunca fique parado na tartaruga.',
+    'para não ser levantado', 'Faça a ponte apoiado nas costas', 'Agarrado por trás', 'aparece para todos na hora']) {
+    assert.match(words, portugueseWords, words);
+  }
+  assert.match('A dupla só observa.', pairActsAlone);
+  assert.doesNotMatch('A sua dupla tenta escapar.', pairActsAlone);
+  assert.doesNotMatch('Quadril parado no chão, com o cotovelo apoiado no seu joelho, todos os dias.', portugueseWords);
   for (const words of ['Segure o braço dele.', 'O aluno descobre.', 'Cumprimente o parceiro.', 'Peça ao professor.', 'Se ele defender']) {
     assert.match(words, portugueseWords, words);
   }

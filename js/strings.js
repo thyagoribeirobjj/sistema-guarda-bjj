@@ -79,7 +79,7 @@ export const strings = {
 
   myBelt: { pt: 'Minha faixa', en: 'My belt' },
   minBelt: { pt: 'Faixa mínima', en: 'Minimum belt' },
-  noMinBelt: { pt: 'Nenhuma: para todos', en: 'None: for everyone' },
+  noMinBelt: { pt: 'Nenhuma: para todo mundo', en: 'None: for everyone' },
   beltWhite: { pt: 'Faixa branca', en: 'White belt' },
   beltBlue: { pt: 'Faixa azul', en: 'Blue belt' },
   beltPurple: { pt: 'Faixa roxa', en: 'Purple belt' },
@@ -163,7 +163,7 @@ export const strings = {
 
   admin: { pt: 'Admin', en: 'Admin' },
   adminTitle: { pt: 'Admin · Esta semana', en: 'Admin · This week' },
-  adminLead: { pt: 'O que você salvar aqui aparece para todos na hora.', en: 'What you save here shows for everyone right away.' },
+  adminLead: { pt: 'O que você salvar aqui aparece para todo mundo na hora.', en: 'What you save here shows for everyone right away.' },
   adminSignIn: { pt: 'Entre com uma conta de admin para mudar a semana.', en: 'Sign in with an admin account to change the week.' },
   notAdmin: { pt: 'Esta conta só pode ver o site. Peça a quem cuida do site para adicionar você como admin.', en: 'This account can only view the site. Ask the coach to add you as an admin.' },
   liveOnly: { pt: 'O admin só funciona no site publicado (sistemaguarda.com).', en: 'Admin only works on the published site (sistemaguarda.com).' },
@@ -202,7 +202,7 @@ export const strings = {
   loading: { pt: 'Carregando…', en: 'Loading…' },
   thisWeekForm: { pt: 'Esta semana', en: 'This week' },
   nextWeekForm: { pt: 'Próxima semana', en: 'Next week' },
-  nextWeekLead: { pt: 'Prepare a aula da próxima semana. Ela entra no lugar desta, para todos, no dia de início.', en: "Prepare next week's class. It takes this week's place, for everyone, on its start date." },
+  nextWeekLead: { pt: 'Prepare a aula da próxima semana. Ela entra no lugar desta, para todo mundo, no dia de início.', en: "Prepare next week's class. It takes this week's place, for everyone, on its start date." },
   startsOn: { pt: 'Começa em', en: 'Starts on' },
   nextReady: { pt: 'Pronta: entra no lugar desta semana em', en: "Ready: it takes this week's place on" },
   nextNotReady: { pt: 'Nada preparado ainda.', en: 'Nothing prepared yet.' },
