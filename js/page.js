@@ -25,9 +25,17 @@ export function isPage(view) {
 }
 
 // The first page: Kids for the kids class, otherwise This week when there is one, otherwise Curriculum.
+// The week often arrives a moment after the page shows. Once the person has done something, the first page stays the
+// one they saw (Back to it too): a week arriving later waits in the navigation until they open it.
+let keptFirstPage = '';
 export function firstPage() {
   if (settings.audience === 'kids' && kidsPage()) return 'kids';
+  if (keptFirstPage && isPage(keptFirstPage)) return keptFirstPage;
   return state.week ? 'semana' : 'curriculum';
+}
+
+export function keepFirstPage() {
+  if (!keptFirstPage) keptFirstPage = state.week ? 'semana' : 'curriculum';
 }
 
 // The pages of the adult curriculum, which the kids class doesn't see in the navigation.

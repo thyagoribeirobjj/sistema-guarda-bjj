@@ -7,7 +7,7 @@ import { changeNote } from './notes.js';
 import { shrinkImage } from './media.js';
 import { changeLesson, redrawPlan } from './lesson.js';
 import { designerInput, designerChange } from './designer.js';
-import { $, drawn, adoptMain, render, search, route } from './page.js';
+import { $, drawn, adoptMain, render, search, route, keepFirstPage } from './page.js';
 import { clickActions, changeMedia } from './actions.js';
 
 // The site's page listening: clicks, changes, typing, keys, the menus' focus and the address. Set up once, when
@@ -97,6 +97,10 @@ document.addEventListener('focusout', (event) => {
   const to = event.relatedTarget;
   if (menu && to && !menu.contains(to) && to.getAttribute('aria-controls') !== menu.id) closeMenus();
 });
+// The person has started using the page: a week arriving from now on no longer replaces the first page.
+for (const type of ['pointerdown', 'keydown', 'wheel', 'focusin', 'hashchange']) {
+  window.addEventListener(type, keepFirstPage, { capture: true, passive: true });
+}
 window.addEventListener('hashchange', route);
 // A Google photo that doesn't load leaves the letter under it showing.
 document.addEventListener('error', (event) => { if (event.target.matches?.('#account img')) event.target.remove(); }, true);

@@ -86,6 +86,9 @@ never "fix" a conflict by replacing a whole file with your copy.
 Four groups: **This week** (`#semana`, only when there is a week), **Curriculum** (`#curriculum`, a card per part of
 the fight, and each part: `#fund`, `#top`…), **My tree** (`#meu`) and **Coach** (`#lesson`, `#method`, and Admin for
 admins). Coach tools are open to everyone; they just live in a quieter place. Without a week the site opens on Curriculum.
+The week often arrives a moment after the page shows: it turns an untouched first page into This week, but once the person
+has done anything (a tap, a key, a scroll, the search box, a link or Back) the first page stays the one they saw and This
+week just appears in the navigation (`firstPage()` in `js/page.js`).
 
 - **One description.** `students` and `coach` in `js/nav.js` list the entries. The bottom bar, the sidebar and the
   account menu's Coach section are all drawn from them; never write a navigation link by hand.
