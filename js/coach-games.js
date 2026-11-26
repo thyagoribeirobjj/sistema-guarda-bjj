@@ -2,20 +2,26 @@ import { loadCoachGames } from './firebase-tv.js';
 
 // The games coaches made in the game designer (site/games): { <id>: game }. Read only when the lesson builder,
 // the designer or the TV remote opens, never on an ordinary visit. loaded is false until they are known; readAt is
-// when they were asked for (ms).
-export const coachGames = { games: {}, loaded: false, readAt: 0 };
+// when they were asked for (ms); fresh, whether they came from the database rather than this browser's copy.
+export const coachGames = { games: {}, loaded: false, readAt: 0, fresh: false };
 let loading = null;
+let loadingFresh = false;
+let loads = 0;
 
-// fresh: an admin's page always asks the database (other pages may use this browser's copy of a few minutes ago).
+// fresh: an admin's page always asks the database (other pages may use this browser's copy of a few minutes ago). A
+// fresh copy asked for while an older one loads takes its place.
 export function followCoachGames({ fresh = false } = {}) {
+  if (fresh && !loadingFresh) loading = null;
+  if (loading) return loading;
   const asked = Date.now();
-  loading ||= loadCoachGames({ fresh }).then((games) => {
-    coachGames.games = games;
-    coachGames.loaded = true;
-    coachGames.readAt = asked;
+  const load = ++loads;
+  loadingFresh = fresh;
+  loading = loadCoachGames({ fresh }).then((games) => {
+    if (load !== loads) return;
+    Object.assign(coachGames, { games, loaded: true, readAt: asked, fresh });
   }).catch((error) => {
     console.error(error);
-    loading = null;
+    if (load === loads) loading = null;
   });
   return loading;
 }

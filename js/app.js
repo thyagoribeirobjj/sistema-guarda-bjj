@@ -119,9 +119,11 @@ function renderCookieBar() {
 }
 
 // The coaches' own games (site/games): read once the lesson builder opens, never on an ordinary visit. They join the
-// game lists where they are.
+// game lists where they are. An admin always gets them fresh from the database, also when the account turns out to
+// be an admin's after this browser's copy was shown.
 function followLessonGames() {
-  if (state.view !== 'lesson' || state.search || !state.online || coachGames.loaded) return;
+  if (state.view !== 'lesson' || state.search || !state.online) return;
+  if (coachGames.loaded && (coachGames.fresh || !state.admin)) return;
   followCoachGames({ fresh: state.admin }).then(() => {
     if (state.view !== 'lesson' || state.search) return;
     showCoachGames();

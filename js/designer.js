@@ -2,7 +2,7 @@ import { html } from './html.js';
 import { settings } from './settings.js';
 import { t } from './strings.js';
 import { translate } from './firebase.js';
-import { saveCoachGame } from './firebase-tv.js';
+import { saveCoachGame, gamesSavedAt } from './firebase-tv.js';
 import { coachGames, keepCoachGame, newGameId, tellCoachGameSaved } from './coach-games.js';
 import { updateTvsShowing } from './tv-follow.js';
 import { allGames, findGame, gameChoice } from './plan.js';
@@ -143,10 +143,20 @@ async function translateChanged(game) {
 // The save itself already worked, so a failure here only waits for the next press on the phone.
 async function keepAndShow(id, game) {
   const before = coachGames.games;
+  const sent = Date.now();
   await saveCoachGame(id, game);
+  const answered = Date.now();
   keepCoachGame(id, game);
-  await updateTvsShowing(id, before, coachGames.games).catch((error) => console.error(error));
+  await updateTvsShowing(id, before, coachGames.games, () => databaseClock(sent, answered)).catch((error) => console.error(error));
   tellCoachGameSaved(id);
+}
+
+// The database's clock, from this computer's: the save was stamped by the database while it was on its way, about
+// half way between sending it and its answer. Read only when a TV shows the game.
+async function databaseClock(sent, answered) {
+  const savedAt = await gamesSavedAt();
+  const ahead = savedAt === null ? 0 : (sent + answered) / 2 - savedAt;
+  return () => Date.now() - ahead;
 }
 
 async function saveDesign(redraw) {

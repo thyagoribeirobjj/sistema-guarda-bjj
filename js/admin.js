@@ -1,6 +1,6 @@
 import { html } from './html.js';
 import { content, loadContent, findTechnique } from './content.js';
-import { startFirebase, onAccountChange, signIn, signOut, isAdmin, loadWeek, saveWeek, archiveWeek, loadPastWeeks, translate } from './firebase.js';
+import { startFirebase, onAccountChange, signIn, signOut, checkAdmin, loadWeek, saveWeek, archiveWeek, loadPastWeeks, translate } from './firebase.js';
 import { settings, applyTheme, useAccount } from './settings.js';
 import { t, text } from './strings.js';
 import { translatedFields, translationPlan, answerPlan, handFixedAfter, writtenAfter, translationLabel } from './translation.js';
@@ -396,15 +396,34 @@ async function openWeek(email) {
   showForm(email, notice);
 }
 
+// Without a connection nobody can be told apart from an admin: the page says there is no connection and tries again
+// by itself. null when someone else signed in meanwhile.
+let signedIn = null;
+async function adminOnceConnected(user) {
+  for (;;) {
+    try {
+      return await checkAdmin(user.email);
+    } catch (error) {
+      console.warn('No connection to the database yet:', error.code || error.message);
+      message('noConnection');
+      await new Promise((done) => setTimeout(done, 5000));
+      if (signedIn !== user) return null;
+    }
+  }
+}
+
 async function start() {
   applyTheme();
   await loadContent();
   if (!(await startFirebase())) return message('liveOnly');
   onAccountChange(async (user) => {
+    signedIn = user;
     await useAccount(user);
     delete main.dataset.email;
     if (!user) return message('adminSignIn', html`<button type="button" class="primary" id="signIn">${t('signInWithGoogle')}</button>`);
-    if (!(await isAdmin(user.email))) return message('notAdmin', accountLine(user.email));
+    const admin = await adminOnceConnected(user);
+    if (admin === null) return;
+    if (!admin) return message('notAdmin', accountLine(user.email));
     main.dataset.email = user.email;
     await showPage(user.email);
   });

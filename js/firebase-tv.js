@@ -23,12 +23,6 @@ export async function saveCoachGame(id, game) {
 
 const session = (data) => ({ ...data, updatedAt: data.updatedAt?.toMillis?.() ?? null });
 
-export async function readTv(code) {
-  const { db, fb } = database();
-  const snapshot = await fb.getDoc(fb.doc(db, `tv/${code}`));
-  return snapshot.exists() ? session(snapshot.data()) : null;
-}
-
 // Admins only, when the remote opens: every session, one read each (there are a few, and old ones are deleted).
 export async function listTvs() {
   const { db, fb } = database();
@@ -44,11 +38,30 @@ export async function tvsShowing(id) {
   return (await Promise.all(asking)).flatMap((snapshot) => snapshot.docs.map((tv) => ({ code: tv.id, session: session(tv.data()) })));
 }
 
-export function writeTv(code, session) {
+// No coach's email here: anyone with the TV's code can read the session.
+function stored({ name, language, show, clock, beeps, stamp }, fb) {
+  return { name, language, show, clock, beeps, stamp, updatedAt: fb.serverTimestamp() };
+}
+
+// A change made to the session as it is stored now: change(session or null) gives the session to write, or null to
+// write nothing. If another change lands between the read and the write, the database refuses the write and change
+// runs again on what is stored then, so neither change is lost. One read and one write, as a read then a write.
+export function changeTv(code, change) {
   const { db, fb } = database();
-  const { name, language, show, clock, beeps, stamp } = session;
-  // No coach's email here: anyone with the TV's code can read the session.
-  return fb.setDoc(fb.doc(db, `tv/${code}`), { name, language, show, clock, beeps, stamp, updatedAt: fb.serverTimestamp() });
+  const place = fb.doc(db, `tv/${code}`);
+  return fb.runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(place);
+    const next = await change(snapshot.exists() ? session(snapshot.data()) : null);
+    if (next) transaction.set(place, stored(next, fb));
+    return next;
+  });
+}
+
+// When site/games was last saved, by the database's clock (ms), or null.
+export async function gamesSavedAt() {
+  const { db, fb } = database();
+  const snapshot = await fb.getDoc(fb.doc(db, 'site/games'));
+  return snapshot.data()?.updatedAt?.toMillis?.() ?? null;
 }
 
 export function deleteTv(code) {
@@ -70,11 +83,16 @@ function liveDatabase() {
 }
 
 // The remote: calls change(session or null) now and on every change, one read each. Returns how to stop.
+// Only what the database itself answered: without a connection the database code answers from its own memory, which
+// may not know the session at all, so the remote waits (and says there is no connection) instead.
 export function followTv(code, change, failed) {
   let stop = null;
   let stopped = false;
   liveDatabase().then(({ db, fb }) => {
-    if (!stopped) stop = fb.onSnapshot(fb.doc(db, `tv/${code}`), (snapshot) => change(snapshot.exists() ? session(snapshot.data()) : null), failed);
+    if (stopped) return;
+    stop = fb.onSnapshot(fb.doc(db, `tv/${code}`), { includeMetadataChanges: true }, (snapshot) => {
+      if (!snapshot.metadata.fromCache) change(snapshot.exists() ? session(snapshot.data()) : null);
+    }, failed);
   }).catch(failed);
   return () => {
     stopped = true;

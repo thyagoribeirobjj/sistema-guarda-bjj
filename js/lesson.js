@@ -29,15 +29,23 @@ function option(value, label, selected) {
 const chosenGame = () => lessonGame(pick, coachGames.games);
 
 // The coaches' own games, read once the lesson builder opens, join the list where it is: the page isn't drawn again
-// under the coach, only the new choices are added (and the plan, if its game is one of them).
+// under the coach. New games are added; when a fresher copy renamed or removed one, the list's choices are replaced.
+// The plan is drawn again when its game is a coach's (it may have changed).
 export function showCoachGames() {
   const select = document.getElementById('selGame');
-  if (!select) return;
-  const listed = new Set([...select.options].map((entry) => entry.value));
-  const added = allGames(coachGames.games).filter((entry) => !listed.has(entry.id));
-  if (!added.length) return;
-  select.insertAdjacentHTML('beforeend', String(html`${added.map((entry) => gameChoice(entry, entry.id === pick.game))}`));
-  if (added.some((entry) => entry.id === pick.game)) redrawPlan();
+  if (!select || !coachGames.loaded) return;
+  const picked = pick.game;
+  if (pick.game.startsWith('coach-') && !coachGames.games[pick.game]) pick.game = chosenGame()?.id || '';
+  const wanted = document.createElement('select');
+  wanted.innerHTML = String(html`${allGames(coachGames.games).map((entry) => gameChoice(entry, entry.id === pick.game))}`);
+  const choices = (list) => [...list.options].map((option) => `${option.value} ${option.textContent}`);
+  const [now, then] = [choices(select).join('\n'), choices(wanted)];
+  if (now !== then.join('\n')) {
+    if (now === then.slice(0, select.options.length).join('\n')) select.append(...[...wanted.options].slice(select.options.length));
+    else select.replaceChildren(...wanted.options);
+    select.value = pick.game;
+  }
+  if (pick.game !== picked || pick.game.startsWith('coach-')) redrawPlan();
 }
 
 export function lessonView() {
