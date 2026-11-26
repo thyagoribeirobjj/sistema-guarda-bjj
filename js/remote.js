@@ -1,7 +1,8 @@
 import { html } from './html.js';
 import { settings } from './settings.js';
 import { t } from './strings.js';
-import { readTv, writeTv, deleteTv, listTvs } from './firebase-tv.js';
+import { readTv, writeTv, followTv } from './firebase-tv.js';
+import { deleteOldSessions } from './tv-follow.js';
 import { coachGames, followCoachGames, reloadCoachGames, onCoachGameSaved } from './coach-games.js';
 import { gameId, chosenGame, lessonModule } from './plan.js';
 import { isCode, typedCode } from './tv-code.js';
@@ -15,19 +16,19 @@ import { remotePage, clockPart, phaseLine, toggleLabel } from './remote-view.js'
 // Every button reads the session first, since another coach may have changed it; the phone then runs the clock
 // itself from its own change, as the TV does from its arrival.
 const tvsKey = 'sg-tvs';
-const dayMs = 24 * 60 * 60 * 1000;
 let slot = null;
 let tvs = [];
 let current = '';
 let session = null;
 let knownAt = 0; // performance.now() when session.clock was true
 let mine = ''; // the mark of this phone's last change
+const sent = new Set(); // the marks of this phone's changes to this TV
 let choice = '';
 let adding = false;
 let typed = '';
 let status = '';
 let ticker = null;
-let following = null;
+let unfollow = null;
 let wake = null;
 let awake = false; // whether the phone was last asked to stay awake
 let built = { named: undefined, games: null, steps: [] };
@@ -94,25 +95,31 @@ function tick() {
 // Someone else's change: its clock was set when it was saved, by the database's time. A coach's game on a session
 // changed since the games were read may have been changed too (js/tv-follow.js): they are read again.
 async function adopt(stored) {
-  if (stored && stored.stamp === mine) return;
+  // What the phone shows already, or its own earlier change coming back after a later one.
+  if (stored?.stamp && (stored.stamp === session?.stamp || (sent.has(stored.stamp) && stored.stamp !== mine))) return;
   session = stored;
   knownAt = performance.now() - Math.max(0, Date.now() - (stored?.updatedAt ?? Date.now()));
   if (needsCoachGames(stored?.show) && stored.updatedAt > coachGames.readAt) await reloadCoachGames();
 }
 
-async function follow() {
-  if (!current) return;
+// The chosen TV's session now and, until another is chosen, each change to it: another coach's press, or a game saved
+// in the designer (js/tv-follow.js), shows within a second or two. Resolves once it has been read.
+function follow() {
+  unfollow?.();
+  sent.clear();
   const code = current;
-  try {
-    const stored = await readTv(code);
-    if (code !== current) return;
-    const before = JSON.stringify(session);
-    const games = coachGames.games;
-    await adopt(stored);
-    if (JSON.stringify(session) !== before || games !== coachGames.games) drawClock();
-  } catch (error) {
-    console.error(error);
-  }
+  if (!code) return Promise.resolve();
+  return new Promise((ready) => {
+    unfollow = followTv(code, (stored) => heard(code, stored).finally(ready), (error) => { console.error(error); ready(); });
+  });
+}
+
+async function heard(code, stored) {
+  if (code !== current) return;
+  const before = JSON.stringify(session);
+  const games = coachGames.games;
+  await adopt(stored);
+  if (JSON.stringify(session) !== before || games !== coachGames.games) drawClock();
 }
 
 function lessonToShow() {
@@ -148,6 +155,7 @@ async function sendNow(change) {
     const now = session?.show ? position() : base.clock;
     const next = { ...base, language: settings.language, ...change(base, steps(), now), stamp: newStamp() };
     mine = next.stamp;
+    sent.add(mine);
     session = next;
     knownAt = performance.now();
     status = '';
@@ -219,6 +227,7 @@ function forgetTv() {
   session = null;
   draw();
   if (current) chooseTv(current);
+  else follow();
 }
 
 // While the clock runs, the phone's screen stays on where the browser allows it.
@@ -234,17 +243,6 @@ async function keepAwake(running) {
       wake.addEventListener('release', () => { wake = null; });
     }
   } catch {}
-}
-
-// Every session untouched for a day is deleted when a coach opens the remote, whichever phone started it (admins can
-// list the TVs). A phone still remembers its TV; its next game starts a new session.
-async function deleteOldSessions() {
-  try {
-    const old = (await listTvs()).filter(({ session: stored }) => stored.updatedAt && Date.now() - stored.updatedAt > dayMs);
-    await Promise.all(old.map(({ code }) => deleteTv(code).catch((error) => console.error(error))));
-  } catch (error) {
-    console.error(error);
-  }
 }
 
 function listen() {
@@ -265,14 +263,10 @@ function listen() {
     } else if (button.dataset.remote === 'forget') forgetTv();
     else commands[button.dataset.remote]?.();
   });
-  // A game saved in the designer in another tab of this browser: at once, not at the next look.
-  onCoachGameSaved(() => reloadCoachGames().then(follow));
-  // Coming back to the page: the other coaches' changes, and the screen kept on again (the browser let it go).
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'visible') return;
-    awake = false;
-    follow();
-  });
+  // A game saved in the designer in another tab of this browser: the chooser's list too.
+  onCoachGameSaved(() => reloadCoachGames().then(drawClock));
+  // Coming back to the page: the screen kept on again (the browser let it go).
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') awake = false; });
 }
 
 export async function openRemote(into) {
@@ -292,15 +286,13 @@ export async function openRemote(into) {
   choiceFromSession();
   draw();
   clearInterval(ticker);
-  clearInterval(following);
   ticker = setInterval(tick, 250);
-  following = setInterval(() => { if (document.visibilityState === 'visible') follow(); }, 20000);
   (document.querySelector(typed ? '#tvName' : '#tvCode') || document.querySelector('[data-remote="toggle"], #remoteShow'))?.focus();
 }
 
 export function closeRemote(into) {
   clearInterval(ticker);
-  clearInterval(following);
+  unfollow?.();
   keepAwake(false);
   into.hidden = true;
   into.innerHTML = '';

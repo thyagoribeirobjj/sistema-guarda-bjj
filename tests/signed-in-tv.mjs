@@ -127,6 +127,11 @@ export async function tvSteps({ visitor, step, until, stored, seed, address, peo
     await tvShows(tv, '#tvsClock', clock(shown.parts[0].seconds + 30), 'the TV shows 30 s more');
     await press(coach, 'back');
     await tvShows(tv, '.tvs-phase', 'Get ready', 'back to the part before');
+    // Three quick presses all count, and the phone, following the TV live, ends on the last, not one in between.
+    for (let presses = 0; presses < 3; presses += 1) await press(coach, 'more');
+    await tvShows(tv, '#tvsClock', clock(shown.ready + 90), 'the TV shows 90 s more');
+    await coach.waitForTimeout(2000);
+    assert.equal(await coach.locator('#remoteTime').textContent(), clock(shown.ready + 90), 'the phone shows the same');
     await press(coach, 'end');
     await tvShows(tv, '.tvs-how', 'Choose a game', 'the TV waits for the next game');
     assert.equal(await tv.locator('.tvs-name').textContent(), 'Front mat');
@@ -223,12 +228,15 @@ export async function tvSteps({ visitor, step, until, stored, seed, address, peo
     await tvShows(tv, '#tvsClock', '0:45', 'its first part, 45 s');
   });
 
-  await step('a coach\'s game changed in the designer while a TV shows it: the TV and the phone pick it up by themselves, the clock carrying on', async () => {
+  await step('a coach\'s game changed in the designer while a TV shows it: the TV and a phone in another browser pick it up within seconds by themselves, the clock carrying on', async () => {
     await press(coach, 'toggle');
     await until(async () => seconds(await tvClock(tv)) < 44, 'the 45 s part runs', soon);
     const otherTv = (await stored(`tv/${second.code}`)).stamp;
-    const builder = await coach.context().newPage();
-    await builder.goto(`${address}/?emulators=${encodeURIComponent(JSON.stringify(people.coach))}#lesson`);
+    // The designer on a laptop, the remote on a phone: another browser, so no BroadcastChannel between them.
+    const builder = await visitor(people.coach);
+    await builder.open('', '#lesson');
+    await builder.locator('#account').click();
+    await builder.locator('#accountMenu #signIn').click();
     await builder.locator('[data-designer="open"]').click();
     await builder.selectOption('#designFrom', made);
     await builder.locator('#designName').fill('Mount marathon, longer');
@@ -242,7 +250,7 @@ export async function tvSteps({ visitor, step, until, stored, seed, address, peo
     assert.equal((await stored(`tv/${second.code}`)).stamp, otherTv, 'the other TV, showing another game, is left alone');
     assert.deepEqual(tv.writes, [], 'the TV still wrote nothing');
     await press(coach, 'toggle');
-    await builder.close();
+    await builder.context().close();
   });
 
   // The TV counts on from the coach's last press, not from when it loaded: a reload mid-run keeps the phone's time.

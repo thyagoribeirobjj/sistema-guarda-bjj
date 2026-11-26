@@ -63,7 +63,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/game-clock.js`, `js/tv-code.js`, `js/qr.js` | The games on the TV (see below): the clock's rules, a game's limits, carrying the clock over when a game changes (all tested in `tests/game-clock.test.js`), the TV's pairing code, and the QR square (`tests/qr.test.js`). |
 | `js/tv-screen.js`, `js/tv-screen-view.js`, `js/tv-show.js` | The TV screen (`/?tv#screen`): the pairing code, then the game; `tv-show.js` builds what a TV session names into the clock's steps, the same on the TV and the phone. `fitList()` sizes a lesson plan's techniques block to the screen. |
 | `js/remote.js`, `js/remote-view.js` | The coach's phone remote, "Run on the TV" (`admin.html#tv`). |
-| `js/designer.js`, `js/coach-games.js`, `js/tv-follow.js` | The game designer (admins, in the lesson builder) and the coaches' own games (`site/games`), read only when they are needed; `tv-follow.js` hands a saved game to the TVs showing it. |
+| `js/designer.js`, `js/coach-games.js`, `js/tv-follow.js` | The game designer (admins, in the lesson builder) and the coaches' own games (`site/games`), read only when they are needed; `tv-follow.js` hands a saved game to the TVs showing it and deletes old sessions. |
 | `js/admin.js` | The admin page: set this week's class, or prepare next week's with a start date; start from a past week. A new week moves the last one into past weeks. |
 | `js/week.js` | Decides which class is "this week" on a given day (a prepared week takes over on its start date) and what the admin page writes when it does. Tested in `tests/week.test.js`. |
 | `js/students.js`, `js/roster.js` | The admin page's Students section (read only when the coach taps "Show students"); `roster.js` counts, sorts, finds and groups (tested in `tests/roster.test.js`). Never shows notes. |
@@ -185,7 +185,8 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 - **The remote** is the admin page's "Run on the TV" (`admin.html#tv`): pair by the code, name the TV (the phone
   remembers its TVs, `sg-tvs`), choose a game or this class's plan (the lesson builder's choices), then Start/Pause,
   Back a part, Next part, +30 s, Restart, Beeps, End. Each button reads the session first, since another coach may have
-  changed it. A typed code with one wrong character, or two neighbours swapped, is always refused, but the TV can't say
+  changed it; the phone also follows its TV's session live (the full database code, loaded only for the remote: one
+  read when a TV is chosen and one per change), so another coach's press shows within a second or two. A typed code with one wrong character, or two neighbours swapped, is always refused, but the TV can't say
   which codes exist, so a code typed at random still passes about 1 time in 961 and pairs with no TV. Opening the remote
   lists every session (admins only) and deletes those untouched for a day.
 - **The clock** (`js/game-clock.js`): get ready once, then each round's parts, a rest between rounds; a lesson plan's
@@ -194,9 +195,9 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   and the other is translated on save. Coaches' games join the lesson builder's list beside the curriculum's. Saving a
   game a TV shows hands it over at once (`js/tv-follow.js`): the designer asks for the sessions showing that game (only
   those are read), carries each clock over (`carryClock()`: the same round and part, the time spent there kept) and
-  writes them. The TV reads the games again with each change of its session; a phone does when its session changed
-  after it read them: at once in the same browser (a `BroadcastChannel`), otherwise at its next look (20 s, or when
-  its screen comes back). TVs showing other games read nothing more.
+  writes them. The TV and every phone following that TV hear the change and read the games again, so both run the
+  saved game within a second or two (a phone in the same browser also hears it through a `BroadcastChannel`). TVs
+  showing other games read nothing more.
 - A new field in a game, a session or the clock needs the same change in `js/game-clock.js` (`gameProblems`),
   `firestore.rules` and its tests. The rules may evaluate only 1,000 expressions per save, which is why a game has at
   most 6 parts and a session names its game instead of carrying it.

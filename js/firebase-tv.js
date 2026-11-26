@@ -56,6 +56,32 @@ export function deleteTv(code) {
   return fb.deleteDoc(fb.doc(db, `tv/${code}`));
 }
 
+// The phone remote's live session: the full database code (as on the TV) beside the page's smaller one, loaded only
+// when the remote follows a TV.
+let live = null;
+function liveDatabase() {
+  const { app, sdk, emulators } = database();
+  live ||= import(sdk + 'firebase-firestore.js').then((store) => {
+    const db = store.getFirestore(app);
+    if (emulators) store.connectFirestoreEmulator(db, '127.0.0.1', 8080);
+    return { db, fb: store };
+  });
+  return live;
+}
+
+// The remote: calls change(session or null) now and on every change, one read each. Returns how to stop.
+export function followTv(code, change, failed) {
+  let stop = null;
+  let stopped = false;
+  liveDatabase().then(({ db, fb }) => {
+    if (!stopped) stop = fb.onSnapshot(fb.doc(db, `tv/${code}`), (snapshot) => change(snapshot.exists() ? session(snapshot.data()) : null), failed);
+  }).catch(failed);
+  return () => {
+    stopped = true;
+    stop?.();
+  };
+}
+
 // The TV screen only (the full database code): calls change(session or null) now and on every change.
 export function listenToTv(code, change, failed) {
   const { db, fb } = database();

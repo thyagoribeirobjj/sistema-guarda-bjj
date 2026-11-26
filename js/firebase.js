@@ -60,7 +60,7 @@ export async function loadAnalytics() {
 
 // For js/firebase-tv.js, the database calls of the games on the TV, kept in a file of their own.
 export function database() {
-  return { db, fb, auth };
+  return { db, fb, auth, app: firebaseApp, sdk, emulators: Boolean(testPerson) };
 }
 
 export function onAccountChange(callback) {
