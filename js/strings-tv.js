@@ -3,9 +3,9 @@
 export const tvStrings = {
   // the TV screen
   tvScreenName: { pt: 'Sistema Guarda · TV', en: 'Sistema Guarda · TV' },
-  tvPairHow: { pt: 'No celular do professor: Admin, “Rodar na TV”, e digite este código. Ou aponte a câmera para o quadrado.', en: 'On the coach’s phone: Admin, “Run on the TV”, and type this code. Or point the camera at the square.' },
+  tvPairHow: { pt: 'No celular de quem dá a aula: Admin, “Rodar na TV”, e digite este código. Ou aponte a câmera para o quadrado.', en: 'On the coach’s phone: Admin, “Run on the TV”, and type this code. Or point the camera at the square.' },
   tvCodeLabel: { pt: 'Código desta TV', en: 'This TV’s code' },
-  tvPairedWaiting: { pt: 'Pronta. Escolha um jogo no celular do professor.', en: 'Ready. Choose a game on the coach’s phone.' },
+  tvPairedWaiting: { pt: 'Pronta. Escolha um jogo no celular de quem dá a aula.', en: 'Ready. Choose a game on the coach’s phone.' },
   tvGameMissing: { pt: 'Este jogo não está mais no site. Escolha outro no celular.', en: 'This game is no longer on the site. Choose another on the phone.' },
   tvGetReady: { pt: 'Prepare-se', en: 'Get ready' },
   tvStartsIn: { pt: 'Começa em', en: 'Starts in' },
@@ -23,7 +23,7 @@ export const tvStrings = {
   tvTheEnd: { pt: 'o fim', en: 'the end' },
   tvLeft: { pt: 'para acabar', en: 'left' },
   tvTime: { pt: 'Tempo!', en: 'Time!' },
-  tvTimeSay: { pt: 'Fim. Cumprimente o parceiro e forme a fila.', en: 'Game over. Bow, thank your partner, line up.' },
+  tvTimeSay: { pt: 'Fim. Cumprimente a sua dupla e forme a fila.', en: 'Game over. Bow, thank your partner, line up.' },
   tvMore: { pt: 'mais', en: 'more' },
   tvSoundOn: { pt: '🔊 Toque aqui para ligar o som', en: '🔊 Press here for sound' },
   tvSoundBlocked: { pt: 'O navegador desta TV não deixou tocar som. O relógio funciona sem ele.', en: 'This TV’s browser didn’t allow sound. The clock works without it.' },
@@ -63,7 +63,7 @@ export const tvStrings = {
   designerLead: { pt: 'Comece de um jogo ou do zero. Os jogos salvos aparecem na lista de jogos, ao lado dos do currículo, e rodam na TV.', en: 'Start from a game or from scratch. Saved games appear in the game list, beside the curriculum’s, and run on the TV.' },
   startFromGame: { pt: 'Começar de', en: 'Start from' },
   blankGame: { pt: 'Um jogo em branco', en: 'A blank game' },
-  coachGame: { pt: 'jogo do professor', en: 'coach’s game' },
+  coachGame: { pt: 'jogo da equipe', en: 'coach’s game' },
   gameName: { pt: 'Nome', en: 'Name' },
   gameStartsIn: { pt: 'Começa em', en: 'Starts in' },
   topWinsBy: { pt: 'Cima vence se', en: 'Top wins by' },
@@ -81,7 +81,7 @@ export const tvStrings = {
   wholeGame: { pt: 'O jogo inteiro', en: 'Whole game' },
   saveGame: { pt: 'Salvar o jogo', en: 'Save the game' },
   deleteGame: { pt: 'Apagar este jogo', en: 'Delete this game' },
-  deleteGameQuestion: { pt: 'Apagar este jogo para todos os professores? Não dá para desfazer.', en: 'Delete this game for every coach? This can’t be undone.' },
+  deleteGameQuestion: { pt: 'Apagar este jogo para toda a equipe? Não dá para desfazer.', en: 'Delete this game for every coach? This can’t be undone.' },
   yesDeleteGame: { pt: 'Sim, apagar', en: 'Yes, delete it' },
   keepGame: { pt: 'Não, manter', en: 'No, keep it' },
   gameNeedsName: { pt: 'Dê um nome ao jogo.', en: 'Give the game a name.' },
@@ -92,6 +92,6 @@ export const tvStrings = {
 
   // the "Show on the TV" sheet
   tvGameClock: { pt: 'Relógio dos jogos na TV', en: 'The game clock on the TV' },
-  tvGameClockHow: { pt: 'Abra este endereço no navegador da TV. Ela mostra um código, e o professor roda os jogos pelo celular: Admin, “Rodar na TV”.', en: 'Open this address in the TV’s browser. It shows a code, and the coach runs the games from the phone: Admin, “Run on the TV”.' },
+  tvGameClockHow: { pt: 'Abra este endereço no navegador da TV. Ela mostra um código, e quem dá a aula roda os jogos pelo celular: Admin, “Rodar na TV”.', en: 'Open this address in the TV’s browser. It shows a code, and the coach runs the games from the phone: Admin, “Run on the TV”.' },
   tvOpenClock: { pt: 'Abrir o relógio aqui', en: 'Open the game clock here' },
 };
