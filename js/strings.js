@@ -40,7 +40,7 @@ export const strings = {
   whereTo: { pt: 'Para onde ir', en: 'Where to go' },
   next: { pt: 'Próximo passo', en: 'Next step' },
   chain: { pt: 'Combina com', en: 'Chains with' },
-  combo: { pt: 'Se ele defender', en: 'If he defends' },
+  combo: { pt: 'Se ele defender', en: 'If they defend' },
   counter: { pt: 'Do outro lado da posição', en: 'The other side of the position' },
   groupTrans: { pt: 'Mudar de posição', en: 'Change position' },
   groupSubmit: { pt: 'Finalizar', en: 'Submit' },

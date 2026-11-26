@@ -78,7 +78,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `data/kids.json` | The kids' worlds (`mark` is the world's emoji; `alwaysOpen`), challenges (task, XP and the site's technique ids in `techniques`) and XP levels. Read only for the kids class or both. |
 | `firestore.rules` | Who can read and change what in the database. |
 | `js/translation.js` | Decides, on the admin page, which fields to translate, keep or ask about (see Translation). |
-| `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `week.test.js` and `roster.test.js` check next week and the students list; `rules.test.js` checks the database rules; `game-clock.test.js` and `qr.test.js` check the game clock, the TV's code and the QR square; `kids.test.js` the kids' game; `smoke.mjs` uses the site in a real browser (with `smoke-kids.mjs` and `smoke-tv.mjs`: the TV screen's layout for every game and the techniques block); `signed-in.mjs` uses it signed in (with `signed-in-tv.mjs`: TVs and coaches' phones), as made-up students and a coach, against local copies of sign-in and the database; both answer Google Analytics themselves (`analytics-fake.mjs`); `nightly.mjs` checks the published site every night. |
+| `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `week.test.js` and `roster.test.js` check next week and the students list; `rules.test.js` checks the database rules; `game-clock.test.js` and `qr.test.js` check the game clock, the TV's code and the QR square; `kids.test.js` the kids' game; `wording.test.js` that no text assumes a person's gender; `smoke.mjs` uses the site in a real browser (with `smoke-kids.mjs` and `smoke-tv.mjs`: the TV screen's layout for every game and the techniques block); `signed-in.mjs` uses it signed in (with `signed-in-tv.mjs`: TVs and coaches' phones), as made-up students and a coach, against local copies of sign-in and the database; both answer Google Analytics themselves (`analytics-fake.mjs`); `nightly.mjs` checks the published site every night. |
 | `docs/translator.gs` | A copy of the translator that runs in the site's Google account (see Translation). |
 
 ## Navigation
@@ -106,6 +106,9 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 - Curriculum wording goes in the `data/` files. Button and label wording goes in `js/strings.js`.
 - Every text has both languages: `{ "pt": "…", "en": "…" }`. Show it with `text(value)`; show a label with `t('key')`.
 - Thyago may give you text in one language only. Write it in that language and fill in the other yourself.
+- **English says "their".** In English never write he, his, him, she or her for a training partner, student, coach or
+  child: use "their", "your partner", "the person on top". `tests/wording.test.js` fails if one comes back.
+  Portuguese keeps its usual forms ("o professor", "o aluno", "ele"); that is the head coach's choice.
 
 ## Content (`data/content.json`, `data/curriculum.json`)
 
