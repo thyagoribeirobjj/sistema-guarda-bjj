@@ -104,9 +104,14 @@ export async function kidsSteps({ open, openLate, step, hits, analyticsCookies, 
     await visit.waitForTimeout(800);
     assert.equal(visit.analytics.length, sent, 'nothing more is sent');
     assert.ok(await visit.locator('#cookieBar').isHidden());
+    const hitsBefore = hits(visit).length;
     await visit.locator('#account').click();
     await visit.locator('[data-audience-choice="adult"]').click();
     await visit.locator('main .part-card').first().waitFor();
     await until(() => visit.analytics.length > sent);
+    await until(() => hits(visit).length > hitsBefore);
+    await visit.waitForTimeout(800);
+    const counted = hits(visit).slice(hitsBefore).map((hit) => hit.page_location);
+    assert.deepEqual(counted, [`${new URL(visit.url()).origin}/${new URL(visit.url()).hash}`], 'only the adult page it opens, not the kids\' page it left');
   });
 }

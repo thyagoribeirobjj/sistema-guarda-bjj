@@ -12,8 +12,14 @@ import { settings } from './settings.js';
 const choiceKey = 'sg-cookies';
 const adsOff = { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' };
 
+// A signed-in person may train in the kids class, which only their account says: nothing is counted for them until
+// it is known (classKnown()). This browser notes that someone is signed in here, so after a reload that wait starts
+// with the very first page; a signed-out visitor is counted as before.
+const signedInKey = 'sg-signed-in';
+
 // '' (not chosen yet) | 'accepted' | 'rejected'. Kept here too, so a browser that can't store it still obeys it.
 let choice = storedChoice();
+let classUnknown = signedInHere();
 let barOpen = false;
 let analytics = null; // { sdk, instance } once loaded
 let loading = null;
@@ -29,6 +35,25 @@ function storedChoice() {
   }
 }
 
+function signedInHere() {
+  try { return localStorage.getItem(signedInKey) === 'yes'; } catch { return false; }
+}
+
+// Someone signed in (or out): for someone signed in, nothing is counted until classKnown().
+export function holdCountingFor(user) {
+  classUnknown = Boolean(user);
+  try {
+    if (user) localStorage.setItem(signedInKey, 'yes');
+    else localStorage.removeItem(signedInKey);
+  } catch {}
+}
+
+// The account's class is known (or the person signed out): counting follows it from now on.
+export function classKnown() {
+  classUnknown = false;
+  followAudience();
+}
+
 function storeChoice(value) {
   choice = value;
   try {
@@ -42,8 +67,10 @@ export function cookiesOffered() {
 }
 
 // "I train in" changed (here, or with the account arriving): the kids class switches counting off at once and
-// deletes its cookies, keeping the cookie choice itself; going back to another class follows that choice again.
+// deletes its cookies, keeping the cookie choice itself; going back to another class follows that choice again,
+// from the next page on (the page being left was a kids' page, so it is not counted).
 export function followAudience() {
+  if (!countable()) page = null;
   if (!started || !analyticsId()) return;
   if (cookiesOffered()) {
     if (choice === 'accepted') turnOn();
@@ -52,6 +79,8 @@ export function followAudience() {
   barOpen = false;
   turnOff();
 }
+
+const countable = () => settings.audience !== 'kids';
 
 // A page opened for the television (?tv, js/tv.js) has no one at it to answer, so it does not ask. With no choice it counts nothing.
 const forTv = new URLSearchParams(location.search).has('tv');
@@ -77,7 +106,7 @@ async function turnOn() {
   loading ||= loadAnalytics().then(async (loaded) => ((await loaded.sdk.isSupported()) ? loaded : null))
     .catch((error) => { console.error(error); return null; });
   const loaded = await loading;
-  if (!loaded || call !== turnOnCalls || choice !== 'accepted' || !cookiesOffered()) return;
+  if (!loaded || call !== turnOnCalls || choice !== 'accepted' || !cookiesOffered() || classUnknown) return;
   if (!analytics) {
     // The defaults, before anything is sent: statistics yes, advertising no.
     loaded.sdk.setConsent({ analytics_storage: 'granted', ...adsOff });
@@ -152,7 +181,7 @@ export function forgetCookieChoice() {
 }
 
 function send() {
-  if (analytics && choice === 'accepted' && cookiesOffered() && page) analytics.sdk.logEvent(analytics.instance, 'page_view', page);
+  if (analytics && choice === 'accepted' && cookiesOffered() && !classUnknown && page) analytics.sdk.logEvent(analytics.instance, 'page_view', page);
 }
 
 // The link is built from the page's own hash, so nothing else in the address (a search, a test's ?emulators=) goes.
@@ -162,12 +191,12 @@ const pageLink = (hash) => `${location.origin}${location.pathname}${hash}`;
 export function countView(view, title) {
   const changed = view !== countedView;
   countedView = view;
-  page = { page_location: pageLink(`#${view}`), page_title: title };
+  page = countable() ? { page_location: pageLink(`#${view}`), page_title: title } : null;
   if (changed) send();
 }
 
 export function countTechnique(id, name) {
-  page = { page_location: pageLink(`#t-${id}`), page_title: name };
+  page = countable() ? { page_location: pageLink(`#t-${id}`), page_title: name } : null;
   send();
 }
 

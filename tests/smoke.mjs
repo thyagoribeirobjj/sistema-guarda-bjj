@@ -15,6 +15,7 @@ import { chromium } from 'playwright-core';
 import { checkout } from './checkout.mjs';
 import { kidsSteps } from './smoke-kids.mjs';
 import { tvSteps } from './smoke-tv.mjs';
+import { routeAnalytics, hits as analyticsHits } from './analytics-fake.mjs';
 
 const options = process.argv.slice(2);
 const codeFromAt = options.indexOf('--code-from');
@@ -72,48 +73,6 @@ const firestoreValue = (value) => (typeof value === 'string' ? { stringValue: va
   : Array.isArray(value) ? { arrayValue: { values: value.map(firestoreValue) } }
   : { mapValue: { fields: Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, firestoreValue(inner)])) } });
 const firestoreFields = (value) => firestoreValue(value).mapValue.fields;
-
-// Google Analytics, answered here so nothing ever reaches the real one. Every request to its hosts (and to the
-// Firebase ones its code calls) is noted in `requests`; Tag Manager's gtag.js is a small stand-in that sends each
-// event the site asks for to www.google-analytics.com as JSON, as long as gtag.js itself would (collection on,
-// analytics_storage not denied), and sets a _ga cookie the way gtag.js does once it may.
-const analyticsHosts = /googletagmanager\.com|google-analytics\.com|analytics\.google\.com|firebase\.googleapis\.com|firebaseinstallations\.googleapis\.com/;
-const fakeGtag = `(() => {
-  const layer = window.dataLayer = window.dataLayer || [];
-  const consent = {};
-  let id = '';
-  let config = {};
-  const allowed = () => id && !window['ga-disable-' + id] && consent.analytics_storage !== 'denied';
-  const cookie = (name) => { document.cookie = name + '=GA1.1.made-up; path=/; max-age=600' + (location.hostname.includes('.') ? '; domain=' + location.hostname : ''); };
-  const handle = (command) => {
-    const [kind, first, second] = Array.from(command);
-    if (kind === 'consent') Object.assign(consent, second);
-    if (kind === 'config') { id = first; config = second || {}; }
-    if (!allowed() || (kind !== 'event' && kind !== 'config')) return;
-    cookie('_ga');
-    cookie('_ga_' + id.replace(/^G-/, ''));
-    if (kind !== 'event') return;
-    const hit = { tid: id, en: first, dl: location.href, dt: document.title, ul: navigator.language, ...config, ...second };
-    fetch('https://www.google-analytics.com/g/collect?v=2', { method: 'POST', mode: 'no-cors', body: JSON.stringify(hit) });
-  };
-  layer.forEach(handle);
-  const push = layer.push.bind(layer);
-  layer.push = (...commands) => { commands.forEach(handle); return push(...commands); };
-})();`;
-
-async function routeAnalytics(context, requests, measurementId) {
-  await context.route(analyticsHosts, (route) => {
-    const request = route.request();
-    requests.push({ url: request.url(), body: request.postData() || '' });
-    const url = new URL(request.url());
-    if (url.hostname.includes('googletagmanager')) return route.fulfill({ contentType: 'text/javascript', body: fakeGtag });
-    if (url.pathname.endsWith('/webConfig')) return route.fulfill({ json: { measurementId, appId: '1:1:web:1' } });
-    if (url.hostname.startsWith('firebaseinstallations')) {
-      return route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: { name: 'installation', fid: 'cMadeUpInstallation1', refreshToken: 'made-up', authToken: { token: 'made-up', expiresIn: '604800s' } } });
-    }
-    return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
-  });
-}
 
 // `config`: more Firebase settings, such as a measurementId (Google Analytics switched on). page.analytics: the
 // requests made to Google Analytics' hosts (see routeAnalytics). page.releaseNow(): let the Firebase code through
@@ -718,7 +677,7 @@ await step('a minimum belt an admin set shows on its technique, and "up to my be
 // routeAnalytics(), so nothing reaches the real one.
 const measurementId = 'G-MADEUP123';
 const withAnalytics = { config: { measurementId } };
-const hits = (visit) => visit.analytics.filter((request) => request.url.includes('google-analytics.com/g/collect')).map((request) => JSON.parse(request.body));
+const hits = (visit) => analyticsHits(visit.analytics);
 const analyticsCookies = async (visit) => (await visit.context().cookies()).filter((cookie) => cookie.name.startsWith('_ga'));
 const online = (visit) => visit.locator('#accountMenu #signIn').waitFor({ state: 'attached' });
 const consentCommands = (visit) => visit.evaluate(() => (window.dataLayer || []).map((command) => Array.from(command)).filter(([kind]) => kind === 'consent').map(([, , settings]) => settings));
