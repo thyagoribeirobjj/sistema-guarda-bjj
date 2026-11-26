@@ -1,4 +1,4 @@
-// What the page is showing right now. app.js changes it, then calls render().
+// What the page is showing right now. js/page.js and js/actions.js change it, then call render().
 export const state = {
   view: '',
   search: '',

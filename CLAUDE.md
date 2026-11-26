@@ -26,7 +26,7 @@ never "fix" a conflict by replacing a whole file with your copy.
   (`it`, `M`, `pd`), no clever one-liners. Someone new should follow any function on first read.
 - **Few comments.** Only where the reason isn't obvious from the code. Never narrate what a line does.
 - **Reuse before you write.** Look for an existing piece first: `techniqueChip`, `stageBlock`, `intro`, `gameCard`
-  in `js/views.js`; `field` in `js/admin.js`; `.tech`, `.stage`, `.card`, `.field`, `.pill`, `.chipbtn` in `css/app.css`.
+  in `js/views.js`; `field` in `js/admin-page.js`; `.tech`, `.stage`, `.card`, `.field`, `.pill`, `.chipbtn` in `css/app.css`.
   If you write the same markup twice, make it a small function.
 - **Templates, not string-building.** All markup goes through the `html` tag from `js/html.js`:
   `` html`<b>${text(technique.n)}</b>` ``. It escapes every value, which is what keeps the site safe.
@@ -49,7 +49,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `css/kids.css` | The kids' class: "I train in", the kids' belts, the Kids page and the coach's answers (both pages). |
 | `css/tv.css` | The games on the TV: the TV screen, the coach's phone remote and the game designer. |
 | `css/nav.css` | The site's navigation and page layout (`index.html` only): the bottom bar and part switcher under 900px, the sidebar from 900px. |
-| `js/app.js` | Starts the site: header, search box, navigation, links (`#curriculum`, `#top`, `#t-top-base`), clicks, sign-in. |
+| `js/app.js`, `js/page.js`, `js/actions.js`, `js/page-events.js` | Starts the site (`app.js`: the content, the database, the account); `page.js` draws it (header, search box, navigation, the page) and follows links (`#curriculum`, `#top`, `#t-top-base`); `actions.js` is what each button does; `page-events.js` listens for clicks, typing, keys and the address. |
 | `js/nav.js` | The navigation, described once (see Navigation below), and the menus (the account menu and the part switcher). |
 | `js/account.js` | The header's account button (`#account`, the person's Google photo) and its menu (`#accountMenu`): sign in or out, the Coach section, the theme picker. The button always shows; without Firebase (a local preview) the menu has no sign-in. |
 | `js/views.js` | The pages: Curriculum home, this week (and past weeks), each part of the fight, my tree (favorites), method; and the search results. |
@@ -64,7 +64,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/tv-screen.js`, `js/tv-screen-view.js`, `js/tv-list.js`, `js/tv-show.js` | The TV screen (`/?tv#screen`): the pairing code, then the game; `tv-show.js` builds what a TV session names into the clock's steps, the same on the TV and the phone. `js/tv-list.js` sizes a lesson plan's techniques block to the screen (`fitList()`) and turns its pages (`turnPage()`). |
 | `js/remote.js`, `js/remote-view.js` | The coach's phone remote, "Run on the TV" (`admin.html#tv`). |
 | `js/designer.js`, `js/coach-games.js`, `js/tv-follow.js` | The game designer (admins, in the lesson builder) and the coaches' own games (`site/games`), read only when they are needed; `tv-follow.js` hands a saved game to the TVs showing it and deletes old sessions. |
-| `js/admin.js` | The admin page: set this week's class, or prepare next week's with a start date; start from a past week. A new week moves the last one into past weeks. |
+| `js/admin.js`, `js/admin-week.js`, `js/admin-saving.js`, `js/admin-page.js` | The admin page: `admin.js` starts it and follows the account; `admin-week.js` sets this week's class, or prepares next week's with a start date, or starts from a past week (`admin-saving.js`: switching a prepared week, translating, filing the old week); `admin-page.js` the markup they share. A new week moves the last one into past weeks. |
 | `js/week.js` | Decides which class is "this week" on a given day (a prepared week takes over on its start date) and what the admin page writes when it does. Tested in `tests/week.test.js`. |
 | `js/students.js`, `js/roster.js` | The admin page's Students section (read only when the coach taps "Show students"); `roster.js` counts, sorts, finds and groups (tested in `tests/roster.test.js`). Never shows notes. |
 | `js/privacy.js`, `js/delete-data.js` | The privacy page (`#privacy`) and "Delete my data"; `delete-data.js` remembers a press until it is done and finishes one that was cut off. Its words must stay true to the code and `firestore.rules`. |
@@ -95,7 +95,7 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 - **Desktop (900px and wider):** a sidebar left of the page, the parts listed under Curriculum (folding them away is
   remembered in this browser, `sg-nav-parts`), Coach at the bottom. The account menu has the Coach section too.
 - **A new part of the fight** is only content (see below): Curriculum, the sidebar and the switcher list `content.order`.
-- **A new coach tool:** one entry in `coach` (`js/nav.js`), its page function in `pages` (`js/app.js`), its label in
+- **A new coach tool:** one entry in `coach` (`js/nav.js`), its page function in `pages` (`js/page.js`), its label in
   `js/strings.js`, and `intro(title, lead, '', t('coach'))` so the page shows the "Coach" line above its title.
 - Every page has its own link (`#<view>`); old links keep working, so never rename a view.
 - **Privacy** (`#privacy`) is linked from the foot of the sidebar and the account menu (with "Signing in lets your coaches
@@ -271,7 +271,7 @@ whether it was translated automatically or corrected by hand (nothing when that 
 `translationLabel()`, using `written`). A corrected
   field is listed in `handFixed` and is never translated over silently: if its original text changes, the page
   asks first. What happens to each field on save is decided in `js/translation.js` (tested in
-  `tests/translation.test.js`); `js/admin.js` carries it out. The translator is
+  `tests/translation.test.js`); `js/admin-week.js` carries it out. The translator is
   `docs/translator.gs`, running free in the site's own Google account (sistemaguarda@gmail.com); its address is
   in `site/config`. Changing it means redeploying it there, which is John's.
 

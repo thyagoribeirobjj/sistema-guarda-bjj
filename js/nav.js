@@ -7,7 +7,7 @@ import { heart } from './views.js';
 
 // The site's navigation, described once. The bottom bar (phones), the sidebar (desktop) and the account menu's
 // Coach section are all drawn from these two lists. A new part of the fight needs nothing here: Curriculum lists
-// content.order. A new coach tool is one more entry in `coach` (and its view in `pages`, js/app.js).
+// content.order. A new coach tool is one more entry in `coach` (and its view in `pages`, js/page.js).
 const icon = (paths) => html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
 const calendarIcon = icon(html`<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>`);
 const curriculumIcon = icon(html`<path d="M12 3 2 8l10 5 10-5z"/><path d="m2 13 10 5 10-5"/>`);

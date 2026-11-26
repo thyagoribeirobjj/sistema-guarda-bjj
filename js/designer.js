@@ -206,7 +206,7 @@ async function deleteDesign(answer, redraw) {
   focus('#designFrom');
 }
 
-// The designer's buttons, for the click handler in js/app.js; redraw draws the page again.
+// The designer's buttons, for the click handler (js/actions.js); redraw draws the page again.
 export function designerActions(redraw) {
   return [
     ['[data-designer="open"]', () => {

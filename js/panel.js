@@ -225,7 +225,7 @@ function drawPanel(id, markup, again, focus) {
 
 // The control in root, once redrawn, that does what this one did: the same id, or the same data-* attributes and
 // link (the same progress mark, the same technique, the same page), counted in order when several match.
-// Also used for the main page (js/app.js).
+// Also used for the main page (js/page.js).
 export function sameControl(element, root) {
   const data = [...element.attributes].filter(({ name }) => name.startsWith('data-') || name === 'href');
   const selector = element.id ? `#${CSS.escape(element.id)}`
