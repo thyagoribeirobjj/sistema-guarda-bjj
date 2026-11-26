@@ -48,7 +48,7 @@ export function notesEpoch() {
   return epoch;
 }
 
-// An open note box is filled again at once (js/app.js), so no key typed into it brings back what was forgotten.
+// An open note box is filled again at once (js/page-events.js), so no key typed into it brings back what was forgotten.
 export function forgetNotes() {
   epoch++;
   notes = {};

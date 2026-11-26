@@ -12,6 +12,16 @@
 
 export const limits = { parts: 6, name: 80, line: 200, label: 60, say: 300, seconds: [5, 1800], rounds: [1, 20], rest: [0, 600], ready: [0, 60] };
 
+// The most techniques a lesson plan on the TV names (firestore.rules checks the same in a session): every technique
+// of the largest part of the fight is 65.
+export const lessonItemsLimit = 100;
+
+// The lesson's techniques as a TV session holds them: '<stage>-<technique>', each once, at most lessonItemsLimit.
+export function lessonItems(items) {
+  const keys = (Array.isArray(items) ? items : []).map(String).filter((key) => /^\d{1,2}-\d{1,2}$/.test(key));
+  return [...new Set(keys)].slice(0, lessonItemsLimit);
+}
+
 // The steps of one game: get ready, then each round's parts, with a rest between rounds.
 export function gameSteps(game) {
   const steps = [];
@@ -125,6 +135,16 @@ export function carryClock(before, after, clock) {
 // The length of the step showing, "+30 s" included (for its share of the progress bar).
 export function stepLength(steps, clock) {
   return isOver(steps, clock) ? 0 : steps[clock.step].seconds + clock.added;
+}
+
+// A block too long for the TV screen shows in pages that turn every pageSeconds, counted from the block's own clock,
+// so the TV, a reloaded TV and the phone all agree on the page, and a paused clock keeps it.
+export const pageSeconds = 8;
+
+export function pageAt(steps, clock, pages) {
+  if (pages < 2 || isOver(steps, clock)) return 0;
+  const spent = Math.max(0, stepLength(steps, clock) - clock.left);
+  return Math.floor(spent / pageSeconds) % pages;
 }
 
 export function timeLeft(steps, clock) {

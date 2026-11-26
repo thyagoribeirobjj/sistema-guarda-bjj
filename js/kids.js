@@ -81,7 +81,7 @@ export function kidsView() {
   return html`${intro(t('kids'), t('kidsLead'), levelLine(progress.xp))}${signIn}<div class="worlds">${kids.worlds.map((world, i) => worldCard(world, i + 1, progress))}</div>`;
 }
 
-// The buttons, for js/app.js: each redraws and keeps the focus on the challenge's other button.
+// The buttons, for js/actions.js: each redraws and keeps the focus on the challenge's other button.
 export function kidsActions(render) {
   const answer = (id, claimed) => {
     claimChallenge(id, claimed);

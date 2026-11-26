@@ -2,7 +2,7 @@ import { html } from './html.js';
 import { state } from './state.js';
 import { t } from './strings.js';
 import { intro } from './views.js';
-import { deleteMyData } from './firebase.js';
+import { deleteAccountData, deletionDone } from './delete-data.js';
 import { leaveAccount, clearThisBrowser, useAccount } from './settings.js';
 import { forgetCookieChoice } from './analytics.js';
 
@@ -40,14 +40,18 @@ async function deleteEverything(render) {
   const account = state.account;
   leaveAccount();
   try {
-    await deleteMyData(account.uid);
+    await deleteAccountData(account.uid);
     state.deleting = 'deleted';
   } catch (error) {
     console.error(error);
     state.deleting = 'failed';
-    // Back to saving to the account, so nothing is quietly kept on this device only. Once the settings are gone,
-    // nothing is saved again: pressing "Delete my data" again finishes the job.
-    if (!error.settingsDeleted) await useAccount(account);
+    // Back to saving to the account, so nothing is quietly kept on this device only (and nothing is deleted later by
+    // itself). Once the settings are gone, nothing is saved again: pressing "Delete my data" again finishes the job,
+    // and so does this account's next visit or sign-in here (js/delete-data.js).
+    if (!error.settingsDeleted) {
+      deletionDone();
+      await useAccount(account);
+    }
   }
   render();
 }

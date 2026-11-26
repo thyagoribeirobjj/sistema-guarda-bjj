@@ -15,7 +15,7 @@ const phone = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile:
 // Shown on the TV within a second or two of a press on the phone.
 const soon = 2500;
 
-export async function tvSteps({ visitor, step, until, stored, seed, address, people }) {
+export async function tvSteps({ visitor, step, until, stored, seed, touch, address, people }) {
   const openTv = async () => {
     const tv = await visitor({ email: 'a TV' }, { device: television });
     tv.writes = [];
@@ -137,6 +137,74 @@ export async function tvSteps({ visitor, step, until, stored, seed, address, peo
     assert.equal(await tv.locator('.tvs-name').textContent(), 'Front mat');
   });
 
+  await step('the phone ignores its own earlier change coming back after a later press', async () => {
+    const mount = curriculumGame('top-game-hold-the-mount');
+    await coach.selectOption('#remoteShow', mount.id);
+    await press(coach, 'show');
+    await tvShows(tv, '.tvs-title', 'Hold the mount', 'the TV shows the game');
+    await press(coach, 'more');
+    await until(async () => (await stored(`tv/${tv.code}`))?.clock.added === 30, 'the first +30 s is saved');
+    // The second press shows on the phone at once; its save is held back while the first comes back to the phone, as
+    // it can when the database is slow.
+    let release;
+    const held = new Promise((resolve) => { release = resolve; });
+    let saving = false;
+    // The held save is refused once it arrives (the session changed since it was read) and is worked out again.
+    coach.refusalsExpected = true;
+    await coach.route(/documents:commit/, async (route) => {
+      saving = true;
+      await held;
+      return route.continue();
+    }, { times: 1 });
+    await press(coach, 'more');
+    await until(() => saving, 'the second +30 s is on its way');
+    await coach.locator('#remoteTime', { hasText: clock(mount.ready + 60) }).waitFor({ timeout: soon });
+    await touch(`tv/${tv.code}`);
+    await coach.waitForTimeout(2500);
+    assert.equal(await coach.locator('#remoteTime').textContent(), clock(mount.ready + 60), 'the phone keeps its later press');
+    release();
+    await until(async () => (await stored(`tv/${tv.code}`))?.clock.added === 60, 'the second +30 s is saved, once');
+    await tvShows(tv, '#tvsClock', clock(mount.ready + 60), 'the TV shows both');
+    assert.equal(await coach.locator('#remoteTime').textContent(), clock(mount.ready + 60));
+    coach.refusalsExpected = false;
+    await press(coach, 'end');
+    await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
+  });
+
+  await step('the remote opened with no connection says so instead of "Loading", keeps trying, and carries on by itself', async () => {
+    // No connection at all: not even whether this is a coach can be known. Then only the coach check gets through,
+    // and the remote itself waits for its TV.
+    let blocked = 'everything';
+    const handler = (route) => {
+      const coachCheck = /documents\/admins\//.test(decodeURIComponent(route.request().postData() || ''));
+      return blocked === 'everything' || (blocked === 'all but the coach check' && !coachCheck) ? route.abort('internetdisconnected') : route.continue();
+    };
+    await coach.context().route(/127\.0\.0\.1:8080/, handler);
+    coach.failuresExpected = true;
+    try {
+      await coach.reload();
+      await coach.locator('main', { hasText: 'No internet connection' }).waitFor({ timeout: 10000 });
+      assert.equal(await coach.locator('main', { hasText: 'can only view the site' }).count(), 0, 'not taken for a student');
+      blocked = 'all but the coach check';
+      await coach.locator('#remote', { hasText: 'No internet connection' }).waitFor({ timeout: 15000 });
+      await coach.waitForTimeout(2000);
+      assert.equal(await coach.locator('#remote', { hasText: 'No internet connection' }).count(), 1, 'still saying so while it waits');
+      assert.equal(await coach.locator('#remoteClock').count(), 0, 'and not guessing what the TV shows');
+      blocked = '';
+      await coach.locator(`[data-remote-tv="${tv.code}"]`).waitFor({ timeout: 30000 });
+      assert.equal(await coach.locator('#remote', { hasText: 'No internet connection' }).count(), 0, 'and no longer once it answers');
+    } finally {
+      blocked = '';
+      await coach.context().unroute(/127\.0\.0\.1:8080/, handler);
+      coach.failuresExpected = false;
+    }
+    await coach.selectOption('#remoteShow', 'top-game-hold-the-mount');
+    await press(coach, 'show');
+    await tvShows(tv, '.tvs-title', 'Hold the mount', 'the remote works again');
+    await press(coach, 'end');
+    await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
+  });
+
   let second;
   await step('a second TV keeps its own clock', async () => {
     await coach.locator('[data-remote-tv]').first().waitFor();
@@ -179,9 +247,9 @@ export async function tvSteps({ visitor, step, until, stored, seed, address, peo
     assert.equal(await student.locator('#remote').isVisible(), false);
     student.tryingRefused = true;
     const answer = await student.evaluate(async (code) => {
-      const { writeTv } = await import('/js/firebase-tv.js');
+      const { changeTv } = await import('/js/firebase-tv.js');
       try {
-        await writeTv(code, { name: 'Mine', language: 'en', show: null, clock: { running: false, step: 0, left: 0, added: 0 }, beeps: false, stamp: 'x' });
+        await changeTv(code, () => ({ name: 'Mine', language: 'en', show: null, clock: { running: false, step: 0, left: 0, added: 0 }, beeps: false, stamp: 'x' }));
         return 'allowed';
       } catch (error) {
         return error.code || error.message;
@@ -253,6 +321,85 @@ export async function tvSteps({ visitor, step, until, stored, seed, address, peo
     await builder.context().close();
   });
 
+  await step('a game saved in the designer while a coach presses on the phone: neither is lost, and a laptop clock that is wrong changes nothing', async () => {
+    await press(coach, 'toggle');
+    await until(async () => (await coach.locator('#remoteToggle').textContent()) === 'Pause', 'the part runs', soon);
+    // The laptop's clock is two minutes ahead of the database's.
+    const builder = await visitor(people.coach);
+    builder.refusalsExpected = true; // its held save, refused once it arrives, and worked out again
+    await builder.context().addInitScript(() => {
+      const real = Date.now;
+      Date.now = () => real() + 120000;
+    });
+    let release;
+    const held = new Promise((resolve) => { release = resolve; });
+    let saving = false;
+    // The designer's change to the TV is held back after it has read the session, while the coach presses +30 s.
+    await builder.context().route(/documents:commit/, async (route) => {
+      if (!(route.request().postData() || '').includes(`/tv/${tv.code}`) || saving) return route.continue();
+      saving = true;
+      await held;
+      return route.continue();
+    });
+    await builder.open('', '#lesson');
+    await builder.locator('#account').click();
+    await builder.locator('#accountMenu #signIn').click();
+    await builder.locator('[data-designer="open"]').click();
+    await builder.selectOption('#designFrom', made);
+    await builder.locator('#designName').fill('Mount marathon, renamed');
+    await builder.locator('[data-designer="save"]').click();
+    await until(() => saving, 'the designer is changing the TV');
+    await press(coach, 'more');
+    await until(async () => (await stored(`tv/${tv.code}`))?.clock.added === 30, 'the coach\'s +30 s is saved');
+    release();
+    await builder.locator('#designStatus', { hasText: 'Saved' }).waitFor();
+    await tvShows(tv, '.tvs-title', 'Mount marathon, renamed', 'the game as saved');
+    const session = await stored(`tv/${tv.code}`);
+    assert.equal(session.clock.added, 30, 'the coach\'s +30 s is kept');
+    assert.equal(session.clock.step, 1, 'the same part: two minutes were not counted');
+    await until(async () => Math.abs(seconds(await coach.locator('#remoteTime').textContent()) - seconds(await tvClock(tv))) <= 1, 'the phone shows the same time', soon);
+    const onTv = seconds(await tvClock(tv));
+    assert.ok(onTv > 60 && onTv <= 120, `the 90 s part with 30 s more carries on (${onTv} s left)`);
+    await press(coach, 'toggle');
+    await builder.context().close();
+  });
+
+  await step('the lesson builder of a coach whose account arrives after the page opened lists the coaches\' games fresh; a student reads nothing more', async () => {
+    const now = (await stored('site/games')).games;
+    const old = { games: { [made]: { ...now[made], n: { pt: 'Cópia antiga', en: 'Old copy' } }, 'coach-gone0000': { ...now[made], n: { pt: 'Apagado', en: 'Deleted since' } } } };
+    const keptOld = (context) => context.addInitScript((value) => {
+      if (!sessionStorage.getItem('kept')) localStorage.setItem('sg-site-games', JSON.stringify({ at: Date.now(), value }));
+      sessionStorage.setItem('kept', 'yes');
+    }, old);
+    const gamesRead = (page) => {
+      page.gamesReads = 0;
+      page.on('request', (request) => { if (/documents(:batchGet|\/site\/games)/.test(request.url()) && (request.postData() || request.url()).includes('site/games')) page.gamesReads += 1; });
+    };
+    const builder = await visitor(people.coach);
+    await keptOld(builder.context());
+    gamesRead(builder);
+    await builder.open('', '#lesson');
+    await builder.locator(`#selGame option[value="${made}"]`).waitFor({ state: 'attached' });
+    await builder.locator('#account').click();
+    await builder.locator('#accountMenu #signIn').click();
+    await builder.locator('[data-designer="open"]').waitFor();
+    await until(async () => (await builder.locator(`#selGame option[value="${made}"]`).textContent()) === `${now[made].n.en} · coach’s game`, 'the game as saved now');
+    assert.equal(await builder.locator('#selGame option[value="coach-gone0000"]').count(), 0, 'a game deleted since is gone');
+    assert.ok(builder.gamesReads >= 1, 'read from the database');
+    await builder.context().close();
+    const student = await visitor(people.newcomer);
+    await keptOld(student.context());
+    gamesRead(student);
+    await student.open('', '#lesson');
+    await student.locator('#account').click();
+    await student.locator('#accountMenu #signIn').click();
+    await student.locator('#account[aria-label*="Test"]').waitFor();
+    await student.waitForTimeout(1500);
+    assert.equal(await student.locator(`#selGame option[value="${made}"]`).textContent(), 'Old copy · coach’s game', 'this browser\'s copy of a few minutes ago');
+    assert.equal(student.gamesReads, 0, 'no read for a student');
+    await student.context().close();
+  });
+
   // The TV counts on from the coach's last press, not from when it loaded: a reload mid-run keeps the phone's time.
   await step('a TV reloaded while its clock runs shows the same time as the phone', async () => {
     await coach.selectOption('#remoteShow', 'lesson');
@@ -267,6 +414,78 @@ export async function tvSteps({ visitor, step, until, stored, seed, address, peo
     const [onTv, onPhone] = [seconds(await tvClock(tv)), seconds(await coach.locator('#remoteTime').textContent())];
     assert.ok(onPhone < 595, `the clock ran on the phone (${onPhone} s)`);
     assert.ok(Math.abs(onTv - onPhone) <= 1, `the TV shows ${onTv} s, the phone ${onPhone} s`);
+    await press(coach, 'end');
+    await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
+  });
+
+  await step('a TV that loses its connection while the clock runs shows the right time when it comes back', async () => {
+    await coach.selectOption('#remoteShow', 'lesson');
+    await press(coach, 'show');
+    await tvShows(tv, '.tvs-phase', 'Warm-up', 'the plan is on the TV');
+    await press(coach, 'toggle');
+    await until(async () => seconds(await tvClock(tv)) < 600, 'the TV clock runs', soon);
+    await tv.context().setOffline(true);
+    await tv.waitForTimeout(1000);
+    await press(coach, 'more');
+    await press(coach, 'more');
+    await tv.waitForTimeout(3000);
+    const [offline, phoneTime] = [seconds(await tvClock(tv)), seconds(await coach.locator('#remoteTime').textContent())];
+    assert.ok(phoneTime - offline > 50, `offline, the TV runs on by itself without the presses (TV ${offline} s, phone ${phoneTime} s)`);
+    await tv.waitForTimeout(4000);
+    await tv.context().setOffline(false);
+    await until(async () => Math.abs(seconds(await tvClock(tv)) - seconds(await coach.locator('#remoteTime').textContent())) <= 1, 'back online, the TV shows the phone\'s time', 20000);
+    await press(coach, 'end');
+    await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
+  });
+
+  await step('a long techniques block turns its pages on the TV with the clock, the same after a reload, and fits again when the window changes size', async () => {
+    const every = Object.values(guard.modules.bottom.stages).flatMap((stage, si) => stage.items.map((_, ii) => `${si}-${ii}`));
+    await coach.evaluate(async ([items, game]) => {
+      const { changeSettings } = await import('/js/settings.js');
+      changeSettings({ lesson: { mod: 'bottom', dur: '60', items, game } });
+    }, [every, made]);
+    await coach.selectOption('#remoteShow', 'lesson');
+    await press(coach, 'show');
+    await tvShows(tv, '.tvs-phase', 'Warm-up', 'the plan is on the TV');
+    await press(coach, 'next');
+    await press(coach, 'next');
+    await tvShows(tv, '.tvs-phase', 'Techniques', 'the techniques block');
+    const layout = () => tv.evaluate(() => {
+      const list = document.getElementById('tvsList');
+      const shown = [...list.children].filter((item) => !item.hidden);
+      return {
+        pages: Number(list.dataset.pages), mark: document.getElementById('tvsPages').hidden ? '' : document.getElementById('tvsPages').textContent,
+        columns: list.style.getPropertyValue('--columns'), size: parseFloat(getComputedStyle(list).fontSize), shown: shown.length,
+        fits: list.scrollHeight <= list.clientHeight + 1 && list.scrollWidth <= list.clientWidth + 1,
+      };
+    });
+    const first = await layout();
+    assert.ok(first.pages > 1, `in pages (${first.pages})`);
+    assert.equal(first.mark, `1 / ${first.pages}`);
+    assert.ok(first.fits && first.size >= 0.03 * 720 - 0.5, `nothing cut, and large enough (${first.size} px)`);
+    await press(coach, 'toggle');
+    await until(async () => (await layout()).mark === `2 / ${first.pages}`, 'the next page, by itself', 8000 + soon);
+    const pageNow = async () => {
+      const spent = 20 * 60 - seconds(await coach.locator('#remoteTime').textContent());
+      return `${(Math.floor(spent / 8) % first.pages) + 1} / ${first.pages}`;
+    };
+    await tv.reload();
+    await tv.locator('#tvsPages').waitFor({ timeout: soon });
+    await until(async () => (await layout()).mark === (await pageNow()), 'after a reload, the page the clock is on', soon);
+    // A window made larger: the screen fits itself again at once, as a fresh drawing would.
+    await tv.setViewportSize({ width: 1280, height: 1000 });
+    await tv.waitForTimeout(500);
+    const resized = await layout();
+    const fresh = await tv.evaluate(async () => {
+      const { fitList } = await import('/js/tv-screen-view.js');
+      const list = document.getElementById('tvsList');
+      fitList();
+      return { pages: Number(list.dataset.pages), columns: list.style.getPropertyValue('--columns'), size: parseFloat(getComputedStyle(list).fontSize) };
+    });
+    assert.notDeepEqual([fresh.pages, fresh.columns], [first.pages, first.columns], 'the taller window fits differently');
+    assert.deepEqual({ pages: resized.pages, columns: resized.columns, size: resized.size }, fresh, 'fitted again after the resize');
+    assert.ok(resized.fits, 'nothing cut');
+    await tv.setViewportSize(television.viewport);
     await press(coach, 'end');
     await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
   });

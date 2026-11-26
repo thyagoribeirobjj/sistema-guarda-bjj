@@ -39,13 +39,19 @@ function signedInHere() {
   try { return localStorage.getItem(signedInKey) === 'yes'; } catch { return false; }
 }
 
-// Someone signed in (or out): for someone signed in, nothing is counted until classKnown().
+// Someone signed in (or out): for someone signed in, nothing is counted until classKnown(). Google Analytics already
+// counting this visit (an adult who accepted, signed out until now) is switched off meanwhile, so it sends nothing of
+// its own either; its cookies and the consent stay as they are, for the adult it most likely is.
 export function holdCountingFor(user) {
   classUnknown = Boolean(user);
   try {
     if (user) localStorage.setItem(signedInKey, 'yes');
     else localStorage.removeItem(signedInKey);
   } catch {}
+  if (classUnknown && analytics && !switchedOff) {
+    switchedOff = true;
+    analytics.sdk.setAnalyticsCollectionEnabled(analytics.instance, false);
+  }
 }
 
 // The account's class is known (or the person signed out): counting follows it from now on.
@@ -123,9 +129,9 @@ async function turnOn() {
 }
 
 function turnOff() {
-  if (analytics && !switchedOff) {
+  if (analytics) {
+    if (!switchedOff) analytics.sdk.setAnalyticsCollectionEnabled(analytics.instance, false);
     switchedOff = true;
-    analytics.sdk.setAnalyticsCollectionEnabled(analytics.instance, false);
     analytics.sdk.setConsent({ analytics_storage: 'denied', ...adsOff });
   }
   deleteAnalyticsCookies();

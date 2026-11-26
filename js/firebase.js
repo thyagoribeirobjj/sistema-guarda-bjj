@@ -92,9 +92,20 @@ function write(path, data) {
   return fb.setDoc(fb.doc(db, path), { ...data, updatedAt: fb.serverTimestamp() });
 }
 
-export async function isAdmin(email) {
+// Whether this person is an admin; fails (unlike isAdmin) when the database can't be reached, so the admin page can
+// say there is no connection instead of "this account can only view the site".
+export async function checkAdmin(email) {
   if (!db || !email) return false;
-  return (await read(`admins/${email.toLowerCase()}`).catch(() => null)) !== null;
+  try {
+    return (await read(`admins/${email.toLowerCase()}`)) !== null;
+  } catch (error) {
+    if (error.code === 'permission-denied') return false;
+    throw error;
+  }
+}
+
+export function isAdmin(email) {
+  return checkAdmin(email).catch(() => false);
 }
 
 // ---- what the whole site shows ----
@@ -201,25 +212,31 @@ export function saveApproval(uid, id, answer) {
 // firestore.rules lets them delete only once the settings are gone), then their sign-in record on this site, which
 // signs them out (and so clears this browser). Deleting what is already gone is fine, so pressing again after an
 // interruption finishes the job; error.settingsDeleted says the settings were gone by the time it stopped.
-export async function deleteMyData(uid) {
+// confirm: false never opens Google's window to confirm it's them (js/delete-data.js finishing a cut-off delete).
+export async function deleteMyData(uid, { confirm = true } = {}) {
   let settingsDeleted = false;
   try {
     await fb.deleteDoc(fb.doc(db, `users/${uid}/private/notes`));
     await fb.deleteDoc(fb.doc(db, `users/${uid}`));
     settingsDeleted = true;
     await fb.deleteDoc(fb.doc(db, `approvals/${uid}`));
-    await deleteSignIn();
+    await deleteSignIn(confirm);
   } catch (error) {
     error.settingsDeleted = settingsDeleted;
     throw error;
   }
 }
 
-async function deleteSignIn() {
+// When the account's settings were last saved, by the database's clock (ms); null when there are none.
+export async function settingsSavedAt(uid) {
+  return (await read(`users/${uid}`))?.updatedAt?.toMillis?.() ?? null;
+}
+
+async function deleteSignIn(confirm) {
   try {
     await fb.deleteUser(auth.currentUser);
   } catch (error) {
-    if (error.code !== 'auth/requires-recent-login') throw error;
+    if (error.code !== 'auth/requires-recent-login' || !confirm) throw error;
     // Signed in a while ago: Google asks the person to confirm it's them first.
     const user = auth.currentUser;
     await (testPerson

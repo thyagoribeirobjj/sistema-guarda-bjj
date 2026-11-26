@@ -1,7 +1,7 @@
 // Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
 // previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the cookie bar and
-// Google Analytics (answered here, never the real one), the kids' class (tests/smoke-kids.mjs), the TV screen of the games on the TV (tests/smoke-tv.mjs), the privacy page and "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu or has the focus somewhere,
+// Google Analytics (answered here, never the real one), the kids' class (tests/smoke-kids.mjs), the TV screen of the games on the TV (tests/smoke-tv.mjs), the privacy page and "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu, has the focus somewhere or has started on the first page,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page, robots.txt and the "noai"
 // tags. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm ci)
@@ -341,7 +341,9 @@ await step('on a phone: the bottom bar, Curriculum, a part, the part switcher, n
   const href = await other.getAttribute('href');
   const otherName = (await other.textContent()).trim();
   await other.click();
-  await phone.waitForFunction((hash) => location.hash === hash, href);
+  // The address changes first; the page follows when the browser reports the change, a moment later.
+  await phone.locator(`#partMenu a[href="${href}"][aria-current="page"]`).waitFor({ state: 'attached' });
+  assert.equal(new URL(phone.url()).hash, href);
   assert.equal((await phone.locator('#partButton span').textContent()).trim(), otherName);
   assert.ok(!(await phone.locator('#partMenu').isVisible()), 'the part menu closes');
   assert.equal(await bar.locator('a[href="#curriculum"]').getAttribute('aria-current'), 'page');
@@ -357,7 +359,10 @@ await step('on a phone: the bottom bar, Curriculum, a part, the part switcher, n
 });
 
 await step('on a phone: Back returns to the first page, Search, closing the part menu, the My tree count', async () => {
-  const phone = await open('/', 'en-US', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  // A database with no class this week, so the first page is Curriculum (the real one may have a week, which would
+  // make This week the first page of a visit that opens after it arrived).
+  const phone = await openLate('/', 'en-US', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  await phone.release();
   await phone.locator('main .part-card').first().tap();
   await phone.locator('main .spine').waitFor();
   await phone.goBack();
@@ -570,6 +575,45 @@ await step('the site arriving late and changing the page leaves the focus on the
     if (selector.startsWith('#accountMenu')) assert.ok(await visit.locator('#accountMenu').isVisible(), 'the account menu stays open');
     await visit.context().close();
   }
+});
+
+await step('on a phone: a week arriving after the person started leaves the first page alone; This week waits in the navigation', async () => {
+  const stored = { 'site/week': firestoreFields({ weekOf: '2026-11-23', title: { pt: 'Postura', en: 'Posture' }, note: { pt: '', en: '' }, techniques: ['top-base'] }) };
+  const phone = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true };
+  const firstPageShown = (visit) => visit.evaluate(() => ({ hash: location.hash, heading: document.querySelector('main h2')?.textContent }));
+  const curriculum = { hash: '', heading: 'Curriculum' };
+  // Into a part, Back, then Search: the week arrives with the focus in the search box.
+  let visit = await openLate('/', 'en-US', phone, { stored });
+  await visit.locator('main .part-card').first().tap();
+  await visit.locator('main .spine').waitFor();
+  await visit.goBack();
+  await visit.locator('main .part-card').first().waitFor();
+  await visit.locator('#bottomBar [data-search-button]').tap();
+  await visit.release();
+  await visit.locator('#bottomBar a[href="#semana"]').waitFor();
+  assert.deepEqual(await firstPageShown(visit), curriculum, 'Curriculum stays, with This week in the bottom bar');
+  assert.equal(await visit.evaluate(() => document.activeElement.id), 'search', 'and the focus stays in the search box');
+  await visit.locator('main .part-card').first().tap({ timeout: 5000 });
+  await visit.locator('main .spine').waitFor();
+  await visit.context().close();
+  // The week arrives inside a part: Back returns to the Curriculum the person left, and This week opens when tapped.
+  visit = await openLate('/', 'en-US', phone, { stored });
+  await visit.locator('main .part-card').first().tap();
+  await visit.locator('main .spine').waitFor();
+  await visit.release();
+  await visit.goBack();
+  await visit.locator('main .part-card').first().waitFor({ timeout: 5000 });
+  assert.deepEqual(await firstPageShown(visit), curriculum, 'Back returns to Curriculum');
+  await visit.locator('#bottomBar a[href="#semana"]').tap();
+  await visit.locator('main .week-title', { hasText: 'Posture' }).waitFor();
+  await visit.context().close();
+  // Nothing touched yet: the visit opens on This week, as before.
+  visit = await openLate('/', 'en-US', phone, { stored });
+  await visit.locator('main .part-card').first().waitFor();
+  await visit.release();
+  await visit.locator('main .week-title', { hasText: 'Posture' }).waitFor();
+  assert.equal(new URL(visit.url()).hash, '');
+  await visit.context().close();
 });
 
 await step('a technique opened before the site is online shows its diagram once it is, read once', async () => {

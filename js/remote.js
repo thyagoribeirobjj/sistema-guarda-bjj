@@ -1,12 +1,12 @@
 import { html } from './html.js';
 import { settings } from './settings.js';
 import { t } from './strings.js';
-import { readTv, writeTv, followTv } from './firebase-tv.js';
+import { changeTv, followTv } from './firebase-tv.js';
 import { deleteOldSessions } from './tv-follow.js';
 import { coachGames, followCoachGames, reloadCoachGames, onCoachGameSaved } from './coach-games.js';
 import { gameId, chosenGame, lessonModule } from './plan.js';
 import { isCode, typedCode } from './tv-code.js';
-import { showSteps, startClock, advance, toggle, nextPart, backPart, addTime, restart, clockText } from './game-clock.js';
+import { lessonItems, showSteps, startClock, advance, toggle, nextPart, backPart, addTime, restart, clockText } from './game-clock.js';
 import { buildShow, needsCoachGames, newStamp } from './tv-show.js';
 import { remotePage, clockPart, phaseLine, toggleLabel } from './remote-view.js';
 
@@ -126,7 +126,7 @@ function lessonToShow() {
   const lesson = settings.lesson || {};
   return {
     mod: lessonModule(lesson), dur: lesson.dur === '90' ? '90' : '60',
-    items: (Array.isArray(lesson.items) ? lesson.items : []).slice(0, 200).map(String),
+    items: lessonItems(lesson.items),
     game: gameId(lesson.game) || chosenGame(lesson, coachGames.games)?.id || '',
   };
 }
@@ -147,20 +147,27 @@ function send(change) {
   return sending;
 }
 
+// The session is read and written in one change (changeTv): if another coach's press or a game saved in the designer
+// lands in between, this press is worked out again on top of it, so neither is lost (each try starts from what the
+// phone knew before this press, never from its own try that was not saved).
 async function sendNow(change) {
   const code = current;
+  const known = { session, knownAt, mine };
   try {
-    await adopt(await readTv(code));
-    const base = session || { name: tvs.find((tv) => tv.code === code)?.name || '', show: null, clock: startClock([]), beeps: true };
-    const now = session?.show ? position() : base.clock;
-    const next = { ...base, language: settings.language, ...change(base, steps(), now), stamp: newStamp() };
-    mine = next.stamp;
-    sent.add(mine);
-    session = next;
-    knownAt = performance.now();
-    status = '';
-    drawClock();
-    await writeTv(code, next);
+    await changeTv(code, async (stored) => {
+      ({ session, knownAt, mine } = known);
+      await adopt(stored);
+      const base = session || { name: tvs.find((tv) => tv.code === code)?.name || '', show: null, clock: startClock([]), beeps: true };
+      const now = session?.show ? position() : base.clock;
+      const next = { ...base, language: settings.language, ...change(base, steps(), now), stamp: newStamp() };
+      mine = next.stamp;
+      sent.add(mine);
+      session = next;
+      knownAt = performance.now();
+      status = '';
+      drawClock();
+      return next;
+    });
   } catch (error) {
     console.error(error);
     say(t('tvSendFailed'));
@@ -201,7 +208,7 @@ async function pair(form) {
   session = null;
   mine = '';
   // A TV another coach already runs keeps its game and clock (the chooser shows it); a new one shows what is chosen here.
-  await follow();
+  await sayWhileWaiting(follow(), () => document.getElementById('remoteStatus'));
   choiceFromSession();
   draw();
   await send((base, all, now) => (base.show ? { name, clock: now } : { name, show: named(), clock: startClock(showSteps(buildShow(named(), coachGames.games))) }));
@@ -214,7 +221,7 @@ async function chooseTv(code) {
   mine = '';
   adding = false;
   draw();
-  await follow();
+  await sayWhileWaiting(follow(), () => document.getElementById('remoteStatus'));
   choiceFromSession();
   draw();
   document.querySelector(`[data-remote-tv="${code}"]`)?.focus();
@@ -269,20 +276,31 @@ function listen() {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') awake = false; });
 }
 
+// Waiting for the database more than a few seconds: the page says there is no connection. The live session keeps
+// trying by itself, and the remote carries on once it answers.
+const patience = 4000;
+function sayWhileWaiting(waiting, line) {
+  const slow = setTimeout(() => { if (line()) line().textContent = t('noConnection'); }, patience);
+  return waiting.finally(() => clearTimeout(slow));
+}
+
 export async function openRemote(into) {
   const first = !slot;
   slot = into;
   slot.hidden = false;
-  slot.innerHTML = html`<p class="status" role="status">${t('loading')}</p>`;
+  slot.innerHTML = html`<p class="status" role="status" id="remoteLoading">${t('loading')}</p>`;
   if (first) listen();
   tvs = rememberedTvs();
   const fromSquare = typedCode(location.hash.split('=')[1]);
-  await Promise.all([followCoachGames({ fresh: true }), deleteOldSessions()]);
+  const loadingLine = () => document.getElementById('remoteLoading');
+  await sayWhileWaiting(Promise.all([followCoachGames({ fresh: true }), deleteOldSessions()]), loadingLine);
   choice = choice || gameId(settings.lesson?.game) || chosenGame(settings.lesson || {}, coachGames.games)?.id || 'lesson';
   if (fromSquare && tvs.some((tv) => tv.code === fromSquare)) current = fromSquare;
   else if (fromSquare) [adding, typed] = [true, fromSquare];
   current ||= tvs[0]?.code || '';
-  if (current) await follow();
+  if (current) await sayWhileWaiting(follow(), loadingLine);
+  // Back online: the coaches' games the remote could not read before.
+  if (!coachGames.loaded) await followCoachGames({ fresh: true });
   choiceFromSession();
   draw();
   clearInterval(ticker);

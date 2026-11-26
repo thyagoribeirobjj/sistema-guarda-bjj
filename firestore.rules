@@ -130,8 +130,15 @@ service cloud.firestore {
         && (!('game' in show) || (show.game is string && show.game.size() <= 80))
         && (!('lesson' in show) || (show.lesson.keys().hasOnly(['mod', 'dur', 'items', 'game'])
           && show.lesson.mod is string && show.lesson.mod.size() <= 40 && show.lesson.dur in ['60', '90']
-          && show.lesson.items is list && show.lesson.items.size() <= 200
+          && validLessonItems(show.lesson.items)
           && show.lesson.game is string && show.lesson.game.size() <= 80));
+    }
+    // A lesson's techniques, as the lesson builder names them: '<stage>-<technique>' (both counted from 0), each once,
+    // at most 100 (lessonItemsLimit, js/game-clock.js). Checked as one joined text, a handful of expressions however many.
+    function validLessonItems(items) {
+      return items is list && items.size() <= 100 && items.toSet().size() == items.size()
+        && (items.size() == 0 || (items.join(',').matches('[0-9]{1,2}-[0-9]{1,2}(,[0-9]{1,2}-[0-9]{1,2})*')
+          && items.join(',').split(',').size() == items.size()));
     }
     function validClock(clock) {
       return clock.keys().hasOnly(['running', 'step', 'left', 'added'])

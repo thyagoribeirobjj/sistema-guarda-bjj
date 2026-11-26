@@ -26,7 +26,7 @@ never "fix" a conflict by replacing a whole file with your copy.
   (`it`, `M`, `pd`), no clever one-liners. Someone new should follow any function on first read.
 - **Few comments.** Only where the reason isn't obvious from the code. Never narrate what a line does.
 - **Reuse before you write.** Look for an existing piece first: `techniqueChip`, `stageBlock`, `intro`, `gameCard`
-  in `js/views.js`; `field` in `js/admin.js`; `.tech`, `.stage`, `.card`, `.field`, `.pill`, `.chipbtn` in `css/app.css`.
+  in `js/views.js`; `field` in `js/admin-page.js`; `.tech`, `.stage`, `.card`, `.field`, `.pill`, `.chipbtn` in `css/app.css`.
   If you write the same markup twice, make it a small function.
 - **Templates, not string-building.** All markup goes through the `html` tag from `js/html.js`:
   `` html`<b>${text(technique.n)}</b>` ``. It escapes every value, which is what keeps the site safe.
@@ -49,7 +49,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `css/kids.css` | The kids' class: "I train in", the kids' belts, the Kids page and the coach's answers (both pages). |
 | `css/tv.css` | The games on the TV: the TV screen, the coach's phone remote and the game designer. |
 | `css/nav.css` | The site's navigation and page layout (`index.html` only): the bottom bar and part switcher under 900px, the sidebar from 900px. |
-| `js/app.js` | Starts the site: header, search box, navigation, links (`#curriculum`, `#top`, `#t-top-base`), clicks, sign-in. |
+| `js/app.js`, `js/page.js`, `js/actions.js`, `js/page-events.js` | Starts the site (`app.js`: the content, the database, the account); `page.js` draws it (header, search box, navigation, the page) and follows links (`#curriculum`, `#top`, `#t-top-base`); `actions.js` is what each button does; `page-events.js` listens for clicks, typing, keys and the address. |
 | `js/nav.js` | The navigation, described once (see Navigation below), and the menus (the account menu and the part switcher). |
 | `js/account.js` | The header's account button (`#account`, the person's Google photo) and its menu (`#accountMenu`): sign in or out, the Coach section, the theme picker. The button always shows; without Firebase (a local preview) the menu has no sign-in. |
 | `js/views.js` | The pages: Curriculum home, this week (and past weeks), each part of the fight, my tree (favorites), method; and the search results. |
@@ -61,13 +61,13 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/plan.js` | A lesson plan's timed blocks and its game, from the lesson builder's choices; the list of games (the curriculum's and the coaches'). Used by the lesson builder and the TV. |
 | `js/tv.js` | "Show on the TV" (the sheet: casting, mirroring, the TV's browser, the game clock's address) and `?tv`, the site in large type. |
 | `js/game-clock.js`, `js/tv-code.js`, `js/qr.js` | The games on the TV (see below): the clock's rules, a game's limits, carrying the clock over when a game changes (all tested in `tests/game-clock.test.js`), the TV's pairing code, and the QR square (`tests/qr.test.js`). |
-| `js/tv-screen.js`, `js/tv-screen-view.js`, `js/tv-show.js` | The TV screen (`/?tv#screen`): the pairing code, then the game; `tv-show.js` builds what a TV session names into the clock's steps, the same on the TV and the phone. `fitList()` sizes a lesson plan's techniques block to the screen. |
+| `js/tv-screen.js`, `js/tv-screen-view.js`, `js/tv-list.js`, `js/tv-show.js` | The TV screen (`/?tv#screen`): the pairing code, then the game; `tv-show.js` builds what a TV session names into the clock's steps, the same on the TV and the phone. `js/tv-list.js` sizes a lesson plan's techniques block to the screen (`fitList()`) and turns its pages (`turnPage()`). |
 | `js/remote.js`, `js/remote-view.js` | The coach's phone remote, "Run on the TV" (`admin.html#tv`). |
 | `js/designer.js`, `js/coach-games.js`, `js/tv-follow.js` | The game designer (admins, in the lesson builder) and the coaches' own games (`site/games`), read only when they are needed; `tv-follow.js` hands a saved game to the TVs showing it and deletes old sessions. |
-| `js/admin.js` | The admin page: set this week's class, or prepare next week's with a start date; start from a past week. A new week moves the last one into past weeks. |
+| `js/admin.js`, `js/admin-week.js`, `js/admin-saving.js`, `js/admin-page.js` | The admin page: `admin.js` starts it and follows the account; `admin-week.js` sets this week's class, or prepares next week's with a start date, or starts from a past week (`admin-saving.js`: switching a prepared week, translating, filing the old week); `admin-page.js` the markup they share. A new week moves the last one into past weeks. |
 | `js/week.js` | Decides which class is "this week" on a given day (a prepared week takes over on its start date) and what the admin page writes when it does. Tested in `tests/week.test.js`. |
 | `js/students.js`, `js/roster.js` | The admin page's Students section (read only when the coach taps "Show students"); `roster.js` counts, sorts, finds and groups (tested in `tests/roster.test.js`). Never shows notes. |
-| `js/privacy.js` | The privacy page (`#privacy`) and "Delete my data". Its words must stay true to the code and `firestore.rules`. |
+| `js/privacy.js`, `js/delete-data.js` | The privacy page (`#privacy`) and "Delete my data"; `delete-data.js` remembers a press until it is done and finishes one that was cut off. Its words must stay true to the code and `firestore.rules`. |
 | `js/analytics.js` | Visitor statistics (Google Analytics, through Firebase) and the cookie bar. See Statistics and cookies below. |
 | `js/strings.js` | Every button and label, in PT and EN (the kids' in `js/strings-kids.js`, the games on the TV's in `js/strings-tv.js`). |
 | `js/settings.js` | Each person's language, theme, belt, favorites, progress ("Drilling" / "Got it" per move) and lesson builder choices. |
@@ -86,6 +86,9 @@ never "fix" a conflict by replacing a whole file with your copy.
 Four groups: **This week** (`#semana`, only when there is a week), **Curriculum** (`#curriculum`, a card per part of
 the fight, and each part: `#fund`, `#top`…), **My tree** (`#meu`) and **Coach** (`#lesson`, `#method`, and Admin for
 admins). Coach tools are open to everyone; they just live in a quieter place. Without a week the site opens on Curriculum.
+The week often arrives a moment after the page shows: it turns an untouched first page into This week, but once the person
+has done anything (a tap, a key, a scroll, the search box, a link or Back) the first page stays the one they saw and This
+week just appears in the navigation (`firstPage()` in `js/page.js`).
 
 - **One description.** `students` and `coach` in `js/nav.js` list the entries. The bottom bar, the sidebar and the
   account menu's Coach section are all drawn from them; never write a navigation link by hand.
@@ -95,7 +98,7 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 - **Desktop (900px and wider):** a sidebar left of the page, the parts listed under Curriculum (folding them away is
   remembered in this browser, `sg-nav-parts`), Coach at the bottom. The account menu has the Coach section too.
 - **A new part of the fight** is only content (see below): Curriculum, the sidebar and the switcher list `content.order`.
-- **A new coach tool:** one entry in `coach` (`js/nav.js`), its page function in `pages` (`js/app.js`), its label in
+- **A new coach tool:** one entry in `coach` (`js/nav.js`), its page function in `pages` (`js/page.js`), its label in
   `js/strings.js`, and `intro(title, lead, '', t('coach'))` so the page shows the "Coach" line above its title.
 - Every page has its own link (`#<view>`); old links keep working, so never rename a view.
 - **Privacy** (`#privacy`) is linked from the foot of the sidebar and the account menu (with "Signing in lets your coaches
@@ -132,8 +135,8 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 | `site/media` | Each move's video (a YouTube id), whether it has a diagram and, where an admin set one, its minimum belt: `techniques.<id>.video`, `.diagram`, `.minBelt` | everyone | admins |
 | `diagrams/{id}` | A move's diagram, as a small image (`data:image/webp;base64,…`, under 900 KB) | everyone | admins |
 | `site/config` | `translatorUrl`: where the translator lives | everyone | admins |
-| `site/games` | The coaches' own games, from the game designer: `games: { <coach-xxxxxxxx>: game }` (as in `js/game-clock.js`, at most 50, each at most 6 parts), `changed` (one game per save), `updatedBy`. Read only when the lesson builder, the designer or the TV remote opens. | everyone | admins, one game per save, in the game's shape |
-| `tv/{code}` | What one TV shows, named by the code it shows: `name`, `language`, `show` (`{ game: <id> }`, `{ lesson: { mod, dur, items, game } }` or null), `clock` (`running`, `step`, `left`: seconds left when written, `added`: "+30 s"), `beeps`, `stamp` (which change this is). The TV builds the steps from the site's own files. Every session untouched for a day is deleted when an admin opens the remote (it lists them all, one read each). | anyone, one at a time by its code; only admins can list them (the remote opening; the designer saving a game asks for the sessions showing it) | admins |
+| `site/games` | The coaches' own games, from the game designer: `games: { <coach-xxxxxxxx>: game }` (as in `js/game-clock.js`, at most 50, each at most 6 parts), `changed` (one game per save), `updatedBy`. Read only when the lesson builder, the designer or the TV remote opens; an admin's always fresh (also when the account turns out to be an admin's after the page opened). | everyone | admins, one game per save, in the game's shape |
+| `tv/{code}` | What one TV shows, named by the code it shows: `name`, `language`, `show` (`{ game: <id> }`, `{ lesson: { mod, dur, items, game } }` or null; `items` as the lesson builder names them, `'<stage>-<technique>'`, each once, at most 100: `lessonItems()` in `js/game-clock.js`), `clock` (`running`, `step`, `left`: seconds left when written, `added`: "+30 s"), `beeps`, `stamp` (which change this is). The TV builds the steps from the site's own files. Every session untouched for a day is deleted when an admin opens the remote (it lists them all, one read each). | anyone, one at a time by its code; only admins can list them (the remote opening; the designer saving a game asks for the sessions showing it) | admins |
 | `users/{uid}` | A person's `email`, `name` (from Google), `language`, `theme`, `belt` (`''` or `white`…`black`, picked by them), `seenWeek` (a short mark of the class last looked at on This week, for the "new" dot), `favorites` (their "Minha árvore", in their order), `progress` (`<id>: "learning" \| "done"`) and `lesson` (the lesson builder's choices: `mod`, `dur`, `items`, `game`) | that person and admins (coaches) | that person |
 | `users/{uid}` (kids) | Also `audience` (`'adult'`, `'kids'` or `'both'`: "I train in"; missing means adult), a kids' `belt` (`gray-white`…`green-black`) and `claims` (`<challenge id>: <when, ms>`: the kid's "I did it", at most 100). The rules check that each claim a save adds (a value not stored before) is a whole number, at most 50 added per save (there are 25 challenges, `tests/kids.test.js` keeps it so); with no loops and 1,000 expressions per save they can't check more, and leave claims already stored alone. The coach's answers name any stored claim as a whole number (`claimMark()`, `js/kids-progress.js`), so they always save. | as above | that person |
 | `approvals/{uid}` | A coach's answers to a kid's claims: `challenges: { <id>: { status: 'approved' \| 'again', claim } }` (`claim`: the claim answered), `changed` (one answer per save), `updatedBy`. Read once per visit, only for the kids class or both and signed in; the Students list reads them all when the coach taps "Show students". | that person and admins | admins only (so nobody approves themselves); the person may delete it only once their `users/{uid}` is gone ("Delete my data"), so a kid can't wipe a "Try again" alone; admins may delete it |
@@ -159,7 +162,14 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   prepared week must start after today and after this week's date (`dateProblem()`).
 - **Delete my data** (the privacy page) deletes the notes, `users/{uid}`, then `approvals/{uid}` (the rules allow that only once the
   settings are gone) and the person's sign-in record (Google may ask them to confirm it's them first). Deleting what is
-  already gone is fine: if it stops half way, the page stays signed in without saving and a second press finishes it. Once a device knows the account's documents exist it only updates them, never
+  already gone is fine: if it stops half way, the page stays signed in without saving and a second press finishes it.
+  The press is remembered in that browser (`sg-deleting`: the account and when its settings were last saved, by the
+  database's clock, read just before deleting) until it is done, so a reload, the next visit or the next sign-in of
+  that account there finishes it by itself (`js/delete-data.js`, without opening Google's window: if Google wants the
+  person to confirm, it signs out and the next sign-in finishes). Only that account, and only while its settings are
+  the ones it asked to delete or gone: an account used again since (settings saved anew) keeps everything, and the
+  request is dropped. A press that failed before the settings were deleted goes back to the account and is dropped too.
+  Once a device knows the account's documents exist it only updates them, never
   writes them anew, so another device still signed in finds them gone, writes nothing back and signs out. The notes
   document can only be started (created) while `users/{uid}` exists (`firestore.rules`), so a device that never read
   the notes can't start them again either; the site saves the settings before the first note, and treats a refused
@@ -182,23 +192,31 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   runs the clock itself from the moment a change arrives, so the phone's clock and the TV's need not agree. Nothing on
   it is counted and it shows no cookie bar. Sound needs one press on the TV (its remote's OK); without it the clock runs
   silently; the sound button (or the note that sound is blocked) has a line of its own at the foot, so it never covers a
-  word. Its sizes are shares of the screen (`--u` in `css/tv.css`), so it fills a 16:9 TV without scrolling. A lesson
-  plan's techniques block lists every technique in the largest type that fits (with tips, then names, up to five columns;
-  a whole part of the fight, 65 techniques, fits); only past that do the last give way to "+N more".
+  word. Its sizes are shares of the screen (`--u` in `css/tv.css`), so it fills a 16:9 TV without scrolling, and it
+  fits itself again when the window changes size or goes full screen. A lesson plan's techniques block lists every
+  technique in the largest type that fits (with tips, then names, up to four columns), never below 1.7 u (3% of the
+  screen's height: about 22 px on a 720p TV, 33 px on a 1080p one). What doesn't fit at that size shows in pages
+  (3 columns, 2 u) with a "1 / 3" mark, turning every 8 seconds (`pageAt()` in `js/game-clock.js`): the page comes from
+  the block's own clock, so a paused clock keeps its page and a reloaded TV lands on the right one. Nothing is cut;
+  "+N more" only past 100 techniques, more than a lesson can name.
 - **The remote** is the admin page's "Run on the TV" (`admin.html#tv`): pair by the code, name the TV (the phone
   remembers its TVs, `sg-tvs`), choose a game or this class's plan (the lesson builder's choices), then Start/Pause,
-  Back a part, Next part, +30 s, Restart, Beeps, End. Each button reads the session first, since another coach may have
-  changed it; the phone also follows its TV's session live (the full database code, loaded only for the remote: one
+  Back a part, Next part, +30 s, Restart, Beeps, End. Each button reads and writes the session in one change
+  (`changeTv()`, a transaction in `js/firebase-tv.js`): if another coach's press or a saved game lands in between, the
+  press is worked out again on top of it, so neither is lost. The phone also follows its TV's session live (the full database code, loaded only for the remote: one
   read when a TV is chosen and one per change), so another coach's press shows within a second or two. A typed code with one wrong character, or two neighbours swapped, is always refused, but the TV can't say
   which codes exist, so a code typed at random still passes about 1 time in 961 and pairs with no TV. Opening the remote
-  lists every session (admins only) and deletes those untouched for a day.
+  lists every session (admins only) and deletes those untouched for a day. Opened without a connection, it says so
+  after a few seconds ("No internet connection. Trying again…", also on the admin page while it can't tell an admin)
+  and carries on by itself once the database answers; it never guesses what a TV shows from the database code's memory.
 - **The clock** (`js/game-clock.js`): get ready once, then each round's parts, a rest between rounds; a lesson plan's
   blocks run on the same clock, with the game's own parts in place of the game block.
 - **The game designer** (admins, in the lesson builder) saves to `site/games`; the coach writes in the site's language
   and the other is translated on save. Coaches' games join the lesson builder's list beside the curriculum's. Saving a
   game a TV shows hands it over at once (`js/tv-follow.js`): the designer asks for the sessions showing that game (only
   those are read), carries each clock over (`carryClock()`: the same round and part, the time spent there kept) and
-  writes them. The TV and every phone following that TV hear the change and read the games again, so both run the
+  writes them, each read and written in one change like a press on the phone. The time since a session was saved is
+  counted by the database's clock (learned from the game's own save), never the laptop's. The TV and every phone following that TV hear the change and read the games again, so both run the
   saved game within a second or two (a phone in the same browser also hears it through a `BroadcastChannel`). TVs
   showing other games read nothing more.
 - A new field in a game, a session or the clock needs the same change in `js/game-clock.js` (`gameProblems`),
@@ -220,7 +238,8 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 - **With Kids class, nothing is counted:** no cookie bar, no "Cookies" in the menu, Google Analytics switched off and its
   cookies deleted (`followAudience()` in `js/analytics.js`), whatever the cookie choice; the choice itself is kept.
   For someone signed in nothing is counted until their account's class is known (`holdCountingFor()`, `classKnown()`;
-  `sg-signed-in` notes a signed-in browser so a reload waits from the first page); a signed-out visitor is counted as
+  `sg-signed-in` notes a signed-in browser so a reload waits from the first page; Google Analytics already running on
+  that visit is switched off meanwhile, so it sends nothing of its own either); a signed-out visitor is counted as
   before. Going back to Adult counts from the next page, never the kids' page being left.
   The privacy page's "For the kids class" says what is kept and that a parent or guardian sets up a child's account.
 
@@ -258,7 +277,7 @@ whether it was translated automatically or corrected by hand (nothing when that 
 `translationLabel()`, using `written`). A corrected
   field is listed in `handFixed` and is never translated over silently: if its original text changes, the page
   asks first. What happens to each field on save is decided in `js/translation.js` (tested in
-  `tests/translation.test.js`); `js/admin.js` carries it out. The translator is
+  `tests/translation.test.js`); `js/admin-week.js` carries it out. The translator is
   `docs/translator.gs`, running free in the site's own Google account (sistemaguarda@gmail.com); its address is
   in `site/config`. Changing it means redeploying it there, which is John's.
 

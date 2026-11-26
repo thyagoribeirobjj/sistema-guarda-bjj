@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { upToBelt } from '../js/content.js';
-import { gameProblems, clockGame, gameLength } from '../js/game-clock.js';
+import { gameProblems, clockGame, gameLength, lessonItems, lessonItemsLimit } from '../js/game-clock.js';
 
 const read = (name) => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url), 'utf8'));
 const content = read('content.json');
@@ -18,6 +18,15 @@ test('every technique and game has an id like "top-standing-pass"', () => {
   for (const { key, item } of [...techniques, ...games]) {
     assert.match(item.id || '', new RegExp(`^${key}-[a-z0-9]+(-[a-z0-9]+)*$`), `missing or bad id: ${item.n?.en}`);
   }
+});
+
+test('a lesson that picks every technique of a part of the fight can be shown on a TV (firestore.rules: "<stage>-<technique>", at most 100)', () => {
+  for (const [key, module] of modules) {
+    const every = module.stages.flatMap((stage, si) => stage.items.map((_, ii) => `${si}-${ii}`));
+    assert.ok(every.length <= lessonItemsLimit, `${key}: ${every.length} techniques`);
+    assert.deepEqual(lessonItems(every), every, key);
+  }
+  assert.deepEqual(lessonItems(['0-1', '0-1', 2, '3-4,5-6', 'x', '12-3']), ['0-1', '12-3'], 'each once, and only what the rules accept');
 });
 
 test('ids are unique across both files', () => {
