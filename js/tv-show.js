@@ -11,6 +11,13 @@ export function needsCoachGames(named) {
   return (named?.game || named?.lesson?.game || '').startsWith('coach-');
 }
 
+// A block of the plan on the TV; the techniques block lists each technique (its name and tip, in both languages).
+function showBlock(block) {
+  const seconds = block.minutes * 60;
+  if (block.techniques?.length) return { title: block.title, say: '', list: block.techniques, seconds };
+  return { title: block.title, say: block.list ? block.list.join(' · ') : text(block.text), seconds };
+}
+
 // null when nothing is shown, or the game named is not on the site (any more).
 export function buildShow(named, coachGames = {}) {
   if (named?.game) {
@@ -22,8 +29,11 @@ export function buildShow(named, coachGames = {}) {
   const game = blocks[gameBlock].game;
   return {
     title: content.modules[lessonModule(named.lesson)].title,
-    blocks: blocks.map((block) => ({ title: block.title, say: block.list ? block.list.join(' · ') : text(block.text), seconds: block.minutes * 60 })),
+    blocks: blocks.map(showBlock),
     game: hasClock(game) ? clockGame(game) : null,
     gameAt: gameBlock,
   };
 }
+
+// The mark of one change to a session (its stamp), so a phone knows its own changes from the others'.
+export const newStamp = () => Math.random().toString(36).slice(2, 12);

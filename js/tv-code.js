@@ -1,23 +1,30 @@
-// The code a TV shows so a coach's phone can pair with it: 4 characters from letters and digits that can't be
+// The code a TV shows so a coach's phone can pair with it: 5 characters from letters and digits that can't be
 // mistaken for each other (no 0/O, 1/I/L). The TV never writes to the database, so the phone can't ask whether a
-// TV shows a code; instead the last character is a check on the first three, and a code typed with one character
-// wrong, or two side by side swapped, is refused. Tested in tests/game-clock.test.js.
+// TV shows a code; instead the last two characters are a check on the first three. A code typed with one character
+// wrong, or two side by side swapped, is always refused; a code typed at random still passes about 1 time in 961
+// (31 × 31). Tested in tests/game-clock.test.js.
 export const codeLetters = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
-const base = codeLetters.length; // 31, a prime: every single mistake changes the check
+const base = codeLetters.length; // 31, a prime: every single mistake changes the checks
+export const codeLength = 5;
 
-const weightedSum = (values) => values.reduce((sum, value, index) => sum + (index + 1) * value, 0);
+const modulo = (value) => ((value % base) + base) % base;
 
-// The check character for three: the one that makes 1·a + 2·b + 3·c + 4·check a multiple of 31.
-function checkLetter(first) {
-  const sum = weightedSum([...first].map((letter) => codeLetters.indexOf(letter)));
-  const inverseOfFour = 8; // 4 × 8 = 32, one more than 31
-  return codeLetters[(((base - (sum % base)) % base) * inverseOfFour) % base];
+// The two check characters for three (a, b, c): the ones that make both a + b + c + d + e and
+// 1·a + 2·b + 3·c + 4·d + 5·e multiples of 31. A wrong character changes the first sum; two neighbours swapped
+// change the second.
+function checkLetters(first) {
+  const [a, b, c] = [...first].map((letter) => codeLetters.indexOf(letter));
+  const plain = a + b + c;
+  const weighted = a + 2 * b + 3 * c;
+  const e = modulo(4 * plain - weighted);
+  const d = modulo(-plain - e);
+  return codeLetters[d] + codeLetters[e];
 }
 
 // random: a function giving whole numbers from 0 to 30 (crypto in the browser; fixed in the tests).
 export function newCode(random) {
   const first = Array.from({ length: 3 }, () => codeLetters[random()]).join('');
-  return first + checkLetter(first);
+  return first + checkLetters(first);
 }
 
 export function randomLetterIndex() {
@@ -32,5 +39,5 @@ export function typedCode(typed) {
 }
 
 export function isCode(code) {
-  return /^[2-9A-HJKMNP-Z]{4}$/.test(code) && checkLetter(code.slice(0, 3)) === code[3];
+  return /^[2-9A-HJKMNP-Z]{5}$/.test(code) && checkLetters(code.slice(0, 3)) === code.slice(3);
 }

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   gameSteps, showSteps, totalSeconds, gameLength, clockText, startClock, advance, toggle, nextPart, backPart, addTime,
-  restart, stepLength, timeLeft, rolesSwitched, gameProblems, clockGame, isOver, caughtUp, freshSlack,
+  restart, stepLength, timeLeft, rolesSwitched, gameProblems, clockGame, isOver, caughtUp, freshSlack, carryClock,
 } from '../js/game-clock.js';
 import { newCode, isCode, typedCode, codeLetters } from '../js/tv-code.js';
 
@@ -114,21 +114,52 @@ test('a game is checked against the same limits as the database', () => {
   assert.ok(gameProblems({ ...game, n: { pt: 'Só português' } }).length, 'both languages');
 });
 
-test('a TV code is 4 unmistakable characters whose last one checks the others', () => {
+test('a game changed while a TV shows it: the clock carries on at the same place, with the time spent there kept', () => {
+  const before = gameSteps(game); // ready 10, slow 60, fast 30, rest 90, slow 60, fast 30
+  const slowInRoundTwo = { running: true, step: 4, left: 40, added: 0 }; // 20 s into it
+  const longer = gameSteps({ ...game, parts: [{ ...game.parts[0], seconds: 90 }, game.parts[1]] });
+  assert.deepEqual(carryClock(before, longer, slowInRoundTwo), { running: true, step: 4, left: 70, added: 0 }, 'a longer part runs on');
+  const shorter = gameSteps({ ...game, parts: [{ ...game.parts[0], seconds: 15 }, game.parts[1]] });
+  assert.deepEqual(carryClock(before, shorter, slowInRoundTwo), { running: true, step: 5, left: 30, added: 0 }, 'a part already past its new length hands over');
+  const noRest = gameSteps({ ...game, rest: 0 }); // ready, slow, fast, slow, fast
+  assert.deepEqual(carryClock(before, noRest, slowInRoundTwo), { running: true, step: 3, left: 40, added: 0 }, 'the same round and part, wherever it is now');
+  assert.deepEqual(carryClock(before, noRest, { running: false, step: 3, left: 50, added: 0 }), { running: false, step: 3, left: noRest[3].seconds, added: 0 }, 'a rest that is gone: the step in its place, from its start');
+  const oneRound = gameSteps({ ...game, rounds: 1 });
+  assert.ok(isOver(oneRound, carryClock(before, oneRound, { running: true, step: 5, left: 10, added: 0 })), 'a round that is gone: the end');
+  assert.deepEqual(carryClock(before, before, { running: true, step: 2, left: 50, added: 30 }), { running: true, step: 2, left: 50, added: 30 }, '"+30 s" is kept');
+  assert.ok(isOver([], carryClock(before, [], slowInRoundTwo)), 'a game deleted: the end');
+  // In a lesson plan the other blocks stay where they are.
+  const blocks = [{ title: say('Warm-up'), say: say(''), seconds: 600 }, { title: say('Game'), say: say(''), seconds: 900 }, { title: say('Log'), say: say(''), seconds: 180 }];
+  const plan = showSteps({ title: say('Class'), blocks, game, gameAt: 1 });
+  const planShorter = showSteps({ title: say('Class'), blocks, game: { ...game, rounds: 1 }, gameAt: 1 });
+  assert.deepEqual(carryClock(plan, planShorter, { running: true, step: 7, left: 100, added: 0 }), { running: true, step: 4, left: 100, added: 0 }, 'the log block, after a shorter game');
+});
+
+test('a TV code is 5 unmistakable characters whose last two check the others', () => {
   assert.equal(codeLetters.length, 31);
   assert.doesNotMatch(codeLetters, /[01ILO]/);
-  let seed = 7;
-  const random = () => { seed = (seed * 17 + 5) % 31; return seed; };
-  for (let i = 0; i < 200; i++) {
-    const code = newCode(random);
-    assert.ok(isCode(code), code);
-    // Every single wrong character, and every two side by side swapped, is refused.
-    for (let at = 0; at < 4; at++) {
+  // Every code a TV can show: each passes, and every single wrong character, and every two side by side swapped,
+  // is refused.
+  let codes = 0;
+  for (const a of codeLetters) for (const b of codeLetters) for (const c of codeLetters) {
+    const letters = [a, b, c].map((letter) => codeLetters.indexOf(letter));
+    const code = newCode(() => letters.shift());
+    assert.equal(code.length, 5);
+    assert.ok(code.startsWith(a + b + c) && isCode(code), code);
+    for (let at = 0; at < 5; at++) {
       for (const letter of codeLetters) if (letter !== code[at]) assert.equal(isCode(code.slice(0, at) + letter + code.slice(at + 1)), false, `${code} → ${letter} at ${at}`);
-      if (at < 3 && code[at] !== code[at + 1]) assert.equal(isCode(code.slice(0, at) + code[at + 1] + code[at] + code.slice(at + 2)), false);
+      if (at < 4 && code[at] !== code[at + 1]) assert.equal(isCode(code.slice(0, at) + code[at + 1] + code[at] + code.slice(at + 2)), false, `${code} swapped at ${at}`);
     }
+    codes += 1;
   }
-  assert.equal(typedCode(' k7p-4 '), 'K7P4');
-  assert.equal(isCode('ABC'), false);
-  assert.equal(isCode('AB0D'), false);
+  assert.equal(codes, 31 ** 3);
+  // Of the 961 ways to end three characters, exactly one passes: a code typed at random passes 1 time in 961.
+  for (const first of ['K7P', '222', 'ZZZ', 'A2Z']) {
+    const ends = [...codeLetters].flatMap((d) => [...codeLetters].map((e) => first + d + e)).filter(isCode);
+    assert.equal(ends.length, 1, first);
+  }
+  assert.equal(typedCode(' k7p-4x '), 'K7P4X');
+  assert.equal(isCode('ABCD'), false, 'an old 4-character code is not a code any more');
+  assert.equal(isCode('AB0DE'), false);
+  assert.equal(isCode(newCode(() => 5).toLowerCase()), false);
 });

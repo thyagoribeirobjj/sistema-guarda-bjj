@@ -28,9 +28,9 @@ function readBack(square) {
 }
 
 test('a link becomes a square of the right size, with its finder patterns, level M and a valid mask', () => {
-  const link = 'https://sistemaguarda.com/admin.html#tv=K7P4';
+  const link = 'https://sistemaguarda.com/admin.html#tv=K7P3N';
   const square = qrModules(link);
-  assert.equal(square.length, 33, 'version 4: 44 bytes need more than version 3-M holds');
+  assert.equal(square.length, 33, 'version 4: 45 bytes need more than version 3-M holds');
   const { mask, level } = readBack(square);
   assert.equal(level, 0, 'level M');
   assert.ok(mask >= 0 && mask < 8);
@@ -50,7 +50,7 @@ test('a link becomes a square of the right size, with its finder patterns, level
 });
 
 test('the same text always gives the same square, and each mask gives a different one', () => {
-  const link = 'https://sistemaguarda.com/admin.html#tv=K7P4';
+  const link = 'https://sistemaguarda.com/admin.html#tv=K7P3N';
   assert.deepEqual(qrModules(link), qrModules(link));
   const squares = new Set(Array.from({ length: 8 }, (_, mask) => JSON.stringify(qrModules(link, { mask }))));
   assert.equal(squares.size, 8);
@@ -61,7 +61,7 @@ test('the same text always gives the same square, and each mask gives a differen
 // bits up and down in pairs of columns (skipping the fixed patterns), split the two blocks, and check each one's
 // error correction and the bytes inside.
 test('a version 4 square reads back as the link, with correct error correction', () => {
-  const link = 'https://sistemaguarda.com/admin.html#tv=K7P4';
+  const link = 'https://sistemaguarda.com/admin.html#tv=K7P3N';
   const square = qrModules(link);
   const size = square.length;
   const { mask } = readBack(square);

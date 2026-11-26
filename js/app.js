@@ -14,7 +14,7 @@ import { designerActions, designerInput, designerChange } from './designer.js';
 import { coachGames, followCoachGames } from './coach-games.js';
 import { privacyView, privacyActions } from './privacy.js';
 import { weekOn, localDate } from './week.js';
-import { cookieBar, chooseCookies, reopenCookieChoice, startAnalytics, countView, onCookieChoiceChange, followAudience } from './analytics.js';
+import { cookieBar, chooseCookies, reopenCookieChoice, startAnalytics, countView, onCookieChoiceChange, followAudience, holdCountingFor, classKnown } from './analytics.js';
 import { kidsView, kidsActions, followKids, kidsPage } from './kids.js';
 import { startTvMode, openTvSheet, castToTv, copyTvAddress, sendTvLink, toggleBigScreen, tvScreenAsked } from './tv.js';
 
@@ -416,10 +416,10 @@ document.addEventListener('error', (event) => { if (event.target.matches?.('#acc
 
 async function accountChanged(user) {
   state.account = user;
-  await useAccount(user);
+  holdCountingFor(user);
+  const known = await useAccount(user);
   state.admin = user ? await isAdmin(user.email) : false;
-  // The account may say the person trains in the kids class: its challenges, its answers, and no counting.
-  followAudience();
+  if (!user || known) classKnown();
   await followKids();
   if (!isPage(state.view)) state.view = firstPage();
   render();

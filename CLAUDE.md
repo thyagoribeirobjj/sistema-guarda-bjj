@@ -60,10 +60,10 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/lesson.js` | The lesson builder. Its choices are saved in `settings.lesson` (the game by its id). |
 | `js/plan.js` | A lesson plan's timed blocks and its game, from the lesson builder's choices; the list of games (the curriculum's and the coaches'). Used by the lesson builder and the TV. |
 | `js/tv.js` | "Show on the TV" (the sheet: casting, mirroring, the TV's browser, the game clock's address) and `?tv`, the site in large type. |
-| `js/game-clock.js`, `js/tv-code.js`, `js/qr.js` | The games on the TV (see below): the clock's rules, a game's limits (both tested in `tests/game-clock.test.js`), the TV's pairing code, and the QR square (`tests/qr.test.js`). |
-| `js/tv-screen.js`, `js/tv-screen-view.js`, `js/tv-show.js` | The TV screen (`/?tv#screen`): the pairing code, then the game; `tv-show.js` builds what a TV session names into the clock's steps, the same on the TV and the phone. |
+| `js/game-clock.js`, `js/tv-code.js`, `js/qr.js` | The games on the TV (see below): the clock's rules, a game's limits, carrying the clock over when a game changes (all tested in `tests/game-clock.test.js`), the TV's pairing code, and the QR square (`tests/qr.test.js`). |
+| `js/tv-screen.js`, `js/tv-screen-view.js`, `js/tv-show.js` | The TV screen (`/?tv#screen`): the pairing code, then the game; `tv-show.js` builds what a TV session names into the clock's steps, the same on the TV and the phone. `fitList()` sizes a lesson plan's techniques block to the screen. |
 | `js/remote.js`, `js/remote-view.js` | The coach's phone remote, "Run on the TV" (`admin.html#tv`). |
-| `js/designer.js`, `js/coach-games.js` | The game designer (admins, in the lesson builder) and the coaches' own games (`site/games`), read only when they are needed. |
+| `js/designer.js`, `js/coach-games.js`, `js/tv-follow.js` | The game designer (admins, in the lesson builder) and the coaches' own games (`site/games`), read only when they are needed; `tv-follow.js` hands a saved game to the TVs showing it and deletes old sessions. |
 | `js/admin.js` | The admin page: set this week's class, or prepare next week's with a start date; start from a past week. A new week moves the last one into past weeks. |
 | `js/week.js` | Decides which class is "this week" on a given day (a prepared week takes over on its start date) and what the admin page writes when it does. Tested in `tests/week.test.js`. |
 | `js/students.js`, `js/roster.js` | The admin page's Students section (read only when the coach taps "Show students"); `roster.js` counts, sorts, finds and groups (tested in `tests/roster.test.js`). Never shows notes. |
@@ -71,14 +71,14 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/analytics.js` | Visitor statistics (Google Analytics, through Firebase) and the cookie bar. See Statistics and cookies below. |
 | `js/strings.js` | Every button and label, in PT and EN (the kids' in `js/strings-kids.js`, the games on the TV's in `js/strings-tv.js`). |
 | `js/settings.js` | Each person's language, theme, belt, favorites, progress ("Drilling" / "Got it" per move) and lesson builder choices. |
-| `js/firebase.js`, `js/firebase-tv.js` | Sign-in and **every** database call (the games on the TV's in `firebase-tv.js`). Nothing else talks to Firebase (it also hands `js/analytics.js` the Analytics id and loads its code). For `tests/signed-in.mjs` only, a page opened from this computer with `?emulators=<made-up person>` uses the local emulators and signs that person in; the published site never does. |
+| `js/firebase.js`, `js/firebase-tv.js` | Sign-in and **every** database call (the games on the TV's in `firebase-tv.js`). Nothing else talks to Firebase (it also hands `js/analytics.js` the Analytics id and loads its code). For `tests/signed-in.mjs` only, a page opened from this computer with `?emulators=<made-up person>` uses the local emulators and signs that person in (`&analytics=<made-up id>` also switches Google Analytics on, answered by the test); the published site never does. |
 | `js/content.js`, `js/state.js` | Loads the curriculum and searches it (names first, then descriptions, key points, drills and steps); tracks which page and technique are showing. |
 | `data/content.json` | The guard modules (top, bottom), drills and the method. Each game also has what the TV clock runs: `start`, `top` and `bottom` (how each side wins), `parts` (`label`, `seconds`, `say`), `rounds`, `rest`, `ready`, `switch`. |
 | `data/curriculum.json` | The other parts of the fight, their order (`moduleOrder`) and the "where to go" links (`nx`). |
 | `data/kids.json` | The kids' worlds (`mark` is the world's emoji; `alwaysOpen`), challenges (task, XP and the site's technique ids in `techniques`) and XP levels. Read only for the kids class or both. |
 | `firestore.rules` | Who can read and change what in the database. |
 | `js/translation.js` | Decides, on the admin page, which fields to translate, keep or ask about (see Translation). |
-| `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `week.test.js` and `roster.test.js` check next week and the students list; `rules.test.js` checks the database rules; `game-clock.test.js` and `qr.test.js` check the game clock, the TV's code and the QR square; `smoke.mjs` uses the site in a real browser (with `smoke-kids.mjs` and `smoke-tv.mjs`); `signed-in.mjs` uses it signed in (with `signed-in-tv.mjs`: TVs and coaches' phones), as made-up students and a coach, against local copies of sign-in and the database; `nightly.mjs` checks the published site every night. |
+| `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `week.test.js` and `roster.test.js` check next week and the students list; `rules.test.js` checks the database rules; `game-clock.test.js` and `qr.test.js` check the game clock, the TV's code and the QR square; `kids.test.js` the kids' game; `smoke.mjs` uses the site in a real browser (with `smoke-kids.mjs` and `smoke-tv.mjs`: the TV screen's layout for every game and the techniques block); `signed-in.mjs` uses it signed in (with `signed-in-tv.mjs`: TVs and coaches' phones), as made-up students and a coach, against local copies of sign-in and the database; both answer Google Analytics themselves (`analytics-fake.mjs`); `nightly.mjs` checks the published site every night. |
 | `docs/translator.gs` | A copy of the translator that runs in the site's Google account (see Translation). |
 
 ## Navigation
@@ -130,10 +130,10 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 | `diagrams/{id}` | A move's diagram, as a small image (`data:image/webp;base64,…`, under 900 KB) | everyone | admins |
 | `site/config` | `translatorUrl`: where the translator lives | everyone | admins |
 | `site/games` | The coaches' own games, from the game designer: `games: { <coach-xxxxxxxx>: game }` (as in `js/game-clock.js`, at most 50, each at most 6 parts), `changed` (one game per save), `updatedBy`. Read only when the lesson builder, the designer or the TV remote opens. | everyone | admins, one game per save, in the game's shape |
-| `tv/{code}` | What one TV shows, named by the code it shows: `name`, `language`, `show` (`{ game: <id> }`, `{ lesson: { mod, dur, items, game } }` or null), `clock` (`running`, `step`, `left`: seconds left when written, `added`: "+30 s"), `beeps`, `stamp` (which change this is). The TV builds the steps from the site's own files. Deleted when an admin opens the remote a day after its last change (only TVs that phone knows). | anyone, one at a time by its code; nobody can list them | admins |
+| `tv/{code}` | What one TV shows, named by the code it shows: `name`, `language`, `show` (`{ game: <id> }`, `{ lesson: { mod, dur, items, game } }` or null), `clock` (`running`, `step`, `left`: seconds left when written, `added`: "+30 s"), `beeps`, `stamp` (which change this is). The TV builds the steps from the site's own files. Every session untouched for a day is deleted when an admin opens the remote (it lists them all, one read each). | anyone, one at a time by its code; only admins can list them (the remote opening; the designer saving a game asks for the sessions showing it) | admins |
 | `users/{uid}` | A person's `email`, `name` (from Google), `language`, `theme`, `belt` (`''` or `white`…`black`, picked by them), `seenWeek` (a short mark of the class last looked at on This week, for the "new" dot), `favorites` (their "Minha árvore", in their order), `progress` (`<id>: "learning" \| "done"`) and `lesson` (the lesson builder's choices: `mod`, `dur`, `items`, `game`) | that person and admins (coaches) | that person |
-| `users/{uid}` (kids) | Also `audience` (`'adult'`, `'kids'` or `'both'`: "I train in"; missing means adult), a kids' `belt` (`gray-white`…`green-black`) and `claims` (`<challenge id>: <when, ms>`: the kid's "I did it", at most 100) | as above | that person |
-| `approvals/{uid}` | A coach's answers to a kid's claims: `challenges: { <id>: { status: 'approved' \| 'again', claim } }` (`claim`: the claim answered), `changed` (one answer per save), `updatedBy`. Read once per visit, only for the kids class or both and signed in; the Students list reads them all when the coach taps "Show students". | that person and admins | admins only (so nobody approves themselves); the person may delete it ("Delete my data") |
+| `users/{uid}` (kids) | Also `audience` (`'adult'`, `'kids'` or `'both'`: "I train in"; missing means adult), a kids' `belt` (`gray-white`…`green-black`) and `claims` (`<challenge id>: <when, ms>`: the kid's "I did it", at most 100). The rules check that each claim a save adds (a value not stored before) is a whole number, at most 50 added per save (there are 25 challenges, `tests/kids.test.js` keeps it so); with no loops and 1,000 expressions per save they can't check more, and leave claims already stored alone. The coach's answers name any stored claim as a whole number (`claimMark()`, `js/kids-progress.js`), so they always save. | as above | that person |
+| `approvals/{uid}` | A coach's answers to a kid's claims: `challenges: { <id>: { status: 'approved' \| 'again', claim } }` (`claim`: the claim answered), `changed` (one answer per save), `updatedBy`. Read once per visit, only for the kids class or both and signed in; the Students list reads them all when the coach taps "Show students". | that person and admins | admins only (so nobody approves themselves); the person may delete it only once their `users/{uid}` is gone ("Delete my data"), so a kid can't wipe a "Try again" alone; admins may delete it |
 | `users/{uid}/private/notes` | Their notes: `notes: { <id>: text }` (at most 500, each under 2,000 characters), `changed` (the note the last save changed: each save changes one) | that person only, not admins | that person |
 
 - `firestore.rules` is the only thing that protects data. The page hiding a button protects nothing.
@@ -154,8 +154,9 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   database itself is switched (the old class filed in `site/weeks`, `next` becomes the week) the next time an admin
   opens or saves the admin page. `js/week.js` decides all of this. Past weeks are told apart by their date, so a
   prepared week must start after today and after this week's date (`dateProblem()`).
-- **Delete my data** (the privacy page) deletes the notes, `approvals/{uid}`, `users/{uid}` and the person's sign-in record (Google may
-  ask them to confirm it's them first). Once a device knows the account's documents exist it only updates them, never
+- **Delete my data** (the privacy page) deletes the notes, `users/{uid}`, then `approvals/{uid}` (the rules allow that only once the
+  settings are gone) and the person's sign-in record (Google may ask them to confirm it's them first). Deleting what is
+  already gone is fine: if it stops half way, the page stays signed in without saving and a second press finishes it. Once a device knows the account's documents exist it only updates them, never
   writes them anew, so another device still signed in finds them gone, writes nothing back and signs out. The notes
   document can only be started (created) while `users/{uid}` exists (`firestore.rules`), so a device that never read
   the notes can't start them again either; the site saves the settings before the first note, and treats a refused
@@ -170,21 +171,33 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
 
 ## Games on the TV
 
-- **The TV screen** is `/?tv#screen` (linked from "Show on the TV"). It shows a 4-character code (letters and digits that
-  can't be mistaken; the last one checks the others, `js/tv-code.js`), kept in that browser (`sg-tv-code`), and a QR
-  square that opens the remote with the code filled in. It never signs in and **never writes**: it listens to `tv/{code}`
+- **The TV screen** is `/?tv#screen` (linked from "Show on the TV"). It shows a 5-character code (letters and digits that
+  can't be mistaken; the last two check the first three, `js/tv-code.js`), kept in that browser (`sg-tv-code`; a TV
+  that kept an older 4-character code makes a new one by itself), and a QR square that opens the remote with the code
+  filled in. It never signs in and **never writes**: it listens to `tv/{code}`
   with the full Firestore code from gstatic (the only page that loads it; everywhere else it is `firestore-lite`), and
   runs the clock itself from the moment a change arrives, so the phone's clock and the TV's need not agree. Nothing on
   it is counted and it shows no cookie bar. Sound needs one press on the TV (its remote's OK); without it the clock runs
-  silently. Its sizes are shares of the screen (`--u` in `css/tv.css`), so it fills a 16:9 TV without scrolling.
+  silently; the sound button (or the note that sound is blocked) has a line of its own at the foot, so it never covers a
+  word. Its sizes are shares of the screen (`--u` in `css/tv.css`), so it fills a 16:9 TV without scrolling. A lesson
+  plan's techniques block lists every technique in the largest type that fits (with tips, then names, up to five columns;
+  a whole part of the fight, 65 techniques, fits); only past that do the last give way to "+N more".
 - **The remote** is the admin page's "Run on the TV" (`admin.html#tv`): pair by the code, name the TV (the phone
   remembers its TVs, `sg-tvs`), choose a game or this class's plan (the lesson builder's choices), then Start/Pause,
   Back a part, Next part, +30 s, Restart, Beeps, End. Each button reads the session first, since another coach may have
-  changed it. A typed code with one wrong character is refused (the TV can't say which codes exist).
+  changed it; the phone also follows its TV's session live (the full database code, loaded only for the remote: one
+  read when a TV is chosen and one per change), so another coach's press shows within a second or two. A typed code with one wrong character, or two neighbours swapped, is always refused, but the TV can't say
+  which codes exist, so a code typed at random still passes about 1 time in 961 and pairs with no TV. Opening the remote
+  lists every session (admins only) and deletes those untouched for a day.
 - **The clock** (`js/game-clock.js`): get ready once, then each round's parts, a rest between rounds; a lesson plan's
   blocks run on the same clock, with the game's own parts in place of the game block.
 - **The game designer** (admins, in the lesson builder) saves to `site/games`; the coach writes in the site's language
-  and the other is translated on save. Coaches' games join the lesson builder's list beside the curriculum's.
+  and the other is translated on save. Coaches' games join the lesson builder's list beside the curriculum's. Saving a
+  game a TV shows hands it over at once (`js/tv-follow.js`): the designer asks for the sessions showing that game (only
+  those are read), carries each clock over (`carryClock()`: the same round and part, the time spent there kept) and
+  writes them. The TV and every phone following that TV hear the change and read the games again, so both run the
+  saved game within a second or two (a phone in the same browser also hears it through a `BroadcastChannel`). TVs
+  showing other games read nothing more.
 - A new field in a game, a session or the clock needs the same change in `js/game-clock.js` (`gameProblems`),
   `firestore.rules` and its tests. The rules may evaluate only 1,000 expressions per save, which is why a game has at
   most 6 parts and a session names its game instead of carrying it.
@@ -203,6 +216,9 @@ admins). Coach tools are open to everyone; they just live in a quieter place. Wi
   worlds always). An adult's visit reads nothing more and never loads `data/kids.json`.
 - **With Kids class, nothing is counted:** no cookie bar, no "Cookies" in the menu, Google Analytics switched off and its
   cookies deleted (`followAudience()` in `js/analytics.js`), whatever the cookie choice; the choice itself is kept.
+  For someone signed in nothing is counted until their account's class is known (`holdCountingFor()`, `classKnown()`;
+  `sg-signed-in` notes a signed-in browser so a reload waits from the first page); a signed-out visitor is counted as
+  before. Going back to Adult counts from the next page, never the kids' page being left.
   The privacy page's "For the kids class" says what is kept and that a parent or guardian sets up a child's account.
 
 ## Statistics and cookies

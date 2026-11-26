@@ -13,7 +13,7 @@ function tvButtons({ tvs, current }) {
 
 function pairForm({ typedCode, defaultName }) {
   return html`<form class="remote-pair" id="pairForm">
-    <div class="field"><label for="tvCode">${t('tvCode')}</label><input id="tvCode" class="code-input" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" value="${typedCode}"></div>
+    <div class="field"><label for="tvCode">${t('tvCode')}</label><input id="tvCode" class="code-input" maxlength="7" autocomplete="off" autocapitalize="characters" spellcheck="false" value="${typedCode}"></div>
     <div class="field"><label for="tvName">${t('tvName')}</label><input id="tvName" maxlength="40" value="${defaultName}"></div>
     <button type="submit" class="primary">${t('pairTv')}</button></form>`;
 }

@@ -24,6 +24,7 @@ export const tvStrings = {
   tvLeft: { pt: 'para acabar', en: 'left' },
   tvTime: { pt: 'Tempo!', en: 'Time!' },
   tvTimeSay: { pt: 'Fim. Cumprimente o parceiro e forme a fila.', en: 'Game over. Bow, thank your partner, line up.' },
+  tvMore: { pt: 'mais', en: 'more' },
   tvSoundOn: { pt: '🔊 Toque aqui para ligar o som', en: '🔊 Press here for sound' },
   tvSoundBlocked: { pt: 'O navegador desta TV não deixou tocar som. O relógio funciona sem ele.', en: 'This TV’s browser didn’t allow sound. The clock works without it.' },
 

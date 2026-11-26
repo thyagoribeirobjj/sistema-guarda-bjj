@@ -5,8 +5,11 @@ import { pastEntry } from './week.js';
 const sdk = 'https://www.gstatic.com/firebasejs/13.2.0/';
 
 // Only for tests/signed-in.mjs: a page on this computer opened with ?emulators=<made-up person> uses the local
-// emulators (firebase.json) and signs that person in. The published site never matches, so nothing changes there.
-const testPerson = ['localhost', '127.0.0.1'].includes(location.hostname) ? new URLSearchParams(location.search).get('emulators') : null;
+// emulators (firebase.json) and signs that person in (&analytics=<made-up id>: with Google Analytics switched on,
+// which the test answers itself). The published site never matches, so nothing changes there.
+const testAddress = new URLSearchParams(['localhost', '127.0.0.1'].includes(location.hostname) ? location.search : '');
+const testPerson = testAddress.get('emulators');
+const testConfig = { apiKey: 'test', projectId: 'demo-sistema-guarda', appId: '1:1:web:1', measurementId: testAddress.get('analytics') || '' };
 
 let auth = null;
 let db = null;
@@ -22,7 +25,7 @@ export async function startFirebase({ realtime = false } = {}) {
     // so the site still works there, just without sign-in or the database.
     const response = testPerson ? null : await fetch('/__/firebase/init.json');
     if (response && !response.ok) return false;
-    const config = testPerson ? { apiKey: 'test', projectId: 'demo-sistema-guarda' } : await response.json();
+    const config = testPerson ? { ...testConfig } : await response.json();
     config.authDomain = location.host;
 
     const files = realtime ? ['firebase-app.js', 'firebase-firestore.js'] : ['firebase-app.js', 'firebase-auth.js', 'firebase-firestore-lite.js'];
@@ -57,7 +60,7 @@ export async function loadAnalytics() {
 
 // For js/firebase-tv.js, the database calls of the games on the TV, kept in a file of their own.
 export function database() {
-  return { db, fb, auth };
+  return { db, fb, auth, app: firebaseApp, sdk, emulators: Boolean(testPerson) };
 }
 
 export function onAccountChange(callback) {
@@ -194,12 +197,25 @@ export function saveApproval(uid, id, answer) {
   }, { merge: true });
 }
 
-// "Delete my data": the person's notes, the coaches' answers to their kids' challenges, their settings, then their
-// sign-in record on this site, which signs them out (and so clears this browser).
+// "Delete my data": the person's notes, their settings, the coaches' answers to their kids' challenges (which
+// firestore.rules lets them delete only once the settings are gone), then their sign-in record on this site, which
+// signs them out (and so clears this browser). Deleting what is already gone is fine, so pressing again after an
+// interruption finishes the job; error.settingsDeleted says the settings were gone by the time it stopped.
 export async function deleteMyData(uid) {
-  await fb.deleteDoc(fb.doc(db, `users/${uid}/private/notes`));
-  await fb.deleteDoc(fb.doc(db, `approvals/${uid}`));
-  await fb.deleteDoc(fb.doc(db, `users/${uid}`));
+  let settingsDeleted = false;
+  try {
+    await fb.deleteDoc(fb.doc(db, `users/${uid}/private/notes`));
+    await fb.deleteDoc(fb.doc(db, `users/${uid}`));
+    settingsDeleted = true;
+    await fb.deleteDoc(fb.doc(db, `approvals/${uid}`));
+    await deleteSignIn();
+  } catch (error) {
+    error.settingsDeleted = settingsDeleted;
+    throw error;
+  }
+}
+
+async function deleteSignIn() {
   try {
     await fb.deleteUser(auth.currentUser);
   } catch (error) {

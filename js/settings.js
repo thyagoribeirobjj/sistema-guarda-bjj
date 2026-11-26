@@ -154,6 +154,7 @@ function knownSaved(uid) {
   try { return localStorage.getItem(accountKey) === uid && localStorage.getItem(unconfirmedKey) !== uid; } catch { return false; }
 }
 
+// True once the account's settings are known (read, or found not saved yet), and so the class the person trains in.
 export async function useAccount(user) {
   accountId = null;
   const previous = lastAccount();
@@ -199,6 +200,7 @@ export async function useAccount(user) {
   if (fromDatabase) settingsExist();
   store();
   applyTheme();
+  return true;
 }
 
 export function changeSettings(changes) {

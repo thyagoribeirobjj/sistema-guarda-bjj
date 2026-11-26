@@ -63,7 +63,7 @@ export function planBlocks(lesson, coachGames = {}) {
   return [
     { minutes: time[0], title: { pt: 'Aquecimento', en: 'Warm-up' }, text: { pt: 'Fuga de quadril, ponte, quedas (ukemi) e levantada técnica.', en: 'Hip escapes, bridges, breakfalls (ukemi) and technical stand-up.' } },
     { minutes: time[1], title: { pt: 'Conceito', en: 'Concept' }, text: chosen.length ? chosen[0].stage.goal : { pt: 'Escolha técnicas ao lado.', en: 'Pick techniques alongside.' } },
-    { minutes: time[2], title: { pt: 'Técnicas', en: 'Techniques' }, list: chosen.length ? chosen.map((x) => text(x.item.n) + (x.item.t ? `: ${text(x.item.t)}` : '')) : [t('noneChosen')], text: { pt: drill('pt'), en: drill('en') } },
+    { minutes: time[2], title: { pt: 'Técnicas', en: 'Techniques' }, list: chosen.length ? chosen.map((x) => text(x.item.n) + (x.item.t ? `: ${text(x.item.t)}` : '')) : [t('noneChosen')], techniques: chosen.map((x) => ({ n: x.item.n, t: x.item.t || null })), text: { pt: drill('pt'), en: drill('en') } },
     { minutes: time[3], title: { pt: `Jogo: ${game ? text(game.n) : ''}`, en: `Game: ${game ? text(game.n) : ''}` }, text: winText(game), game },
     { minutes: time[4], title: { pt: 'Xadrez BJJ ou ao vivo', en: 'BJJ chess or live' }, text: { pt: 'Xadrez BJJ com 3 a 5 movimentos ou rounds ao vivo começando na posição da aula.', en: 'BJJ chess with 3 to 5 moves or live rounds starting from the class position.' } },
     { minutes: time[5], title: { pt: 'Registro', en: 'Log' }, text: { pt: content.method.log.q.map((q) => q.pt).join(' '), en: content.method.log.q.map((q) => q.en).join(' ') } },

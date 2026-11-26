@@ -3,11 +3,23 @@
 // approvals: what a coach answered, { <challenge id>: { status: 'approved' | 'again', claim: <the claim answered> } }
 // (approvals/{uid}.challenges). Only an approved challenge counts: its XP, and towards opening the next world.
 
+// A claim as a coach's answer names it: a whole number, as firestore.rules wants, whatever the kid's account holds
+// (an older account may keep something else there). The same claim always gives the same number.
+export function claimMark(claim) {
+  const whole = typeof claim === 'number' ? Math.trunc(claim) : 0;
+  return Number.isSafeInteger(whole) ? whole : 0;
+}
+
+// What a coach's "Approve" or "Try again" saves for a claim (approvals/{uid}.challenges.<id>).
+export function answerFor(status, claim) {
+  return { status, claim: claimMark(claim) };
+}
+
 // 'done' (approved), 'waiting' (claimed, not answered yet), 'again' (the coach sent that claim back) or 'todo'.
 export function challengeStatus(claim, approval) {
   if (approval?.status === 'approved') return 'done';
   const sentBack = approval?.status === 'again';
-  if (claim && !(sentBack && approval.claim === claim)) return 'waiting';
+  if (claim && !(sentBack && approval.claim === claimMark(claim))) return 'waiting';
   return sentBack ? 'again' : 'todo';
 }
 

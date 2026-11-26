@@ -193,6 +193,37 @@ test('the class someone trains in, a kids’ belt and the challenges they claime
   assert.equal(await write('users/student-uid', { ...settings('student@example.com'), claims: { rolamento: 1 } }, 'otherStudent'), 'denied');
 });
 
+test('each claim a save adds is a whole number (when it was claimed), at most 50 added per save', async () => {
+  const save = (claims, extra = {}) => write('users/student-uid', { ...settings('student@example.com'), claims, ...extra }, 'student');
+  assert.equal(await save({ rolamento: 1764000000000 }), 'allowed');
+  for (const wrong of [1764000000000.5, 'yesterday', true, { at: 1 }, [1], null]) {
+    assert.equal(await save({ rolamento: 1764000000000, camarao: wrong }), 'denied', JSON.stringify(wrong));
+  }
+  const many = (count, from = 0) => Object.fromEntries(Array.from({ length: count }, (_, i) => [`challenge-${String(from + i).padStart(3, '0')}`, 1764000000000 + from + i]));
+  // The first sign-in adds everything this browser marked at once, with the rest of the settings at their largest.
+  const largest = {
+    favorites: Array.from({ length: 500 }, (_, i) => `move-${i}`), name: 'x'.repeat(100), seenWeek: 'x'.repeat(100),
+    progress: Object.fromEntries(Array.from({ length: 1000 }, (_, i) => [`move-${i}`, 'done'])),
+    lesson: { mod: 'top', dur: '60', items: Array.from({ length: 200 }, (_, i) => `0-${i}`), game: 'top:0' },
+  };
+  await remove('users/student-uid', 'student');
+  assert.equal(await save(many(50), largest), 'allowed', '50 claims in a first save, with the largest settings');
+  assert.equal(await save({ ...many(50), ...many(50, 50) }, largest), 'allowed', '50 more in the next, up to the 100 a kid may have');
+  await remove('users/student-uid', 'student');
+  assert.equal(await save(many(51)), 'denied', 'more than 50 added at once (there are far fewer challenges)');
+  for (const at of [0, 4, 5, 26, 49]) {
+    const claims = many(50);
+    claims[`challenge-${String(at).padStart(3, '0')}`] = 1.5;
+    assert.equal(await save(claims), 'denied', `a claim that is not a whole number, the ${at + 1}th of 50`);
+  }
+  // A kid whose account kept such a claim from before is not stuck: saves that leave it alone still work.
+  await write('users/student-uid', { ...settings('student@example.com'), claims: { rolamento: 1.5 } }, 'setup');
+  assert.equal(await save({ rolamento: 1.5 }, { theme: 'light' }), 'allowed', 'claims unchanged');
+  assert.equal(await save({ rolamento: 1.5, camarao: 7 }), 'allowed', 'a new claim beside it');
+  assert.equal(await save({ rolamento: 1.5, camarao: 7.5 }), 'denied', 'but not a new one like it');
+  assert.equal(await save({ camarao: 7 }), 'allowed', 'the old claim taken back');
+});
+
 // The coaches' answers to a kid's challenges, saved as the site does: one challenge per save, named in changed.
 const approvalsPath = 'approvals/student-uid';
 const answer = (id, status = 'approved', extra = {}) => ({ challenges: { [id]: { status, claim: 1764000000000 } }, changed: id, ...extra });
@@ -230,6 +261,21 @@ test('an answer approves or sends back one challenge per save, naming the claim,
   assert.equal(await save({ challenges: { camarao: { status: 'again', claim: 7 }, base: { status: 'approved', claim: 7, xp: 500 } }, changed: 'base' }), 'denied', 'no XP of its own');
   assert.equal(await save({ challenges: { camarao: { status: 'again', claim: 7 } }, changed: 'camarao', note: 'extra' }), 'denied');
   assert.equal(await save({ ...answer('base'), updatedBy: 'someone@example.com' }), 'denied', 'signed with the coach’s own email');
+});
+
+test('a kid deletes their answers only once their settings are gone, so a "Try again" can\'t be wiped alone; coaches always can', async () => {
+  await write(approvalsPath, answer('rolamento', 'again'), 'setup');
+  await write('users/student-uid', settings('student@example.com'), 'setup');
+  assert.equal(await remove(approvalsPath, 'student'), 'denied', 'while their settings exist');
+  assert.equal(await remove(approvalsPath, 'otherStudent'), 'denied');
+  assert.equal(await remove(approvalsPath), 'denied');
+  assert.equal(await remove('users/student-uid', 'student'), 'allowed', '"Delete my data" deletes the settings first');
+  assert.equal(await remove(approvalsPath, 'otherStudent'), 'denied', 'still nobody else');
+  assert.equal(await remove(approvalsPath, 'student'), 'allowed', 'then the answers');
+  assert.equal(await remove(approvalsPath, 'student'), 'allowed', 'pressed again (already gone): still fine');
+  await write(approvalsPath, answer('rolamento', 'again'), 'setup');
+  await write('users/student-uid', settings('student@example.com'), 'setup');
+  assert.equal(await remove(approvalsPath, 'admin'), 'allowed', 'a coach may delete them any time');
 });
 
 const notesPath = 'users/student-uid/private/notes';

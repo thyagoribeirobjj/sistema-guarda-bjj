@@ -49,29 +49,30 @@ export function tvRuleTests({ test, assert, read, write, remove }) {
     assert.equal(await write('site/games', { games: { [id]: game }, changed: id, updatedBy: coach }, 'admin'), 'denied', 'the generic site rule does not cover games');
   });
 
-  test('a TV session: anyone can get one by its code, nobody can list them, not even a coach', async () => {
-    await write('tv/K7P4', session(coach), 'setup');
-    assert.equal(await read('tv/K7P4'), 'allowed');
-    assert.equal(await read('tv/K7P4', 'student'), 'allowed');
-    assert.equal(await read('tv'), 'denied');
+  test('a TV session: anyone can get one by its code; only a coach can list them', async () => {
+    await write('tv/K7P3N', session(coach), 'setup');
+    assert.equal(await read('tv/K7P3N'), 'allowed');
+    assert.equal(await read('tv/K7P3N', 'student'), 'allowed');
+    assert.equal(await read('tv'), 'denied', 'signed out (a TV, or anyone)');
     assert.equal(await read('tv', 'student'), 'denied');
-    assert.equal(await read('tv', 'admin'), 'denied');
+    assert.equal(await read('tv', 'unverifiedAdmin'), 'denied');
+    assert.equal(await read('tv', 'admin'), 'allowed', 'a coach, to delete old sessions');
   });
 
   test('only an admin starts, changes and ends a TV session; signed out (the TV itself) never can', async () => {
-    assert.equal(await write('tv/K7P4', session('')), 'denied');
-    assert.equal(await write('tv/K7P4', session('student@example.com'), 'student'), 'denied');
-    assert.equal(await write('tv/K7P4', session('unverified@example.com'), 'unverifiedAdmin'), 'denied');
-    assert.equal(await write('tv/K7P4', session(coach), 'admin'), 'allowed');
-    assert.equal(await write('tv/K7P4', session(coach, { clock: { ...clock, running: true } }), 'admin'), 'allowed');
-    assert.equal(await write('tv/K7P4', session('student@example.com', { show: null }), 'student'), 'denied');
-    assert.equal(await remove('tv/K7P4'), 'denied');
-    assert.equal(await remove('tv/K7P4', 'student'), 'denied');
-    assert.equal(await remove('tv/K7P4', 'admin'), 'allowed');
+    assert.equal(await write('tv/K7P3N', session('')), 'denied');
+    assert.equal(await write('tv/K7P3N', session('student@example.com'), 'student'), 'denied');
+    assert.equal(await write('tv/K7P3N', session('unverified@example.com'), 'unverifiedAdmin'), 'denied');
+    assert.equal(await write('tv/K7P3N', session(coach), 'admin'), 'allowed');
+    assert.equal(await write('tv/K7P3N', session(coach, { clock: { ...clock, running: true } }), 'admin'), 'allowed');
+    assert.equal(await write('tv/K7P3N', session('student@example.com', { show: null }), 'student'), 'denied');
+    assert.equal(await remove('tv/K7P3N'), 'denied');
+    assert.equal(await remove('tv/K7P3N', 'student'), 'denied');
+    assert.equal(await remove('tv/K7P3N', 'admin'), 'allowed');
   });
 
   test('a TV session has the expected shape and limits, and a TV code\'s letters', async () => {
-    const save = (change, code = 'K7P4') => write(`tv/${code}`, session(coach, change), 'admin');
+    const save = (change, code = 'K7P3N') => write(`tv/${code}`, session(coach, change), 'admin');
     assert.equal(await save({ show: null }), 'allowed', 'nothing on the TV yet');
     assert.equal(await save({ show: { lesson: { mod: 'top', dur: '60', items: ['0-0', '1-2'], game: 'coach-ab12cd34' } } }), 'allowed', 'a lesson plan');
     const bad = [
@@ -85,9 +86,9 @@ export function tvRuleTests({ test, assert, read, write, remove }) {
       { updatedBy: 'coach@example.com' },
     ];
     for (const change of bad) assert.equal(await save(change), 'denied', JSON.stringify(change).slice(0, 80));
-    for (const code of ['K7P', 'K7P45', 'k7p4', 'K0P4', 'KIP4', 'KLP4', 'KOP4']) assert.equal(await save({}, code), 'denied', code);
+    for (const code of ['K7P4', 'K7P3NN', 'k7p3n', 'K0P3N', 'KIP3N', 'KLP3N', 'KOP3N']) assert.equal(await save({}, code), 'denied', code);
     const missing = session(coach);
     delete missing.beeps;
-    assert.equal(await write('tv/K7P4', missing, 'admin'), 'denied', 'every field is needed');
+    assert.equal(await write('tv/K7P3N', missing, 'admin'), 'denied', 'every field is needed');
   });
 }
