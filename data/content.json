@@ -58,8 +58,8 @@
                 "en": "Closed guard posture"
               },
               "d": {
-                "pt": "Coluna reta, quadril para frente, joelhos abertos e mãos no quadril ou no peito dele.",
-                "en": "Straight back, hips forward, knees wide, hands on his hips or chest."
+                "pt": "Coluna reta, quadril para frente, joelhos abertos e mãos no quadril ou no peito da outra pessoa.",
+                "en": "Straight back, hips forward, knees wide, hands on your partner's hips or chest."
               },
               "t": {
                 "pt": "Cabeça alta: olhe para frente, não para baixo.",
@@ -75,8 +75,8 @@
                 "en": "Biceps grips"
               },
               "d": {
-                "pt": "Dentro da guarda, segure os bíceps dele sem usar o polegar. Isso controla os braços e é o ponto de partida das duas passagens clássicas.",
-                "en": "Inside the guard, grip his biceps without using your thumb. It controls his arms and starts both classic passes."
+                "pt": "Dentro da guarda, segure os bíceps sem usar o polegar. Isso controla os braços e é o ponto de partida das duas passagens clássicas.",
+                "en": "Inside the guard, grip both biceps without using your thumb. It controls the arms and starts both classic passes."
               },
               "t": {
                 "pt": "Sem o polegar, a pegada solta rápido quando você precisa.",
@@ -89,11 +89,11 @@
               "mine": 1,
               "n": {
                 "pt": "Prender a mão na barriga",
-                "en": "Pin the hand to his belly"
+                "en": "Pin the hand to the belly"
               },
               "d": {
-                "pt": "Segure o punho que pega sua gola e prenda contra a barriga dele.",
-                "en": "Grab the wrist holding your collar and pin it to his belly."
+                "pt": "Segure o punho que pega sua gola e prenda contra a barriga de quem está na guarda.",
+                "en": "Grab the wrist holding your collar and pin it to your partner's belly."
               },
               "t": {
                 "pt": "Tira um braço do jogo e deixa você levantar.",
@@ -109,12 +109,12 @@
                 "en": "Block the opposite hand"
               },
               "d": {
-                "pt": "Com um braço, controle a mão do outro lado dele. Assim ele não alcança seu pescoço nem monta o triângulo.",
-                "en": "With one arm, control his hand on the other side. That way he can't reach your neck or set up the triangle."
+                "pt": "Com um braço, controle a mão do outro lado. Assim quem está por baixo não alcança seu pescoço nem monta o triângulo.",
+                "en": "With one arm, control the hand on the other side. That way the bottom player can't reach your neck or set up the triangle."
               },
               "t": {
-                "pt": "Os dois braços dentro ou os dois fora das pernas dele: um dentro e outro fora abre o triângulo.",
-                "en": "Both arms inside or both outside his legs: one in and one out opens the triangle."
+                "pt": "Os dois braços dentro ou os dois fora das pernas: um dentro e outro fora abre o triângulo.",
+                "en": "Both arms inside or both outside the legs: one in and one out opens the triangle."
               },
               "id": "top-block-the-opposite-hand"
             },
@@ -126,8 +126,8 @@
                 "en": "Break the grip"
               },
               "d": {
-                "pt": "Se ele não solta a gola, use as duas mãos e o quadril para quebrar a pegada antes de abrir.",
-                "en": "If he won't release the collar, use both hands and your hips to strip it before opening."
+                "pt": "Se a gola não for solta, use as duas mãos e o quadril para quebrar a pegada antes de abrir.",
+                "en": "If the collar grip won't let go, use both hands and your hips to strip it before opening."
               },
               "t": {
                 "pt": "Primeiro as mãos, depois as pernas.",
@@ -143,8 +143,8 @@
                 "en": "Recover posture"
               },
               "d": {
-                "pt": "Puxado para baixo, afaste os braços dele e suba o tronco sem atacar o pescoço.",
-                "en": "When pulled down, push his arms away and lift your chest without reaching for the neck."
+                "pt": "Quando puxarem você para baixo, afaste os braços de quem está na guarda e suba o tronco sem atacar o pescoço.",
+                "en": "When pulled down, push your partner's arms away and lift your chest without reaching for the neck."
               },
               "t": {
                 "pt": "Atacar o pescoço daqui abre triângulo e armlock.",
@@ -159,8 +159,8 @@
                 "en": "How to open the closed guard from the knees"
               },
               "d": {
-                "pt": "Como abrir a guarda fechada por cima, de joelhos: postura, mãos no quadril ou na barriga, um joelho no cóccix dele e o outro para trás, cotovelo na coxa até as pernas abrirem.",
-                "en": "How to open the closed guard from the knees: posture, hands on his hips or belly, one knee at his tailbone and the other back, elbow on his thigh until the legs open."
+                "pt": "Como abrir a guarda fechada por cima, de joelhos: postura, mãos no quadril ou na barriga, um joelho no cóccix da outra pessoa e o outro para trás, cotovelo na coxa até as pernas abrirem.",
+                "en": "How to open the closed guard from the knees: posture, hands on the hips or belly, one knee at your partner's tailbone and the other back, elbow on the thigh until the legs open."
               },
               "s": [
                 [
@@ -169,15 +169,15 @@
                 ],
                 [
                   "Mãos no quadril ou na barriga",
-                  "Hands on his hips or belly"
+                  "Hands on the hips or belly"
                 ],
                 [
-                  "Um joelho no cóccix dele e o outro para trás",
-                  "One knee at his tailbone and the other back"
+                  "Um joelho no cóccix e o outro para trás",
+                  "One knee at the tailbone and the other back"
                 ],
                 [
                   "Cotovelo na coxa até as pernas abrirem",
-                  "Elbow on his thigh until the legs open"
+                  "Elbow on the thigh until the legs open"
                 ]
               ],
               "t": {
@@ -193,13 +193,13 @@
                 "en": "\"Squeeze the bread\" to gain posture while passing"
               },
               "d": {
-                "pt": "\"Apertar o pão\" para ganhar postura na passagem: com as mãos na barriga ou no peito dele, aperte e empurre para baixo enquanto endireita as costas e sobe a cabeça.",
-                "en": "\"Squeeze the bread\" to gain posture while passing: with your hands on his belly or chest, squeeze and press down as you straighten your back and lift your head."
+                "pt": "\"Apertar o pão\" para ganhar postura na passagem: com as mãos na barriga ou no peito da outra pessoa, aperte e empurre para baixo enquanto endireita as costas e sobe a cabeça.",
+                "en": "\"Squeeze the bread\" to gain posture while passing: with your hands on your partner's belly or chest, squeeze and press down as you straighten your back and lift your head."
               },
               "s": [
                 [
-                  "Com as mãos na barriga ou no peito dele",
-                  "With your hands on his belly or chest"
+                  "Com as mãos na barriga ou no peito",
+                  "With your hands on the belly or chest"
                 ],
                 [
                   "Aperte e empurre para baixo enquanto endireita as costas e sobe a cabeça",
@@ -233,21 +233,21 @@
                 "en": "Standing pass"
               },
               "d": {
-                "pt": "Com a mão dele presa, levante, prenda uma perna com o cotovelo apoiado no seu joelho e passe o ombro por baixo dela até o side control.",
-                "en": "With his hand pinned, stand up, trap one leg with your elbow braced on your knee and get your shoulder under it into side control."
+                "pt": "Com a mão de quem está na guarda presa, levante, prenda uma perna com o cotovelo apoiado no seu joelho e passe o ombro por baixo dela até o side control.",
+                "en": "With your partner's hand pinned, stand up, trap one leg with your elbow braced on your knee and get your shoulder under it into side control."
               },
               "s": [
                 [
-                  "Segure os bíceps e levante um joelho; prenda a perna dele com o braço dobrado.",
-                  "Grip the biceps and raise one knee; trap his leg with your bent arm."
+                  "Segure os bíceps e levante um joelho; prenda a perna com o braço dobrado.",
+                  "Grip the biceps and raise one knee; trap the leg with your bent arm."
                 ],
                 [
-                  "Levante a outra perna e ande para a frente com as costas retas, segurando a gola dele bem ajustada.",
-                  "Raise the other leg and step forward with a straight back, holding his collar tight."
+                  "Levante a outra perna e ande para a frente com as costas retas, segurando a gola da outra pessoa bem ajustada.",
+                  "Raise the other leg and step forward with a straight back, holding your partner's collar tight."
                 ],
                 [
-                  "Vire de lado e deslize a mão por dentro até o ombro passar por baixo da perna dele.",
-                  "Turn sideways and slide your hand inside until your shoulder is under his leg."
+                  "Vire de lado e deslize a mão por dentro até o ombro passar por baixo da perna.",
+                  "Turn sideways and slide your hand inside until your shoulder is under the leg."
                 ],
                 [
                   "Pegue a gola mais adiante, com o polegar para dentro, e deixe o peso cair.",
@@ -259,8 +259,8 @@
                 ]
               ],
               "t": {
-                "pt": "Joelho e cotovelo juntos prendem a perna dele; a gola é o seu apoio para não cair para trás.",
-                "en": "Knee and elbow together trap his leg; the collar grip is your anchor so you don't fall back."
+                "pt": "Joelho e cotovelo juntos prendem a perna; a gola é o seu apoio para não cair para trás.",
+                "en": "Knee and elbow together trap the leg; the collar grip is your anchor so you don't fall back."
               },
               "id": "top-standing-pass"
             },
@@ -268,12 +268,12 @@
               "lv": "b",
               "g": 1,
               "n": {
-                "pt": "Passagem ajoelhado",
+                "pt": "Passagem de joelhos",
                 "en": "Kneeling pass"
               },
               "d": {
-                "pt": "Passagem clássica de joelhos: braço por baixo de uma perna e peso levando o joelho dele em direção à cabeça.",
-                "en": "Classic kneeling pass: arm under one leg and weight driving his knee toward his head."
+                "pt": "Passagem clássica de joelhos: braço por baixo de uma perna e peso levando o joelho de quem está na guarda em direção à cabeça.",
+                "en": "Classic kneeling pass: arm under one leg and weight driving your partner's knee toward their head."
               },
               "s": [
                 [
@@ -281,20 +281,20 @@
                   "Grip the biceps without the thumb and raise the opposite leg."
                 ],
                 [
-                  "Dê um passo atrás e vire de lado para abrir espaço; entre com a mão na dobra do joelho dele.",
-                  "Step back and turn sideways to make space; slide your hand into the back of his knee."
+                  "Dê um passo atrás e vire de lado para abrir espaço; entre com a mão na dobra do joelho.",
+                  "Step back and turn sideways to make space; slide your hand into the back of the knee."
                 ],
                 [
-                  "Se ele apertar as pernas, plante a mão no chão, ajoelhe de novo e recue até a perna escorregar para o seu ombro.",
-                  "If he squeezes his legs, post your hand on the mat, kneel again and back up until his leg slides onto your shoulder."
+                  "Se as pernas apertarem, plante a mão no chão, ajoelhe de novo e recue até a perna escorregar para o seu ombro.",
+                  "If they squeeze their legs, post your hand on the mat, kneel again and back up until the leg slides onto your shoulder."
                 ],
                 [
-                  "Segure a gola com o polegar para dentro e use o peso para levar o joelho dele em direção à cabeça.",
-                  "Grab the collar thumb-in and use your weight to drive his knee toward his head."
+                  "Segure a gola com o polegar para dentro e use o peso para levar o joelho da outra pessoa em direção à cabeça.",
+                  "Grab the collar thumb-in and use your weight to drive your partner's knee toward their head."
                 ],
                 [
                   "Relaxe o peso, levante a cabeça para soltar a perna e estabilize ao lado.",
-                  "Relax your weight, lift your head to free the leg and settle at his side."
+                  "Relax your weight, lift your head to free the leg and settle at their side."
                 ]
               ],
               "t": {
@@ -326,8 +326,8 @@
                 "en": "Grip the pants at the knees, push the legs to one side and run to the other."
               },
               "t": {
-                "pt": "Troque de lado se ele acompanhar.",
-                "en": "Switch sides if he follows."
+                "pt": "Troque de lado se a outra pessoa acompanhar.",
+                "en": "Switch sides if your partner follows."
               },
               "id": "top-toreando-bullfighter"
             },
@@ -338,12 +338,12 @@
                 "en": "Knee cut"
               },
               "d": {
-                "pt": "O joelho atravessa a coxa dele até o chão, com underhook do lado da cabeça.",
-                "en": "Slide your knee across his thigh to the mat with an underhook on the head side."
+                "pt": "O joelho atravessa a coxa da outra pessoa até o chão, com underhook do lado da cabeça.",
+                "en": "Slide your knee across your partner's thigh to the mat with an underhook on the head side."
               },
               "t": {
-                "pt": "Controle o braço de baixo para ele não pegar as costas.",
-                "en": "Control his far arm so he can't take your back."
+                "pt": "Controle o braço de baixo para não deixar pegarem suas costas.",
+                "en": "Control the far arm so your partner can't take your back."
               },
               "id": "top-knee-cut"
             },
@@ -355,11 +355,11 @@
               },
               "d": {
                 "pt": "Os dois braços por baixo das pernas, empilhe o quadril e contorne.",
-                "en": "Both arms under his legs, stack his hips and walk around."
+                "en": "Both arms under the legs, stack the hips and walk around."
               },
               "t": {
-                "pt": "Cabeça colada na barriga dele contra o triângulo.",
-                "en": "Head tight to his belly to avoid triangles."
+                "pt": "Cabeça colada na barriga da outra pessoa contra o triângulo.",
+                "en": "Head tight to your partner's belly to avoid triangles."
               },
               "id": "top-double-under-pass"
             },
@@ -370,12 +370,12 @@
                 "en": "Leg drag"
               },
               "d": {
-                "pt": "Puxe uma perna dele por cima do seu quadril e cole o peito de lado.",
-                "en": "Drag one of his legs across your hip and pin chest to side."
+                "pt": "Puxe uma perna da outra pessoa por cima do seu quadril e cole o peito de lado.",
+                "en": "Drag one of your partner's legs across your hip and pin chest to side."
               },
               "t": {
-                "pt": "Quadril dele virado = guarda sem força.",
-                "en": "His hips turned away = a guard with no power."
+                "pt": "Quadril de quem está na guarda virado = guarda sem força.",
+                "en": "Bottom player's hips turned away = a guard with no power."
               },
               "id": "top-leg-drag"
             },
@@ -387,7 +387,7 @@
               },
               "d": {
                 "pt": "Passo cruzado para o lado das pernas, mudando o ângulo rápido.",
-                "en": "Cross-step to the side of his legs, changing the angle fast."
+                "en": "Cross-step to the side of the legs, changing the angle fast."
               },
               "t": {
                 "pt": "Bom contra guardas abertas com pés no quadril.",
@@ -403,7 +403,7 @@
               },
               "d": {
                 "pt": "Um braço por cima e outro por baixo das pernas, ombro esmagando a coxa.",
-                "en": "One arm over and one under his legs, shoulder smashing the thigh."
+                "en": "One arm over and one under the legs, shoulder smashing the thigh."
               },
               "t": {
                 "pt": "Paciência: pressão primeiro, passagem depois.",
@@ -418,8 +418,8 @@
                 "en": "Body lock"
               },
               "d": {
-                "pt": "Abrace o quadril, prenda as pernas dele entre as suas e passe pela meia-guarda.",
-                "en": "Lock your hands around his hips, trap his legs and pass through half guard."
+                "pt": "Abrace o quadril, prenda as pernas da outra pessoa entre as suas e passe pela meia-guarda.",
+                "en": "Lock your hands around the hips, trap your partner's legs and pass through half guard."
               },
               "t": {
                 "pt": "Muito usado no sem kimono.",
@@ -438,8 +438,8 @@
                 "en": "Underhook and chest weight, clear the knee shield and free your leg."
               },
               "t": {
-                "pt": "Ganhe o underhook antes dele.",
-                "en": "Win the underhook before he does."
+                "pt": "Ganhe o underhook primeiro.",
+                "en": "Win the underhook first."
               },
               "id": "top-half-guard-smash-pass"
             },
@@ -450,22 +450,22 @@
                 "en": "Chokes from top half guard"
               },
               "d": {
-                "pt": "Estrangulamentos por cima da meia-guarda: com o peso no peito dele e o underhook, use a gola (dele ou a sua) para estrangular enquanto ele protege a meia-guarda.",
-                "en": "Chokes from top half guard: with chest weight and the underhook, use the lapel (his or yours) to choke while he is busy protecting the half guard."
+                "pt": "Estrangulamentos por cima da meia-guarda: com o peso no peito da outra pessoa e o underhook, use a gola (a de quem está embaixo ou a sua) para estrangular enquanto ela protege a meia-guarda.",
+                "en": "Chokes from top half guard: with chest weight and the underhook, use the lapel (theirs or yours) to choke while your partner is busy protecting the half guard."
               },
               "s": [
                 [
-                  "Com o peso no peito dele e o underhook",
+                  "Com o peso no peito e o underhook",
                   "With chest weight and the underhook"
                 ],
                 [
-                  "Use a gola (dele ou a sua) para estrangular enquanto ele protege a meia-guarda",
-                  "Use the lapel (his or yours) to choke while he is busy protecting the half guard"
+                  "Use a gola (a de quem está embaixo ou a sua) para estrangular enquanto a meia-guarda é protegida",
+                  "Use the lapel (theirs or yours) to choke while they are busy protecting the half guard"
                 ]
               ],
               "t": {
-                "pt": "Ganhe o underhook e a cabeça dele antes de atacar.",
-                "en": "Win the underhook and his head before you attack."
+                "pt": "Ganhe o underhook e controle a cabeça antes de atacar.",
+                "en": "Win the underhook and control the head before you attack."
               },
               "rec": 1,
               "id": "top-chokes-from-top-half-guard"
@@ -481,8 +481,8 @@
                 "en": "Pass pinning the legs down: grab the pants at the knees, press both legs to the mat and walk over them with your weight into side control."
               },
               "t": {
-                "pt": "Peso nas mãos enquanto as pernas dele estão presas.",
-                "en": "Weight on your hands while his legs are pinned."
+                "pt": "Peso nas mãos enquanto as pernas da outra pessoa estão presas.",
+                "en": "Weight on your hands while your partner's legs are pinned."
               },
               "id": "top-pass-pinning-the-legs-down"
             },
@@ -507,8 +507,8 @@
                 ]
               ],
               "t": {
-                "pt": "Quadril dele virado é guarda sem força.",
-                "en": "His hips turned away means a guard with no power."
+                "pt": "Quadril de quem está na guarda virado é guarda sem força.",
+                "en": "Bottom player's hips turned away means a guard with no power."
               },
               "id": "top-pass-pinning-the-legs-to-the-side"
             },
@@ -566,8 +566,8 @@
                 "en": "Yoko shiho gatame (side four-quarter hold)"
               },
               "d": {
-                "pt": "Yoko shiho gatame: de lado, um braço controla a cabeça por cima do corpo dele e o outro passa por baixo da perna; peito pesando.",
-                "en": "Yoko shiho gatame: from the side, one arm controls his head over his body and the other goes under his leg; chest heavy."
+                "pt": "Yoko shiho gatame: de lado, um braço controla a cabeça por cima do corpo da outra pessoa e o outro passa por baixo da perna; peito pesando.",
+                "en": "Yoko shiho gatame: from the side, one arm controls the head over your partner's body and the other goes under the leg; chest heavy."
               },
               "t": {
                 "pt": "A primeira posição depois de passar.",
@@ -583,12 +583,12 @@
                 "en": "Mune gatame (chest hold)"
               },
               "d": {
-                "pt": "Mune gatame: os dois braços do outro lado do corpo dele, joelhos apertando o quadril, peito no peito.",
-                "en": "Mune gatame: both arms on the far side of his body, knees squeezing his hip, chest to chest."
+                "pt": "Mune gatame: os dois braços do outro lado do corpo da outra pessoa, joelhos apertando o quadril, peito no peito.",
+                "en": "Mune gatame: both arms on the far side of your partner's body, knees squeezing the hip, chest to chest."
               },
               "t": {
-                "pt": "Posição de retorno quando ele reage. Corpo relaxado pesa mais.",
-                "en": "Your fallback when he reacts. A relaxed body weighs more."
+                "pt": "Posição de retorno quando quem está embaixo reage. Corpo relaxado pesa mais.",
+                "en": "Your fallback when your partner reacts. A relaxed body weighs more."
               },
               "id": "top-mune-gatame-chest-hold"
             },
@@ -600,12 +600,12 @@
                 "en": "Head-and-arm side control"
               },
               "d": {
-                "pt": "Side control com cabeça e braço: braço sob a cabeça dele como travesseiro, o outro sob a axila, joelho trava o quadril, pernas em sprawl e pressão do ombro.",
-                "en": "Head-and-arm side control: one arm under his head like a pillow, the other under his armpit, knee blocks the hip, legs in a sprawl and shoulder pressure."
+                "pt": "Side control com cabeça e braço: braço sob a cabeça da outra pessoa como travesseiro, o outro sob a axila, joelho trava o quadril, pernas em sprawl e pressão do ombro.",
+                "en": "Head-and-arm side control: one arm under your partner's head like a pillow, the other under the armpit, knee blocks the hip, legs in a sprawl and shoulder pressure."
               },
               "t": {
-                "pt": "O ombro pressiona o queixo dele.",
-                "en": "Your shoulder presses his chin."
+                "pt": "O ombro pressiona o queixo de quem está embaixo.",
+                "en": "Your shoulder presses your partner's chin."
               },
               "id": "top-head-and-arm-side-control"
             },
@@ -617,12 +617,12 @@
                 "en": "Ushiro kesa gatame (reverse scarf hold)"
               },
               "d": {
-                "pt": "Ushiro kesa gatame: sentado ao lado dele, virado para as pernas, o braço dele preso sob a sua axila e o quadril baixo.",
-                "en": "Ushiro kesa gatame: sitting beside him facing his legs, his arm trapped under your armpit and your hips low."
+                "pt": "Ushiro kesa gatame: sente-se ao lado da outra pessoa, de frente para as pernas, com o braço dela preso sob a sua axila e o quadril baixo.",
+                "en": "Ushiro kesa gatame: sit beside your partner facing their legs, their arm trapped under your armpit and your hips low."
               },
               "t": {
-                "pt": "Peso no peito dele, pernas abertas para a base.",
-                "en": "Weight on his chest, legs wide for base."
+                "pt": "Peso no peito da outra pessoa, pernas abertas para a base.",
+                "en": "Weight on your partner's chest, legs wide for base."
               },
               "id": "top-ushiro-kesa-gatame-reverse-scarf-hold"
             },
@@ -634,12 +634,12 @@
                 "en": "Hon kesa gatame (scarf hold)"
               },
               "d": {
-                "pt": "Hon kesa gatame: sentado de lado junto a ele, virado para a cabeça, braço dele preso e cabeça controlada.",
-                "en": "Hon kesa gatame: sitting beside him facing his head, his arm trapped and his head controlled."
+                "pt": "Hon kesa gatame: sente-se de lado junto à outra pessoa, de frente para a cabeça, com o braço dela preso e a cabeça controlada.",
+                "en": "Hon kesa gatame: sit beside your partner facing their head, their arm trapped and their head controlled."
               },
               "t": {
-                "pt": "Se ele reagir, passe a perna sobre a cabeça e volte ao mune gatame.",
-                "en": "If he reacts, step over his head and go back to mune gatame."
+                "pt": "Se houver reação, passe a perna sobre a cabeça e volte ao mune gatame.",
+                "en": "If your partner reacts, step over their head and go back to mune gatame."
               },
               "id": "top-hon-kesa-gatame-scarf-hold"
             },
@@ -651,11 +651,11 @@
               },
               "d": {
                 "pt": "Joelho na barriga, pé de fora afastado, pegada na gola e na calça.",
-                "en": "Knee on his belly, far foot wide, grips on collar and pants."
+                "en": "Knee on the belly, far foot wide, grips on collar and pants."
               },
               "t": {
-                "pt": "Vá para a montada quando ele empurrar.",
-                "en": "Go to mount when he pushes."
+                "pt": "Vá para a montada quando a outra pessoa empurrar.",
+                "en": "Go to mount when your partner pushes."
               },
               "id": "top-knee-on-belly"
             },
@@ -666,8 +666,8 @@
                 "en": "North-south"
               },
               "d": {
-                "pt": "Peito sobre o peito dele, de frente para os pés dele.",
-                "en": "Chest on his chest, facing his legs."
+                "pt": "Peito sobre o peito da outra pessoa, de frente para os pés dela.",
+                "en": "Chest on your partner's chest, facing their legs."
               },
               "t": {
                 "pt": "Abre kimura e armlock norte-sul.",
@@ -683,8 +683,8 @@
             "en": "Submit from side control"
           },
           "goal": {
-            "pt": "Atacar o braço ou o pescoço que ele expõe.",
-            "en": "Attack the arm or neck he exposes."
+            "pt": "Atacar o braço ou o pescoço que fica exposto.",
+            "en": "Attack the arm or neck your partner exposes."
           },
           "items": [
             {
@@ -696,21 +696,21 @@
                 "en": "Kimura"
               },
               "d": {
-                "pt": "Quando ele expõe o braço, prenda o pulso, segure o próprio pulso e torça o ombro com o pé prendendo a cabeça dele.",
-                "en": "When he exposes an arm, trap the wrist, grab your own wrist and rotate the shoulder with your foot pinning his head."
+                "pt": "Quando um braço fica exposto, prenda o pulso, segure o próprio pulso e torça o ombro com o pé prendendo a cabeça da outra pessoa.",
+                "en": "When your partner exposes an arm, trap the wrist, grab your own wrist and rotate the shoulder with your foot pinning their head."
               },
               "s": [
                 [
-                  "Prenda o pulso dele.",
-                  "Trap his wrist."
+                  "Prenda o pulso da outra pessoa.",
+                  "Trap your partner's wrist."
                 ],
                 [
                   "Passe a outra mão por baixo do braço e segure o próprio pulso, sentando de lado.",
-                  "Thread your other hand under his arm and grab your own wrist as you sit to the side."
+                  "Thread your other hand under their arm and grab your own wrist as you sit to the side."
                 ],
                 [
-                  "Passe a perna por cima e prenda a cabeça dele com o pé.",
-                  "Step your leg over and pin his head with your foot."
+                  "Passe a perna por cima e prenda a cabeça com o pé.",
+                  "Step your leg over and pin the head with your foot."
                 ],
                 [
                   "Gire o corpo e torça o ombro.",
@@ -719,7 +719,7 @@
               ],
               "t": {
                 "pt": "O pé na cabeça é o apoio para a torção.",
-                "en": "The foot on his head is the brace for the rotation."
+                "en": "The foot on the head is the brace for the rotation."
               },
               "id": "top-kimura"
             },
@@ -731,30 +731,30 @@
                 "en": "Americana"
               },
               "d": {
-                "pt": "Funciona no side control e na montada: punho dele no chão, braço em L, levante o cotovelo dele e arraste a mão para baixo.",
-                "en": "Works from side control and mount: his wrist on the mat, arm in an L, lift his elbow and slide the hand down."
+                "pt": "Funciona no side control e na montada: punho da outra pessoa no chão, braço em L, levante o cotovelo e arraste a mão para baixo.",
+                "en": "Works from side control and mount: your partner's wrist on the mat, arm in an L, lift the elbow and slide the hand down."
               },
               "s": [
                 [
-                  "Ameace um soco para ele expor os braços.",
-                  "Fake a punch so he exposes his arms."
+                  "Ameace um soco para os braços ficarem expostos.",
+                  "Fake a punch so your partner exposes their arms."
                 ],
                 [
-                  "Segure o pulso e encaixe seu cotovelo junto ao pescoço dele.",
-                  "Grab the wrist and set your elbow tight beside his neck."
+                  "Segure o pulso e encaixe seu cotovelo junto ao pescoço da outra pessoa.",
+                  "Grab the wrist and set your elbow tight beside your partner's neck."
                 ],
                 [
                   "Passe a outra mão por baixo e segure o próprio pulso.",
                   "Thread your other hand under and grab your own wrist."
                 ],
                 [
-                  "Levante o cotovelo dele e arraste a mão em direção ao joelho.",
-                  "Lift his elbow and slide his hand toward his knee."
+                  "Levante o cotovelo da outra pessoa e arraste a mão em direção ao joelho.",
+                  "Lift your partner's elbow and slide their hand toward their knee."
                 ]
               ],
               "t": {
-                "pt": "A mão dele fica sempre no chão, arrastada como um pincel.",
-                "en": "His hand stays on the mat the whole time, dragged like a paintbrush."
+                "pt": "A mão de quem está embaixo fica sempre no chão, arrastada como um pincel.",
+                "en": "Their hand stays on the mat the whole time, dragged like a paintbrush."
               },
               "id": "top-americana"
             },
@@ -766,12 +766,12 @@
                 "en": "Elbow lock"
               },
               "d": {
-                "pt": "Se ele esticar o braço durante a americana, segure o próprio antebraço por baixo e levante para estender o cotovelo.",
-                "en": "If he straightens his arm during the americana, grab your own forearm underneath and lift to extend the elbow."
+                "pt": "Se o braço se esticar durante a americana, segure o próprio antebraço por baixo e levante para estender o cotovelo.",
+                "en": "If your partner straightens their arm during the americana, grab your own forearm underneath and lift to extend the elbow."
               },
               "t": {
-                "pt": "Mantenha o braço dele esticado.",
-                "en": "Keep his arm straight."
+                "pt": "Mantenha o braço da outra pessoa esticado.",
+                "en": "Keep your partner's arm straight."
               },
               "id": "top-elbow-lock"
             },
@@ -783,8 +783,8 @@
                 "en": "Armbar from side control (leg over the head)"
               },
               "d": {
-                "pt": "Segure o cotovelo, prenda o antebraço dele na axila, passe a perna sobre a cabeça e encaixe o calcanhar no pescoço; empurre o quadril para a frente e curve para trás.",
-                "en": "Hold the elbow, trap his forearm in your armpit, swing your leg over his head and set your heel by his neck; push your hips forward and lean back."
+                "pt": "Segure o cotovelo, prenda o antebraço da outra pessoa na axila, passe a perna sobre a cabeça e encaixe o calcanhar no pescoço; empurre o quadril para a frente e curve para trás.",
+                "en": "Hold the elbow, trap your partner's forearm in your armpit, swing your leg over their head and set your heel by their neck; push your hips forward and lean back."
               },
               "t": {
                 "pt": "Segure firme o cotovelo para imobilizar.",
@@ -800,12 +800,12 @@
                 "en": "Armbar from knee on belly"
               },
               "d": {
-                "pt": "Do joelho na barriga, enrole o braço dele, coloque o antebraço sob o cotovelo, segure o próprio pulso e curve para trás com o cotovelo dele apoiado na sua coxa.",
-                "en": "From knee on belly, wrap his arm, put your forearm under his elbow, grab your own wrist and lean back with his elbow on your thigh."
+                "pt": "Do joelho na barriga, enrole o braço da outra pessoa, coloque o antebraço sob o cotovelo, segure o próprio pulso e curve para trás com o cotovelo dela apoiado na sua coxa.",
+                "en": "From knee on belly, wrap your partner's arm, put your forearm under the elbow, grab your own wrist and lean back with their elbow on your thigh."
               },
               "t": {
-                "pt": "Antebraço exatamente embaixo do cotovelo dele.",
-                "en": "Your forearm directly under his elbow."
+                "pt": "Antebraço exatamente embaixo do cotovelo.",
+                "en": "Your forearm directly under the elbow."
               },
               "id": "top-armbar-from-knee-on-belly"
             },
@@ -817,12 +817,12 @@
                 "en": "North-south kimura"
               },
               "d": {
-                "pt": "Prenda o braço segurando a sua própria gola, bloqueie a cintura e gire para o norte-sul; plante o pé, troque para a pegada da kimura e leve o pulso dele para trás.",
-                "en": "Trap the arm by gripping your own collar, block his waist and circle to north-south; post a foot, switch to the kimura grip and take his wrist back."
+                "pt": "Prenda o braço segurando a sua própria gola, bloqueie a cintura e gire para o norte-sul; plante o pé, troque para a pegada da kimura e leve o pulso da outra pessoa para trás.",
+                "en": "Trap the arm by gripping your own collar, block the waist and circle to north-south; post a foot, switch to the kimura grip and take your partner's wrist back."
               },
               "t": {
-                "pt": "Ao levantar a perna, escore o outro joelho nas costas dele.",
-                "en": "When you raise a leg, brace the other knee against his back."
+                "pt": "Ao levantar a perna, escore o outro joelho nas costas da outra pessoa.",
+                "en": "When you raise a leg, brace the other knee against your partner's back."
               },
               "id": "top-north-south-kimura"
             },
@@ -834,12 +834,12 @@
                 "en": "North-south armbar"
               },
               "d": {
-                "pt": "Se ele envolver seu pescoço, passe a mão por baixo do braço e segure a própria gola; vá para o norte-sul, ponha o joelho na barriga e deite para trás com o braço.",
-                "en": "If he wraps your neck, thread your hand under his arm and grab your own collar; move to north-south, put a knee on his belly and fall back with the arm."
+                "pt": "Se a outra pessoa envolver seu pescoço, passe a mão por baixo do braço e segure a própria gola; vá para o norte-sul, ponha o joelho na barriga e deite para trás com o braço.",
+                "en": "If your partner wraps your neck, thread your hand under their arm and grab your own collar; move to north-south, put a knee on the belly and fall back with the arm."
               },
               "t": {
-                "pt": "Use o joelho para escorar as costas dele.",
-                "en": "Use your knee to brace his back."
+                "pt": "Use o joelho para escorar as costas de quem está embaixo.",
+                "en": "Use your knee to brace your partner's back."
               },
               "id": "top-north-south-armbar"
             },
@@ -851,12 +851,12 @@
                 "en": "Side control collar choke"
               },
               "d": {
-                "pt": "Prenda um braço com a gola e ameace o norte-sul. Quando ele tirar o braço, volte, prenda o outro braço e estrangule com a gola, polegar para dentro.",
-                "en": "Trap one arm with the collar and threaten north-south. When he pulls the arm out, come back, trap the other arm and choke with the collar, thumb in."
+                "pt": "Prenda um braço com a gola e ameace o norte-sul. Quando o braço sair, volte, prenda o outro braço e estrangule com a gola, polegar para dentro.",
+                "en": "Trap one arm with the collar and threaten north-south. When your partner pulls the arm out, come back, trap the other arm and choke with the collar, thumb in."
               },
               "t": {
-                "pt": "O começo é igual ao do armlock: a reação dele decide o ataque.",
-                "en": "It starts like the armbar: his reaction decides the attack."
+                "pt": "O começo é igual ao do armlock: a reação da outra pessoa decide o ataque.",
+                "en": "It starts like the armbar: your partner's reaction decides the attack."
               },
               "id": "top-side-control-collar-choke"
             },
@@ -868,8 +868,8 @@
                 "en": "Guillotine from side control"
               },
               "d": {
-                "pt": "Quando ele levanta a cabeça, envolva o pescoço, passe a gola para a outra mão, vire sobre o ombro e curve para trás empurrando o quadril.",
-                "en": "When he lifts his head, wrap the neck, pass the collar to the other hand, turn onto your shoulder and arch back, pushing your hips."
+                "pt": "Quando a cabeça subir, envolva o pescoço, passe a gola para a outra mão, vire sobre o ombro e curve para trás empurrando o quadril.",
+                "en": "When your partner lifts their head, wrap the neck, pass the collar to the other hand, turn onto your shoulder and arch back, pushing your hips."
               },
               "t": {
                 "pt": "Gola bem funda, sem folga; a força vem do peso relaxado.",
@@ -885,8 +885,8 @@
                 "en": "Double armbar"
               },
               "d": {
-                "pt": "Controle os dois braços e finalize o que ele defender pior.",
-                "en": "Trap both arms and finish the one he defends worse."
+                "pt": "Controle os dois braços e finalize o que estiver pior defendido.",
+                "en": "Trap both arms and finish the one your partner defends worse."
               },
               "t": {
                 "pt": "Sai do side control 2.",
@@ -902,8 +902,8 @@
             "en": "Mount"
           },
           "goal": {
-            "pt": "Manter a montada contra as fugas dele.",
-            "en": "Keep the mount against his escapes."
+            "pt": "Manter a montada contra as fugas de quem está embaixo.",
+            "en": "Keep the mount against your partner's escapes."
           },
           "items": [
             {
@@ -917,8 +917,8 @@
                 "en": "Knees tight to the armpits, heavy hips, hands posted."
               },
               "t": {
-                "pt": "Joelhos abertos, quadril para a frente e calcanhares enganchados sob ele.",
-                "en": "Knees wide, hips forward and heels hooked under him."
+                "pt": "Joelhos abertos, quadril para a frente e calcanhares enganchados sob as pernas de quem está embaixo.",
+                "en": "Knees wide, hips forward and heels hooked under your partner."
               },
               "id": "top-mount"
             },
@@ -930,12 +930,12 @@
                 "en": "High mount"
               },
               "d": {
-                "pt": "Suba os joelhos para as axilas dele; os braços dele saem do chão e abrem o armlock.",
-                "en": "Walk your knees up to his armpits; his arms come off the mat and open the armbar."
+                "pt": "Suba os joelhos para as axilas da outra pessoa; os braços dela saem do chão e abrem o armlock.",
+                "en": "Walk your knees up to your partner's armpits; their arms come off the mat and open the armbar."
               },
               "t": {
-                "pt": "Suba quando ele empurrar seu peito.",
-                "en": "Climb when he pushes your chest."
+                "pt": "Suba quando empurrarem seu peito.",
+                "en": "Climb when your partner pushes your chest."
               },
               "id": "top-high-mount"
             },
@@ -947,11 +947,11 @@
                 "en": "Vs. push on the chest"
               },
               "d": {
-                "pt": "Vire de lado, passe uma mão entre os braços dele e plante no chão; repita com a outra, como se nadasse, até tirar as mãos dele do seu peito.",
-                "en": "Turn sideways, slip one hand between his arms and post it on the mat; repeat with the other, like swimming, until his hands come off your chest."
+                "pt": "Vire de lado, passe uma mão entre os braços da outra pessoa e plante no chão; repita com a outra, como se nadasse, até tirar as mãos dela do seu peito.",
+                "en": "Turn sideways, slip one hand between your partner's arms and post it on the mat; repeat with the other, like swimming, until their hands come off your chest."
               },
               "t": {
-                "pt": "Quanto mais relaxado, mais pesado você fica.",
+                "pt": "Quanto mais você relaxa, mais pesa.",
                 "en": "The more relaxed you are, the heavier you feel."
               },
               "id": "top-vs-push-on-the-chest"
@@ -964,8 +964,8 @@
                 "en": "Vs. push on the belly"
               },
               "d": {
-                "pt": "Projete a barriga para a frente e desvie o pulso dele para o lado; repita do outro lado e deixe o peso cair sobre ele.",
-                "en": "Push your belly forward and knock his wrist to the side; repeat on the other side and let your weight fall onto him."
+                "pt": "Projete a barriga para a frente e desvie o pulso da outra pessoa para o lado; repita do outro lado e deixe o peso cair sobre ela.",
+                "en": "Push your belly forward and knock your partner's wrist to the side; repeat on the other side and let your weight fall onto them."
               },
               "t": {
                 "pt": "Joelhos abertos, quadril para a frente, calcanhares enganchados.",
@@ -981,8 +981,8 @@
                 "en": "Vs. push on the knee"
               },
               "d": {
-                "pt": "Enganche o pulso dele e puxe para cima, escorregando o joelho para a frente.",
-                "en": "Hook his wrist and pull it up, sliding your knee forward."
+                "pt": "Enganche o pulso da outra pessoa e puxe para cima, escorregando o joelho para a frente.",
+                "en": "Hook your partner's wrist and pull it up, sliding your knee forward."
               },
               "t": {
                 "pt": "Repita do outro lado se precisar.",
@@ -998,8 +998,8 @@
                 "en": "Vs. sitting up"
               },
               "d": {
-                "pt": "Quando ele tenta levantar, segure o braço de apoio dele, puxe para trás e empurre o peito contra o rosto dele.",
-                "en": "When he tries to sit up, grab his posting arm, pull it back and press your chest into his face."
+                "pt": "Quando a outra pessoa tenta levantar, segure o braço de apoio, puxe para trás e empurre o peito contra o rosto dela.",
+                "en": "When your partner tries to sit up, grab their posting arm, pull it back and press your chest into their face."
               },
               "t": {
                 "pt": "Peso relaxado funciona melhor que força.",
@@ -1028,21 +1028,21 @@
                 "en": "Armbar from mount"
               },
               "d": {
-                "pt": "Quando ele empurra ou pega sua gola, coloque as mãos no peito dele, passe a perna sobre a cabeça e caia para trás apertando os joelhos.",
-                "en": "When he pushes or grabs your collar, put your hands on his chest, swing your leg over his head and fall back with knees tight."
+                "pt": "Quando a outra pessoa empurra ou pega sua gola, coloque as mãos no peito dela, passe a perna sobre a cabeça e caia para trás apertando os joelhos.",
+                "en": "When your partner pushes or grabs your collar, put your hands on their chest, swing your leg over their head and fall back with knees tight."
               },
               "s": [
                 [
-                  "Mãos no peito dele, uma por dentro e outra por fora dos braços.",
-                  "Hands on his chest, one inside and one outside his arms."
+                  "Mãos no peito da outra pessoa, uma por dentro e outra por fora dos braços.",
+                  "Hands on your partner's chest, one inside and one outside their arms."
                 ],
                 [
-                  "Apoie todo o peso no peito dele e suba o quadril.",
-                  "Put all your weight on his chest and lift your hips."
+                  "Apoie todo o peso no peito da outra pessoa e suba o quadril.",
+                  "Put all your weight on your partner's chest and lift your hips."
                 ],
                 [
-                  "Passe a perna sobre a cabeça dele.",
-                  "Swing your leg over his head."
+                  "Passe a perna sobre a cabeça da outra pessoa.",
+                  "Swing your leg over your partner's head."
                 ],
                 [
                   "Caia para trás segurando o braço, aperte os joelhos e levante o quadril.",
@@ -1050,8 +1050,8 @@
                 ]
               ],
               "t": {
-                "pt": "Mantenha o peso no peito dele até a perna passar. Na montada alta fica mais fácil.",
-                "en": "Keep your weight on his chest until the leg is over. High mount makes it easier."
+                "pt": "Mantenha o peso no peito da outra pessoa até a perna passar. Na montada alta fica mais fácil.",
+                "en": "Keep your weight on your partner's chest until the leg is over. High mount makes it easier."
               },
               "id": "top-armbar-from-mount"
             },
@@ -1059,16 +1059,16 @@
               "lv": "a",
               "g": 1,
               "n": {
-                "pt": "Armlock quando empurrado",
+                "pt": "Armlock contra o empurrão",
                 "en": "Armbar when pushed off"
               },
               "d": {
-                "pt": "Se ele te empurra para o lado, segure o pulso dele enquanto cai, levante a perna sobre a cabeça e finalize.",
-                "en": "If he pushes you to the side, hold his wrist as you fall, swing your leg over his head and finish."
+                "pt": "Se empurrarem você para o lado, segure o pulso da outra pessoa enquanto cai, levante a perna sobre a cabeça e finalize.",
+                "en": "If your partner pushes you to the side, hold their wrist as you fall, swing your leg over their head and finish."
               },
               "t": {
                 "pt": "Escore o cotovelo no chão e encaixe a perna firme no pescoço.",
-                "en": "Brace your elbow on the mat and set the leg firmly against his neck."
+                "en": "Brace your elbow on the mat and set the leg firmly against your partner's neck."
               },
               "id": "top-armbar-when-pushed-off"
             },
@@ -1076,16 +1076,16 @@
               "lv": "a",
               "g": 1,
               "n": {
-                "pt": "Armlock com ele de lado",
-                "en": "Armbar when he turns"
+                "pt": "Armlock na virada de lado",
+                "en": "Armbar when they turn"
               },
               "d": {
-                "pt": "Quando ele vira de lado, prenda o braço, escorregue o joelho para trás da cabeça dele, apoie a mão na cabeça e gire a perna por cima.",
-                "en": "When he turns sideways, trap the arm, slide your knee behind his head, post your hand on his head and swing your leg over."
+                "pt": "Quando a outra pessoa vira de lado, prenda o braço, escorregue o joelho para trás da cabeça dela, apoie a mão na cabeça e gire a perna por cima.",
+                "en": "When your partner turns sideways, trap the arm, slide your knee behind their head, post your hand on their head and swing your leg over."
               },
               "t": {
-                "pt": "Todo o peso sobre a cabeça dele.",
-                "en": "All your weight on his head."
+                "pt": "Todo o peso sobre a cabeça da outra pessoa.",
+                "en": "All your weight on your partner's head."
               },
               "id": "top-armbar-when-he-turns"
             },
@@ -1146,7 +1146,7 @@
               },
               "d": {
                 "pt": "Passe um lado da gola sobre a garganta, puxe o outro para ajustar e pressione com o peso, pulso reto.",
-                "en": "Lay one side of the collar across his throat, pull the other to tighten and press with your weight, wrist straight."
+                "en": "Lay one side of the collar across your partner's throat, pull the other to tighten and press with your weight, wrist straight."
               },
               "t": {
                 "pt": "Também funciona de dentro da guarda.",
@@ -1163,11 +1163,11 @@
               },
               "d": {
                 "pt": "Cotovelos no chão, duas mãos na gola atrás do pescoço, polegares para fora; puxe e role os nós dos dedos no pescoço.",
-                "en": "Elbows on the mat, both hands in the collar behind his neck, thumbs out; pull and roll your knuckles into his neck."
+                "en": "Elbows on the mat, both hands in the collar behind your partner's neck, thumbs out; pull and roll your knuckles into the neck."
               },
               "t": {
-                "pt": "Pés enganchados sob as pernas dele para manter a base.",
-                "en": "Hook your feet under his legs to keep your base."
+                "pt": "Pés enganchados sob as pernas da outra pessoa para manter a base.",
+                "en": "Hook your feet under your partner's legs to keep your base."
               },
               "id": "top-knuckle-choke"
             },
@@ -1175,12 +1175,12 @@
               "lv": "a",
               "g": 1,
               "n": {
-                "pt": "Estrangulamento com ele de lado",
-                "en": "Choke when he turns"
+                "pt": "Estrangulamento na virada de lado",
+                "en": "Choke when they turn"
               },
               "d": {
-                "pt": "Quando ele vira de lado, plante um pé, escorregue o joelho para a cabeça dele, passe a gola para a mão de baixo e puxe a outra gola.",
-                "en": "When he turns sideways, post a foot, slide your knee toward his head, pass the collar to your bottom hand and pull the other lapel."
+                "pt": "Quando a outra pessoa vira de lado, plante um pé, escorregue o joelho para a cabeça dela, passe a gola para a mão de baixo e puxe a outra gola.",
+                "en": "When your partner turns sideways, post a foot, slide your knee toward their head, pass the collar to your bottom hand and pull the other lapel."
               },
               "t": {
                 "pt": "Relaxe o peso e ache uma base confortável.",
@@ -1195,8 +1195,8 @@
                 "en": "Arm triangle"
               },
               "d": {
-                "pt": "Cabeça e braço dele presos, desça para o lado e aperte.",
-                "en": "Trap his head and arm, drop to the side and squeeze."
+                "pt": "Com cabeça e braço da outra pessoa presos, desça para o lado e aperte.",
+                "en": "Trap your partner's head and arm, drop to the side and squeeze."
               },
               "t": {
                 "pt": "Saia da montada para o lado oposto ao braço.",
@@ -1223,8 +1223,8 @@
                 "en": "Take the back"
               },
               "d": {
-                "pt": "Quando ele vira de barriga para fugir, cole o peito nas costas dele e controle o tronco.",
-                "en": "When he turns face-down to escape, stick your chest to his back and control his torso."
+                "pt": "Quando a outra pessoa vira de barriga para fugir, cole o peito nas costas dela e controle o tronco.",
+                "en": "When your partner turns face-down to escape, stick your chest to their back and control their torso."
               },
               "t": {
                 "pt": "Não tenha pressa: controle primeiro.",
@@ -1240,12 +1240,12 @@
                 "en": "Inserting the hooks"
               },
               "d": {
-                "pt": "Com ele de barriga e você nas costas: quando ele levantar, equilibre-se nas mãos, empurre o quadril para baixo e coloque os dois ganchos ao mesmo tempo.",
-                "en": "With him face-down and you on his back: when he rises, balance on your hands, sink your hips and insert both hooks at once."
+                "pt": "Com a outra pessoa de barriga e você nas costas dela: quando ela levantar, equilibre-se nas mãos, empurre o quadril para baixo e coloque os dois ganchos ao mesmo tempo.",
+                "en": "With your partner face-down and you on their back: when they rise, balance on your hands, sink your hips and insert both hooks at once."
               },
               "t": {
-                "pt": "Antecipe a levantada dele.",
-                "en": "Anticipate him getting up."
+                "pt": "Antecipe quando a outra pessoa for levantar.",
+                "en": "Anticipate your partner getting up."
               },
               "id": "top-inserting-the-hooks"
             },
@@ -1258,20 +1258,20 @@
               },
               "d": {
                 "pt": "Braço em volta do pescoço com a dobra do cotovelo sob o queixo; a pressão vem dos ombros, não dos braços.",
-                "en": "Arm around the neck with the crook of the elbow under his chin; the pressure comes from your shoulders, not your arms."
+                "en": "Arm around the neck with the crook of the elbow under the chin; the pressure comes from your shoulders, not your arms."
               },
               "s": [
                 [
-                  "Dobra do cotovelo alinhada sob o queixo dele.",
-                  "Crook of your elbow lined up under his chin."
+                  "Dobra do cotovelo alinhada sob o queixo da outra pessoa.",
+                  "Crook of your elbow lined up under your partner's chin."
                 ],
                 [
                   "Mão no seu próprio bíceps.",
                   "Hand on your own biceps."
                 ],
                 [
-                  "Outra mão atrás da cabeça dele, como se penteasse o cabelo.",
-                  "Other hand behind his head, as if combing his hair."
+                  "Outra mão atrás da cabeça da outra pessoa, como se penteasse o cabelo.",
+                  "Other hand behind your partner's head, as if combing their hair."
                 ],
                 [
                   "Abaixe a cabeça, abra o peito e leve ombros e cotovelos para trás.",
@@ -1290,7 +1290,7 @@
       "games": [
         {
           "n": {
-            "pt": "Guardião da postura",
+            "pt": "Postura firme",
             "en": "Posture keeper"
           },
           "d": {
@@ -1302,8 +1302,8 @@
             "en": "Bottom tries to break posture or reach the neck"
           },
           "win": {
-            "pt": "Cima: 30 s de postura com as duas mãos dele controladas",
-            "en": "Top: 30 s of posture with both his hands controlled"
+            "pt": "Cima: 30 s de postura com as duas mãos de baixo controladas",
+            "en": "Top: 30 s of posture with both of bottom's hands controlled"
           },
           "time": "30 s × 6",
           "id": "top-game-posture-keeper",
@@ -1312,8 +1312,8 @@
             "en": "Closed guard"
           },
           "top": {
-            "pt": "30 s de postura com as duas mãos dele controladas",
-            "en": "30 s of posture with both his hands controlled"
+            "pt": "30 s de postura com as duas mãos de baixo controladas",
+            "en": "30 s of posture with both of bottom's hands controlled"
           },
           "bottom": {
             "pt": "Quebrar a postura ou alcançar o pescoço",
@@ -1343,7 +1343,7 @@
             "en": "Open and pass"
           },
           "d": {
-            "pt": "Começa na guarda fechada. Treina a passagem em pé ou ajoelhado.",
+            "pt": "Começa na guarda fechada. Treina a passagem em pé ou de joelhos.",
             "en": "Starts in closed guard. Trains the standing or kneeling pass."
           },
           "who": {
@@ -1376,7 +1376,7 @@
               },
               "seconds": 120,
               "say": {
-                "pt": "Cima abre a guarda fechada, em pé ou ajoelhado, e passa.",
+                "pt": "Cima abre a guarda fechada, em pé ou de joelhos, e passa.",
                 "en": "Top opens the closed guard, standing or kneeling, and passes."
               }
             }
@@ -1442,7 +1442,7 @@
             "en": "Hold the mount"
           },
           "d": {
-            "pt": "Começa montado. O de baixo usa os 4 empurrões do livro: peito, barriga, joelho e levantada.",
+            "pt": "Começa na montada. Quem está embaixo usa os 4 empurrões do livro: peito, barriga, joelho e levantada.",
             "en": "Starts in mount. The bottom player uses the book's 4 escapes: chest push, belly push, knee push and sitting up."
           },
           "who": {
@@ -1492,7 +1492,7 @@
           },
           "mine": 1,
           "d": {
-            "pt": "Cada jogador tem 3 movimentos, um por vez e em câmera lenta, para melhorar a posição e finalizar.",
+            "pt": "Cada pessoa tem 3 movimentos, um por vez e em câmera lenta, para melhorar a posição e finalizar.",
             "en": "Each player gets 3 moves, one at a time and in slow motion, to improve position and submit."
           },
           "who": {
@@ -1523,18 +1523,18 @@
           "parts": [
             {
               "label": {
-                "pt": "Primeiro jogador · 3 movimentos",
+                "pt": "Primeira pessoa · 3 movimentos",
                 "en": "First player · 3 moves"
               },
               "seconds": 30,
               "say": {
-                "pt": "Três movimentos, um por vez, em câmera lenta. O outro só observa.",
+                "pt": "Três movimentos, um por vez, em câmera lenta. A outra pessoa só observa.",
                 "en": "Three moves, one at a time, in slow motion. The other player only watches."
               }
             },
             {
               "label": {
-                "pt": "Segundo jogador · 3 movimentos",
+                "pt": "Segunda pessoa · 3 movimentos",
                 "en": "Second player · 3 moves"
               },
               "seconds": 30,
@@ -1568,8 +1568,8 @@
             "en": "Closed guard"
           },
           "goal": {
-            "pt": "Manter ele na mira, pegar as mangas e quebrar a postura.",
-            "en": "Keep him in your sights, grab the sleeves and break posture."
+            "pt": "Manter a outra pessoa na mira, pegar as mangas e quebrar a postura.",
+            "en": "Keep your partner in your sights, grab the sleeves and break posture."
           },
           "items": [
             {
@@ -1580,7 +1580,7 @@
                 "en": "The \"sights\" concept"
               },
               "d": {
-                "pt": "Mantenha o oponente sempre dentro da guarda, no meio da mira, não importa para onde você se mova. Pernas são a mira grande (calibre .50): mais poder e mais oportunidades de atacar braço ou pescoço, raspar, empurrar e puxar. Mãos são a mira pequena (calibre .22): use quando perder a mira das pernas, apontando para o que dá para manipular (pescoço, cabeça, ombro, cotovelo, mão).",
+                "pt": "Mantenha quem está por cima sempre dentro da guarda, no meio da mira, não importa para onde você se mova. Pernas são a mira grande (calibre .50): mais poder e mais oportunidades de atacar braço ou pescoço, raspar, empurrar e puxar. Mãos são a mira pequena (calibre .22): use quando perder a mira das pernas, apontando para o que dá para manipular (pescoço, cabeça, ombro, cotovelo, mão).",
                 "en": "Always keep your opponent inside your guard, centered in your sights, wherever you move. Legs are the big sights (.50 caliber): more power and more chances to attack an arm or the neck, sweep, push and pull. Hands are the small sights (.22 caliber): use them when you lose the legs, aiming at what you can manipulate (neck, head, shoulder, elbow, hand)."
               },
               "t": {
@@ -1597,12 +1597,12 @@
                 "en": "Sleeve grips"
               },
               "d": {
-                "pt": "Pegue nas duas mangas ao mesmo tempo e traga braços e mãos dele para perto do seu peito. Use o joelho junto com as mãos para quebrar a postura e trazê-lo para perto.",
-                "en": "Grab both sleeves at the same time and bring his arms and hands close to your chest. Use your knee together with your hands to break his posture and pull him in."
+                "pt": "Pegue nas duas mangas ao mesmo tempo e traga braços e mãos da outra pessoa para perto do seu peito. Use o joelho junto com as mãos para quebrar a postura e trazer a pessoa para perto.",
+                "en": "Grab both sleeves at the same time and bring your partner's arms and hands close to your chest. Use your knee together with your hands to break their posture and pull them in."
               },
               "t": {
-                "pt": "Tire as pegadas dele antes de pegar as suas: quem tem o controle interno dita a luta.",
-                "en": "Strip his grips before you take yours: whoever has inside control runs the fight."
+                "pt": "Tire as pegadas da outra pessoa antes de pegar as suas: quem tem o controle interno dita a luta.",
+                "en": "Strip your partner's grips before you take yours: whoever has inside control runs the fight."
               },
               "id": "bottom-sleeve-grips"
             },
@@ -1614,12 +1614,12 @@
                 "en": "Classic position"
               },
               "d": {
-                "pt": "Pernas cruzadas nas costas dele, uma mão na gola e a outra no cotovelo. É o ponto de partida das raspagens e finalizações do livro.",
-                "en": "Legs crossed behind his back, one hand on the collar and the other on the elbow. It starts all of the book's sweeps and submissions."
+                "pt": "Pernas cruzadas nas costas da outra pessoa, uma mão na gola e a outra no cotovelo. É o ponto de partida das raspagens e finalizações do livro.",
+                "en": "Legs crossed behind your partner's back, one hand on the collar and the other on the elbow. It starts all of the book's sweeps and submissions."
               },
               "t": {
-                "pt": "Controlar o cotovelo atrapalha a passagem dele.",
-                "en": "Controlling his elbow disrupts his pass."
+                "pt": "Controlar o cotovelo atrapalha a passagem.",
+                "en": "Controlling the elbow disrupts the pass."
               },
               "id": "bottom-classic-position"
             },
@@ -1630,8 +1630,8 @@
                 "en": "Break posture"
               },
               "d": {
-                "pt": "Puxe com as pernas e com as pegadas na gola para trazer ele para baixo.",
-                "en": "Pull with your legs and collar grips to bring him down."
+                "pt": "Puxe com as pernas e com as pegadas na gola para trazer a outra pessoa para baixo.",
+                "en": "Pull with your legs and collar grips to bring your partner down."
               },
               "t": {
                 "pt": "Joelhos para o peito, não só os braços.",
@@ -1662,8 +1662,8 @@
                 "en": "High guard"
               },
               "d": {
-                "pt": "Suba as pernas fechadas para perto das axilas dele, mantendo a postura dele quebrada.",
-                "en": "Climb your locked legs up near his armpits, keeping his posture broken."
+                "pt": "Suba as pernas fechadas para perto das axilas da outra pessoa, mantendo a postura dela quebrada.",
+                "en": "Climb your locked legs up near your partner's armpits, keeping their posture broken."
               },
               "t": {
                 "pt": "Quebre a postura com as mãos antes de subir as pernas.",
@@ -1675,12 +1675,12 @@
               "lv": "b",
               "mine": 1,
               "n": {
-                "pt": "Braços dele acima da cabeça",
-                "en": "His arms above your head"
+                "pt": "Braços da outra pessoa acima da sua cabeça",
+                "en": "Their arms above your head"
               },
               "d": {
-                "pt": "Da guarda fechada, controle as mangas e traga os braços do oponente para cima da sua cabeça. Com a postura dele quebrada e os braços longe do corpo, abrem-se o armlock reto, o armlock normal e a raspagem windmill.",
-                "en": "From closed guard, control the sleeves and bring his arms up above your head. With his posture broken and his arms away from his body, the straight armbar, the regular armbar and the windmill sweep open up."
+                "pt": "Da guarda fechada, controle as mangas e traga os braços de quem está por cima para cima da sua cabeça. Com a postura quebrada e os braços longe do corpo, abrem-se o armlock reto, o armlock normal e a raspagem windmill.",
+                "en": "From closed guard, control the sleeves and bring your partner's arms up above your head. With their posture broken and their arms away from their body, the straight armbar, the regular armbar and the windmill sweep open up."
               },
               "t": {
                 "pt": "Puxe as mangas para cima e para perto, não para os lados.",
@@ -1696,7 +1696,7 @@
             "en": "Classic sweeps"
           },
           "goal": {
-            "pt": "Inverter e terminar montado.",
+            "pt": "Inverter e terminar na montada.",
             "en": "Reverse and end up in mount."
           },
           "items": [
@@ -1725,21 +1725,21 @@
                 "en": "Heel trap sweep"
               },
               "d": {
-                "pt": "Quando ele levanta dentro da guarda, controle os cotovelos, segure os calcanhares dele e empurre os joelhos contra a cintura dele até sentar na montada.",
-                "en": "When he stands in your guard, control his elbows, grab his heels and drive your knees into his waist until you sit up into mount."
+                "pt": "Quando a outra pessoa levanta dentro da guarda, controle os cotovelos, segure os calcanhares dela e empurre os joelhos contra a cintura até sentar na montada.",
+                "en": "When your partner stands in your guard, control their elbows, grab their heels and drive your knees into their waist until you sit up into mount."
               },
               "s": [
                 [
-                  "Ele se levanta dentro da guarda: controle os dois cotovelos.",
-                  "He stands in your guard: control both elbows."
+                  "A outra pessoa se levanta dentro da guarda: controle os dois cotovelos.",
+                  "Your partner stands in your guard: control both elbows."
                 ],
                 [
-                  "De repente, segure os calcanhares dele e abaixe o quadril.",
-                  "Suddenly grab his heels and drop your hips."
+                  "De repente, segure os calcanhares e abaixe o quadril.",
+                  "Suddenly grab their heels and drop your hips."
                 ],
                 [
-                  "Levante o quadril na hora, empurrando os joelhos contra a cintura dele.",
-                  "Lift your hips right away, driving your knees into his waist."
+                  "Levante o quadril na hora, empurrando os joelhos contra a cintura da outra pessoa.",
+                  "Lift your hips right away, driving your knees into their waist."
                 ],
                 [
                   "Sente para a frente e chegue à montada.",
@@ -1760,25 +1760,25 @@
                 "en": "Overhead sweep"
               },
               "d": {
-                "pt": "Quando ele levanta, abra a guarda, coloque os pés no quadril dele e controle os cotovelos; estique as pernas e deixe o peso dele levar você para a montada.",
-                "en": "When he stands, open your guard, put your feet on his hips and control his elbows; extend your legs and let his weight carry you into mount."
+                "pt": "Quando a outra pessoa levanta, abra a guarda, coloque os pés no quadril dela e controle os cotovelos; estique as pernas e deixe o peso dela levar você para a montada.",
+                "en": "When your partner stands, open your guard, put your feet on their hips and control their elbows; extend your legs and let their weight carry you into mount."
               },
               "s": [
                 [
-                  "Ele levanta para passar: descruze as pernas e ponha os pés no quadril dele.",
-                  "He stands to pass: uncross your legs and put your feet on his hips."
+                  "A outra pessoa levanta para passar: descruze as pernas e ponha os pés no quadril dela.",
+                  "Your partner stands to pass: uncross your legs and put your feet on their hips."
                 ],
                 [
-                  "Controle os cotovelos dele.",
-                  "Control his elbows."
+                  "Controle os cotovelos da outra pessoa.",
+                  "Control your partner's elbows."
                 ],
                 [
-                  "Estique as pernas e jogue-o para cima, com os pés junto à cintura dele.",
-                  "Extend your legs and lift him overhead, feet at his waist."
+                  "Estique as pernas e jogue a outra pessoa para cima, com os pés junto à cintura dela.",
+                  "Extend your legs and lift your partner overhead, feet at their waist."
                 ],
                 [
-                  "Use o peso dele para ser levado junto e caia na montada.",
-                  "Let his weight carry you along and land in mount."
+                  "Use o peso da outra pessoa para ir junto e caia na montada.",
+                  "Let their weight carry you along and land in mount."
                 ]
               ],
               "t": {
@@ -1795,17 +1795,17 @@
                 "en": "Scissor sweep"
               },
               "d": {
-                "pt": "Quando ele levanta uma perna, abra a guarda, apoie a panturrilha na coxa dele, tire o quadril do chão, vire de lado e faça a tesoura.",
-                "en": "When he raises a leg, open your guard, rest your calf on his thigh, lift your hips, turn sideways and scissor."
+                "pt": "Quando a outra pessoa levanta uma perna, abra a guarda, apoie a panturrilha na coxa dela, tire o quadril do chão, vire de lado e faça a tesoura.",
+                "en": "When your partner raises a leg, open your guard, rest your calf on their thigh, lift your hips, turn sideways and scissor."
               },
               "s": [
                 [
-                  "Perna dele levantada: descruze os pés.",
-                  "His leg is up: uncross your feet."
+                  "Perna da outra pessoa levantada: descruze os pés.",
+                  "Their leg is up: uncross your feet."
                 ],
                 [
-                  "Peso no ombro e na panturrilha sobre a coxa dele; levante o quadril.",
-                  "Weight on your shoulder and your calf on his thigh; lift your hips."
+                  "Peso no ombro e na panturrilha sobre a coxa da outra pessoa; levante o quadril.",
+                  "Weight on your shoulder and your calf on their thigh; lift your hips."
                 ],
                 [
                   "Use a gola como apoio, gire de lado e recue o quadril ao máximo.",
@@ -1831,25 +1831,25 @@
                 "en": "Hook sweep"
               },
               "d": {
-                "pt": "Quando ele tenta entrar com a mão na dobra do seu joelho, descruze os pés, recue o quadril, enganche um pé sob o joelho dele e eleve a perna puxando o cotovelo.",
-                "en": "When he reaches into the back of your knee, uncross your feet, shift your hips back, hook a foot under his knee and lift the leg while pulling his elbow."
+                "pt": "Quando a outra pessoa tenta entrar com a mão na dobra do seu joelho, descruze os pés, recue o quadril, enganche um pé sob o joelho dela e eleve a perna puxando o cotovelo.",
+                "en": "When your partner reaches into the back of your knee, uncross your feet, shift your hips back, hook a foot under their knee and lift the leg while pulling their elbow."
               },
               "s": [
                 [
-                  "Ele segura seu bíceps: agarre o kimono atrás do cotovelo dele.",
-                  "He grips your biceps: grab the gi behind his elbow."
+                  "A outra pessoa segura seu bíceps: agarre o kimono atrás do cotovelo dela.",
+                  "Your partner grips your biceps: grab the gi behind their elbow."
                 ],
                 [
-                  "Ele levanta uma perna e enfia a mão na dobra do seu joelho: descruze os pés.",
-                  "He raises a leg and reaches into the back of your knee: uncross your feet."
+                  "A outra pessoa levanta uma perna e enfia a mão na dobra do seu joelho: descruze os pés.",
+                  "Your partner raises a leg and reaches into the back of your knee: uncross your feet."
                 ],
                 [
-                  "Panturrilha na coxa dele, peso no ombro oposto e quadril para trás.",
-                  "Calf on his thigh, weight on the opposite shoulder, hips back."
+                  "Panturrilha na coxa da outra pessoa, peso no ombro oposto e quadril para trás.",
+                  "Calf on their thigh, weight on the opposite shoulder, hips back."
                 ],
                 [
-                  "Enganche um pé sob o joelho dele e ponha o outro pé no outro joelho.",
-                  "Hook one foot under his knee and put the other foot on his other knee."
+                  "Enganche um pé sob o joelho da outra pessoa e ponha o outro pé no outro joelho.",
+                  "Hook one foot under their knee and put the other foot on their other knee."
                 ],
                 [
                   "Empurre o joelho de baixo, puxe o cotovelo e eleve a perna com o gancho até montar.",
@@ -1870,30 +1870,30 @@
                 "en": "Sit-up sweep"
               },
               "d": {
-                "pt": "Quando ele senta para trás, abra a guarda, apoie-se no cotovelo, prenda o braço dele e empurre com a barriga até ele rolar.",
-                "en": "When he sits back, open your guard, come up on your elbow, trap his arm and drive with your belly until he rolls over."
+                "pt": "Quando a outra pessoa senta para trás, abra a guarda, apoie-se no cotovelo, prenda o braço dela e empurre com a barriga até ela rolar.",
+                "en": "When your partner sits back, open your guard, come up on your elbow, trap their arm and drive with your belly until they roll over."
               },
               "s": [
                 [
-                  "Mão na gola e no cotovelo dele.",
-                  "Hand on his collar and on his elbow."
+                  "Mão na gola e no cotovelo da outra pessoa.",
+                  "Hand on their collar and on their elbow."
                 ],
                 [
-                  "Ele senta para trás: descruze as pernas e desça a mão da gola para trás do cotovelo dele.",
-                  "He sits back: uncross your legs and slide the collar hand down behind his elbow."
+                  "A outra pessoa senta para trás: descruze as pernas e desça a mão da gola para trás do cotovelo dela.",
+                  "Your partner sits back: uncross your legs and slide the collar hand down behind their elbow."
                 ],
                 [
-                  "Levante apoiado no próprio cotovelo, depois com o braço esticado.",
+                  "Levante com o apoio no próprio cotovelo, depois com o braço esticado.",
                   "Come up on your elbow, then onto your straight arm."
                 ],
                 [
-                  "Apoie-se no pé do lado oposto, prenda o cotovelo dele e empurre com a barriga até ele rolar para trás.",
-                  "Post on the opposite foot, trap his elbow and drive with your belly until he rolls back."
+                  "Apoie-se no pé do lado oposto, prenda o cotovelo da outra pessoa e empurre com a barriga até ela rolar para trás.",
+                  "Post on the opposite foot, trap their elbow and drive with your belly until they roll back."
                 ]
               ],
               "t": {
                 "pt": "Pé de apoio esticado durante a rolagem.",
-                "en": "Keep your base foot extended as you roll him."
+                "en": "Keep your base foot extended as you roll your partner."
               },
               "id": "bottom-sit-up-sweep"
             }
@@ -1916,8 +1916,8 @@
                 "en": "Flower sweep"
               },
               "d": {
-                "pt": "Prenda um braço, balance a perna como um pêndulo e role ele por cima.",
-                "en": "Trap an arm, swing your leg like a pendulum and roll him over."
+                "pt": "Prenda um braço, balance a perna como um pêndulo e role a outra pessoa por cima.",
+                "en": "Trap an arm, swing your leg like a pendulum and roll your partner over."
               },
               "t": {
                 "pt": "Combina com o armlock.",
@@ -1952,8 +1952,8 @@
                 "en": "From half guard: underhook, grab the ankle and come up."
               },
               "t": {
-                "pt": "Cabeça na axila dele.",
-                "en": "Head in his armpit."
+                "pt": "Cabeça na axila da outra pessoa.",
+                "en": "Head in your partner's armpit."
               },
               "id": "bottom-old-school-sweep"
             },
@@ -1980,12 +1980,12 @@
                 "en": "X-guard sweep"
               },
               "d": {
-                "pt": "Estique as pernas e tire a base dele.",
-                "en": "Extend your legs and take away his base."
+                "pt": "Estique as pernas e tire a base da outra pessoa.",
+                "en": "Extend your legs and take away your partner's base."
               },
               "t": {
-                "pt": "Levante junto quando ele cair.",
-                "en": "Come up as he falls."
+                "pt": "Levante junto na queda.",
+                "en": "Come up as your partner falls."
               },
               "id": "bottom-x-guard-sweep"
             },
@@ -1996,25 +1996,25 @@
                 "en": "Double ankle sweep"
               },
               "d": {
-                "pt": "Raspagem dos dois tornozelos: quando ele levanta dentro da guarda, segure os dois calcanhares, coloque os pés no quadril dele e empurre para ele cair sentado; suba junto.",
-                "en": "Double ankle sweep: when he stands in your guard, grab both heels, put your feet on his hips and push so he falls on his backside; come up with him."
+                "pt": "Raspagem dos dois tornozelos: quando a outra pessoa levanta dentro da guarda, segure os dois calcanhares, coloque os pés no quadril dela e empurre para ela cair sentada; suba junto.",
+                "en": "Double ankle sweep: when your partner stands in your guard, grab both heels, put your feet on their hips and push so they fall on their backside; come up with them."
               },
               "s": [
                 [
-                  "Quando ele levanta dentro da guarda",
-                  "When he stands in your guard"
+                  "Quando a outra pessoa levanta dentro da guarda",
+                  "When your partner stands in your guard"
                 ],
                 [
                   "Segure os dois calcanhares",
                   "Grab both heels"
                 ],
                 [
-                  "Coloque os pés no quadril dele e empurre para ele cair sentado",
-                  "Put your feet on his hips and push so he falls on his backside"
+                  "Coloque os pés no quadril e empurre para a outra pessoa cair sentada",
+                  "Put your feet on their hips and push so they fall on their backside"
                 ],
                 [
                   "Suba junto",
-                  "Come up with him"
+                  "Come up with them"
                 ]
               ],
               "t": {
@@ -2030,26 +2030,26 @@
                 "en": "Tripod sweep"
               },
               "d": {
-                "pt": "Raspagem tripé: um pé no quadril dele, a mão segura o tornozelo do mesmo lado e o outro pé engancha atrás do outro joelho; empurre o quadril e puxe o tornozelo para ele cair para trás.",
-                "en": "Tripod sweep: one foot on his hip, a hand on the same-side ankle and the other foot hooked behind his other knee; push the hip and pull the ankle so he falls backward."
+                "pt": "Raspagem tripé: um pé no quadril da outra pessoa, a mão segura o tornozelo do mesmo lado e o outro pé engancha atrás do outro joelho; empurre o quadril e puxe o tornozelo para ela cair para trás.",
+                "en": "Tripod sweep: one foot on your partner's hip, a hand on the same-side ankle and the other foot hooked behind their other knee; push the hip and pull the ankle so they fall backward."
               },
               "s": [
                 [
-                  "Um pé no quadril dele",
-                  "One foot on his hip"
+                  "Um pé no quadril da outra pessoa",
+                  "One foot on their hip"
                 ],
                 [
                   "A mão segura o tornozelo do mesmo lado e o outro pé engancha atrás do outro joelho",
-                  "A hand on the same-side ankle and the other foot hooked behind his other knee"
+                  "A hand on the same-side ankle and the other foot hooked behind their other knee"
                 ],
                 [
-                  "Empurre o quadril e puxe o tornozelo para ele cair para trás",
-                  "Push the hip and pull the ankle so he falls backward"
+                  "Empurre o quadril e puxe o tornozelo para a outra pessoa cair para trás",
+                  "Push the hip and pull the ankle so they fall backward"
                 ]
               ],
               "t": {
-                "pt": "Suba rápido para não ficar preso nas pernas dele.",
-                "en": "Come up fast so you don't get tangled in his legs."
+                "pt": "Suba rápido para as pernas da outra pessoa não prenderem você.",
+                "en": "Come up fast so you don't get tangled in your partner's legs."
               },
               "id": "bottom-tripod-sweep"
             }
@@ -2061,8 +2061,8 @@
             "en": "Submissions from guard"
           },
           "goal": {
-            "pt": "Atacar quando ele tenta passar ou expõe um braço.",
-            "en": "Attack when he tries to pass or exposes an arm."
+            "pt": "Atacar quando a outra pessoa tenta passar ou expõe um braço.",
+            "en": "Attack when your partner tries to pass or exposes an arm."
           },
           "items": [
             {
@@ -2073,25 +2073,25 @@
                 "en": "Armbar with hip pivot"
               },
               "d": {
-                "pt": "O armlock da sua aula: a perna trava o cotovelo pisando no quadril dele e o seu quadril gira como um eixo embaixo dele para mudar os ângulos a seu favor.",
-                "en": "The armbar from your class: your leg locks his elbow by stepping on his hip, and your hips pivot like an axle underneath him to change the angles in your favor."
+                "pt": "O armlock da sua aula: a perna trava o cotovelo pisando no quadril da outra pessoa e o seu quadril gira como um eixo embaixo dela para mudar os ângulos a seu favor.",
+                "en": "The armbar from your class: your leg locks the elbow by stepping on your partner's hip, and your hips pivot like an axle underneath them to change the angles in your favor."
               },
               "s": [
                 [
-                  "Escolha um braço (ex.: o direito dele) e controle pulso e tríceps.",
-                  "Pick an arm (e.g. his right) and control the wrist and triceps."
+                  "Escolha um braço (ex.: o direito da outra pessoa) e controle pulso e tríceps.",
+                  "Pick an arm (e.g. your partner's right) and control the wrist and triceps."
                 ],
                 [
-                  "A perna esquerda trava o cotovelo, pisando no quadril dele.",
-                  "Your left leg locks the elbow by stepping on his hip."
+                  "A perna esquerda trava o cotovelo, pisando no quadril da outra pessoa.",
+                  "Your left leg locks the elbow by stepping on their hip."
                 ],
                 [
-                  "Solte a manga e abrace o antebraço dele: segure o próprio kimono ou faça um abraço forte.",
-                  "Release the sleeve and hug his forearm: grab your own gi or squeeze tight."
+                  "Solte a manga e abrace o antebraço da outra pessoa: segure o próprio kimono ou faça um abraço forte.",
+                  "Release the sleeve and hug their forearm: grab your own gi or squeeze tight."
                 ],
                 [
-                  "Gire o quadril como eixo embaixo dele até ficar perpendicular. Não é fuga de quadril: é troca de ângulo.",
-                  "Pivot your hips like an axle underneath him until you are perpendicular. It is not a hip escape: it is an angle change."
+                  "Gire o quadril como eixo embaixo da outra pessoa até ficar perpendicular. Não é fuga de quadril: é troca de ângulo.",
+                  "Pivot your hips like an axle underneath your partner until you are perpendicular. It is not a hip escape: it is an angle change."
                 ],
                 [
                   "Passe a perna sobre a cabeça, segure o pulso e finalize com pressão do quadril.",
@@ -2112,21 +2112,21 @@
                 "en": "Armbar from guard (leg over the head)"
               },
               "d": {
-                "pt": "Quando ele ajoelha para entrar com o ombro sob seu joelho, plante o pé, recue o quadril, passe a perna sobre a cabeça dele e estenda o braço.",
-                "en": "When he kneels to get his shoulder under your knee, post your foot, shift your hips back, swing your leg over his head and extend the arm."
+                "pt": "Quando a outra pessoa ajoelha para entrar com o ombro sob seu joelho, plante o pé, recue o quadril, passe a perna sobre a cabeça dela e estenda o braço.",
+                "en": "When your partner kneels to get their shoulder under your knee, post your foot, shift your hips back, swing your leg over their head and extend the arm."
               },
               "s": [
                 [
-                  "Mão na gola e no cotovelo dele.",
-                  "Hand on his collar and on his elbow."
+                  "Mão na gola e no cotovelo da outra pessoa.",
+                  "Hand on their collar and on their elbow."
                 ],
                 [
-                  "Ele entra para passar: plante o pé no chão e recue o quadril.",
-                  "He moves to pass: post your foot and shift your hips back."
+                  "A outra pessoa entra para passar: plante o pé no chão e recue o quadril.",
+                  "Your partner moves to pass: post your foot and shift your hips back."
                 ],
                 [
-                  "Recue o tronco e passe a perna por cima da cabeça dele.",
-                  "Lean your torso back and swing your leg over his head."
+                  "Recue o tronco e passe a perna por cima da cabeça da outra pessoa.",
+                  "Lean your torso back and swing your leg over their head."
                 ],
                 [
                   "Prenda o pulso e pressione o cotovelo para baixo com a perna, levantando o pulso.",
@@ -2147,25 +2147,25 @@
                 "en": "Omoplata"
               },
               "d": {
-                "pt": "Plante o pé, recue o quadril, passe a perna por cima prendendo a cabeça e enrole o braço; sente, abrace a cintura dele e levante o quadril para a frente.",
-                "en": "Post your foot, shift your hips back, swing your leg over trapping the head and wrap the arm; sit up, hug his waist and push your hips forward."
+                "pt": "Plante o pé, recue o quadril, passe a perna por cima prendendo a cabeça e enrole o braço; sente, abrace a cintura da outra pessoa e levante o quadril para a frente.",
+                "en": "Post your foot, shift your hips back, swing your leg over trapping the head and wrap the arm; sit up, hug your partner's waist and push your hips forward."
               },
               "s": [
                 [
-                  "Mão na gola e no cotovelo dele.",
-                  "Hand on his collar and on his elbow."
+                  "Mão na gola e no cotovelo da outra pessoa.",
+                  "Hand on their collar and on their elbow."
                 ],
                 [
-                  "Ele levanta uma perna: plante o pé no chão e recue o quadril.",
-                  "He raises a leg: post your foot and shift your hips back."
+                  "A outra pessoa levanta uma perna: plante o pé no chão e recue o quadril.",
+                  "Your partner raises a leg: post your foot and shift your hips back."
                 ],
                 [
                   "Recue o tronco e passe a perna por cima, prendendo a cabeça e enrolando o braço.",
-                  "Lean back and swing your leg over, trapping his head and wrapping the arm."
+                  "Lean back and swing your leg over, trapping their head and wrapping the arm."
                 ],
                 [
-                  "Sente, segure a cintura dele e reposicione as pernas.",
-                  "Sit up, hold his waist and reposition your legs."
+                  "Sente, segure a cintura da outra pessoa e reposicione as pernas.",
+                  "Sit up, hold their waist and reposition your legs."
                 ],
                 [
                   "Levante o quadril para a frente para finalizar.",
@@ -2173,8 +2173,8 @@
                 ]
               ],
               "t": {
-                "pt": "Abrace a cintura para ele não rolar para a frente.",
-                "en": "Hug his waist so he can't roll forward."
+                "pt": "Abrace a cintura para a outra pessoa não rolar para a frente.",
+                "en": "Hug their waist so they can't roll forward."
               },
               "id": "bottom-omoplata"
             },
@@ -2187,29 +2187,29 @@
                 "en": "Kimura from guard"
               },
               "d": {
-                "pt": "Quando ele põe a mão no chão, segure o pulso, sente apoiado no cotovelo, passe o braço por trás e segure o próprio pulso; role para trás e torça com o braço a 90 graus.",
-                "en": "When he posts a hand, grab the wrist, sit up on your elbow, reach over his arm and grab your own wrist; fall back and rotate with the arm at 90 degrees."
+                "pt": "Quando a outra pessoa põe a mão no chão, segure o pulso, sente-se apoiando no cotovelo, passe o braço por trás e segure o próprio pulso; role para trás e torça com o braço a 90 graus.",
+                "en": "When your partner posts a hand, grab the wrist, sit up on your elbow, reach over their arm and grab your own wrist; fall back and rotate with the arm at 90 degrees."
               },
               "s": [
                 [
-                  "Ele põe a mão no chão: segure o pulso.",
-                  "He posts a hand: grab the wrist."
+                  "A outra pessoa põe a mão no chão: segure o pulso.",
+                  "Your partner posts a hand: grab the wrist."
                 ],
                 [
-                  "Descruze as pernas e sente apoiado no cotovelo, passando o braço por trás.",
-                  "Uncross your legs and sit up on your elbow, reaching over his arm."
+                  "Descruze as pernas e sente-se apoiando no cotovelo, passando o braço por trás.",
+                  "Uncross your legs and sit up on your elbow, reaching over their arm."
                 ],
                 [
-                  "Segure o próprio pulso e role para trás, prendendo a perna dele.",
-                  "Grab your own wrist and fall back, trapping his leg."
+                  "Segure o próprio pulso e role para trás, prendendo a perna da outra pessoa.",
+                  "Grab your own wrist and fall back, trapping their leg."
                 ],
                 [
-                  "Recue o quadril até sair de baixo dele, braço dele dobrado a 90 graus.",
-                  "Shift your hips until you are out from under him, his arm bent at 90 degrees."
+                  "Recue o quadril até sair de baixo da outra pessoa, com o braço dela dobrado a 90 graus.",
+                  "Shift your hips until you are out from under your partner, their arm bent at 90 degrees."
                 ],
                 [
-                  "Perna sobre as costas dele, braço contra o seu peito; gire o pulso como um limpador de para-brisa.",
-                  "Leg over his back, arm against your chest; turn the wrist like a windshield wiper."
+                  "Perna sobre as costas da outra pessoa, braço contra o seu peito; gire o pulso como um limpador de para-brisa.",
+                  "Leg over their back, arm against your chest; turn the wrist like a windshield wiper."
                 ]
               ],
               "t": {
@@ -2227,8 +2227,8 @@
                 "en": "Triangle"
               },
               "d": {
-                "pt": "Quando ele entra com um braço por dentro da sua perna, puxe esse braço, gire o quadril e trave a perna no pescoço dele.",
-                "en": "When he puts one arm inside your leg, pull that arm, turn your hips and lock your leg around his neck."
+                "pt": "Quando a outra pessoa entra com um braço por dentro da sua perna, puxe esse braço, gire o quadril e trave a perna no pescoço dela.",
+                "en": "When your partner puts one arm inside your leg, pull that arm, turn your hips and lock your leg around their neck."
               },
               "s": [
                 [
@@ -2240,17 +2240,17 @@
                   "Post your foot, turn your hips and pull the arm toward you."
                 ],
                 [
-                  "Encaixe a dobra do joelho no pescoço e passe o braço dele para o outro lado.",
-                  "Fit the back of your knee around his neck and pull his arm across."
+                  "Encaixe a dobra do joelho no pescoço e passe o braço da outra pessoa para o outro lado.",
+                  "Fit the back of your knee around the neck and pull their arm across."
                 ],
                 [
                   "Trave a perna livre sobre o tornozelo, puxe a cabeça e levante o quadril.",
-                  "Lock your free leg over your ankle, pull his head and lift your hips."
+                  "Lock your free leg over your ankle, pull the head and lift your hips."
                 ]
               ],
               "t": {
-                "pt": "Fique perpendicular a ele. Um braço dentro e outro fora das suas pernas; para apertar, puxe a cabeça, aperte os joelhos e aproxime o quadril. Se ele resistir, a kimura vira alça para raspar (hip bump).",
-                "en": "Get perpendicular to him. One arm inside and one outside your legs; to tighten, pull the head, squeeze your knees and bring your hips closer. If he resists, the kimura becomes a handle to sweep (hip bump)."
+                "pt": "Fique perpendicular à outra pessoa. Um braço dentro e outro fora das suas pernas; para apertar, puxe a cabeça, aperte os joelhos e aproxime o quadril. Se houver resistência, a kimura vira alça para raspar (hip bump).",
+                "en": "Get perpendicular to your partner. One arm inside and one outside your legs; to tighten, pull the head, squeeze your knees and bring your hips closer. If they resist, the kimura becomes a handle to sweep (hip bump)."
               },
               "id": "bottom-triangle"
             },
@@ -2262,17 +2262,17 @@
                 "en": "Spinning armbar"
               },
               "d": {
-                "pt": "Quando ele levanta uma perna, prenda o cotovelo, segure atrás da panturrilha dele, curve-se como uma tartaruga e gire para passar a perna sobre a cabeça.",
-                "en": "When he raises a leg, trap the elbow, grab behind his calf, curl up like a turtle and spin to swing your leg over his head."
+                "pt": "Quando a outra pessoa levanta uma perna, prenda o cotovelo, segure atrás da panturrilha dela, curve-se como uma tartaruga e gire para passar a perna sobre a cabeça.",
+                "en": "When your partner raises a leg, trap the elbow, grab behind their calf, curl up like a turtle and spin to swing your leg over their head."
               },
               "s": [
                 [
-                  "Ele levanta uma perna: prenda o cotovelo dele.",
-                  "He raises a leg: trap his elbow."
+                  "A outra pessoa levanta uma perna: prenda o cotovelo dela.",
+                  "Your partner raises a leg: trap their elbow."
                 ],
                 [
-                  "Descruze os pés e segure atrás da panturrilha dele.",
-                  "Uncross your feet and grab behind his calf."
+                  "Descruze os pés e segure atrás da panturrilha da outra pessoa.",
+                  "Uncross your feet and grab behind their calf."
                 ],
                 [
                   "Curve-se como uma tartaruga, tire pélvis e cabeça do chão e gire sobre o meio das costas.",
@@ -2280,12 +2280,12 @@
                 ],
                 [
                   "Passe a perna por cima da cabeça, prenda o braço no peito e levante o quadril.",
-                  "Swing your leg over his head, trap the arm to your chest and lift your hips."
+                  "Swing your leg over their head, trap the arm to your chest and lift your hips."
                 ]
               ],
               "t": {
-                "pt": "Pernas soltas no giro, sem encostar nele.",
-                "en": "Keep your legs loose during the spin so you don't bump him."
+                "pt": "Pernas soltas no giro, sem encostar na outra pessoa.",
+                "en": "Keep your legs loose during the spin so you don't bump your partner."
               },
               "id": "bottom-spinning-armbar"
             },
@@ -2297,12 +2297,12 @@
                 "en": "Guillotine from guard"
               },
               "d": {
-                "pt": "Quando ele abaixa a cabeça, envolva o pescoço com a lâmina do antebraço na garganta e segure o pulso desse braço com a outra mão; cruze os pés, puxe o braço e estique as pernas.",
-                "en": "When he drops his head, wrap the neck with your forearm blade across the throat and grab that wrist with your other hand; cross your feet, pull the arm and extend your legs."
+                "pt": "Quando a outra pessoa abaixa a cabeça, envolva o pescoço com a lâmina do antebraço na garganta e segure o pulso desse braço com a outra mão; cruze os pés, puxe o braço e estique as pernas.",
+                "en": "When your partner drops their head, wrap the neck with your forearm blade across the throat and grab that wrist with your other hand; cross your feet, pull the arm and extend your legs."
               },
               "t": {
-                "pt": "Queixo dele preso na dobra do seu braço.",
-                "en": "Keep his chin trapped in the crook of your arm."
+                "pt": "Queixo da outra pessoa preso na dobra do seu braço.",
+                "en": "Keep their chin trapped in the crook of your arm."
               },
               "id": "bottom-guillotine-from-guard"
             },
@@ -2314,8 +2314,8 @@
                 "en": "Bread cutter from guard"
               },
               "d": {
-                "pt": "Solte a gola dele com a palma para baixo e sem o polegar, passe um lado sobre a garganta, puxe o outro para ajustar e pressione com o pulso reto.",
-                "en": "Free his lapel palm-down without the thumb, lay one side across his throat, pull the other side to tighten and press with a straight wrist."
+                "pt": "Solte a gola da outra pessoa com a palma para baixo e sem o polegar, passe um lado sobre a garganta, puxe o outro para ajustar e pressione com o pulso reto.",
+                "en": "Free your partner's lapel palm-down without the thumb, lay one side across their throat, pull the other side to tighten and press with a straight wrist."
               },
               "t": {
                 "pt": "O nó do dedo mínimo pressiona a carótida.",
@@ -2359,12 +2359,12 @@
                 "en": "Straight ankle lock"
               },
               "d": {
-                "pt": "Com a perna dele entre as suas, prenda o tornozelo sob a axila e o antebraço sob o tendão de Aquiles; segure o próprio pulso e curve para trás.",
-                "en": "With his leg between yours, trap the ankle under your armpit and your forearm under his Achilles tendon; grab your own wrist and arch back."
+                "pt": "Com a perna da outra pessoa entre as suas, prenda o tornozelo sob a axila e o antebraço sob o tendão de Aquiles; segure o próprio pulso e curve para trás.",
+                "en": "With your partner's leg between yours, trap the ankle under your armpit and your forearm under their Achilles tendon; grab your own wrist and arch back."
               },
               "t": {
-                "pt": "Pé dele bem ajustado; use a perna para mantê-lo à distância.",
-                "en": "Keep his foot snug; use your leg to keep him at a distance."
+                "pt": "Pé da outra pessoa bem ajustado; use a perna para manter a distância.",
+                "en": "Keep their foot snug; use your leg to keep your partner at a distance."
               },
               "id": "bottom-straight-ankle-lock"
             },
@@ -2376,8 +2376,8 @@
                 "en": "Heel hook"
               },
               "d": {
-                "pt": "Prenda os dedos do pé dele sob a axila, gire a perna, coloque o antebraço sob o calcanhar e gire contra o seu corpo.",
-                "en": "Trap his toes under your armpit, rotate the leg, put your forearm under the heel and turn it against your body."
+                "pt": "Prenda os dedos do pé da outra pessoa sob a axila, gire a perna, coloque o antebraço sob o calcanhar e gire contra o seu corpo.",
+                "en": "Trap your partner's toes under your armpit, rotate the leg, put your forearm under the heel and turn it against your body."
               },
               "t": {
                 "pt": "Muito perigosa: lesiona o joelho antes de doer. Só com supervisão e conforme as regras da faixa.",
@@ -2393,8 +2393,8 @@
                 "en": "Toe hold"
               },
               "d": {
-                "pt": "Segure a base dos dedos do pé dele, passe a outra mão por baixo do calcanhar, segure o próprio pulso e torça o tornozelo.",
-                "en": "Grip the base of his toes, thread your other hand under the heel, grab your own wrist and twist the ankle."
+                "pt": "Segure a base dos dedos do pé da outra pessoa, passe a outra mão por baixo do calcanhar, segure o próprio pulso e torça o tornozelo.",
+                "en": "Grip the base of your partner's toes, thread your other hand under the heel, grab your own wrist and twist the ankle."
               },
               "t": {
                 "pt": "Funciona de várias posições.",
@@ -2427,15 +2427,15 @@
               },
               "s": [
                 [
-                  "Cotovelos colados ao corpo, escorando os joelhos dele.",
-                  "Elbows tight to your body, blocking his knees."
+                  "Cotovelos colados ao corpo, escorando os joelhos da outra pessoa.",
+                  "Elbows tight to your body, blocking their knees."
                 ],
                 [
                   "Prenda o pulso (sem polegar), o cotovelo e o pé do mesmo lado.",
                   "Trap the wrist (no thumb), the elbow and the foot on the same side."
                 ],
                 [
-                  "Faça a ponte apoiado nas costas, não na cabeça.",
+                  "Faça a ponte com o apoio nas costas, não na cabeça.",
                   "Bridge off your upper back, not your head."
                 ],
                 [
@@ -2444,8 +2444,8 @@
                 ]
               ],
               "t": {
-                "pt": "Mantenha o braço dele preso durante toda a rolagem.",
-                "en": "Keep his arm trapped through the whole roll."
+                "pt": "Mantenha o braço da outra pessoa preso durante toda a rolagem.",
+                "en": "Keep their arm trapped through the whole roll."
               },
               "id": "bottom-upa-bridge-and-roll"
             },
@@ -2457,8 +2457,8 @@
                 "en": "Elbow escape"
               },
               "d": {
-                "pt": "Quando ele abre a perna para segurar a upa, escore o joelho dele, vire de lado, recue o quadril e tire uma perna de cada vez até fechar a guarda.",
-                "en": "When he widens a leg to stop the upa, block his knee, turn sideways, shift your hips back and free one leg at a time until you close your guard."
+                "pt": "Quando a outra pessoa abre a perna para segurar a upa, escore o joelho dela, vire de lado, recue o quadril e tire uma perna de cada vez até fechar a guarda.",
+                "en": "When your partner widens a leg to stop the upa, block their knee, turn sideways, shift your hips back and free one leg at a time until you close your guard."
               },
               "s": [
                 [
@@ -2466,20 +2466,20 @@
                   "Trap the wrist, elbow and same-side foot, and start the upa."
                 ],
                 [
-                  "Ele abre a perna para segurar a base: escore o joelho dele com as duas mãos e vire a sua perna de lado no chão.",
-                  "He widens a leg to base: block his knee with both hands and turn your leg sideways on the mat."
+                  "A outra pessoa abre a perna para segurar a base: escore o joelho dela com as duas mãos e vire a sua perna de lado no chão.",
+                  "Your partner widens a leg to base: block their knee with both hands and turn your leg sideways on the mat."
                 ],
                 [
                   "Peso no ombro e no pé oposto, vire de lado e recue o quadril; encolha o joelho e plante o pé.",
                   "Weight on your shoulder and opposite foot, turn sideways and shift your hips back; pull your knee in and post your foot."
                 ],
                 [
-                  "Recue o quadril para o outro lado, solte a perna e prenda a dele.",
-                  "Shift your hips the other way, free your leg and trap his."
+                  "Recue o quadril para o outro lado, solte a perna e prenda a da outra pessoa.",
+                  "Shift your hips the other way, free your leg and trap theirs."
                 ],
                 [
-                  "Repita do outro lado e cruze as pernas: ele está na sua guarda.",
-                  "Repeat on the other side and cross your legs: he is in your guard."
+                  "Repita do outro lado e cruze as pernas: a outra pessoa está na sua guarda.",
+                  "Repeat on the other side and cross your legs: your partner is in your guard."
                 ]
               ],
               "t": {
@@ -2496,7 +2496,7 @@
                 "en": "Elbow escape drill"
               },
               "d": {
-                "pt": "Sozinho ou com parceiro: escore os joelhos com os cotovelos, vire de lado, recue o quadril, encolha o joelho, plante o pé e repita para o outro lado.",
+                "pt": "Solo ou em dupla: escore os joelhos com os cotovelos, vire de lado, recue o quadril, encolha o joelho, plante o pé e repita para o outro lado.",
                 "en": "Solo or with a partner: block the knees with your elbows, turn sideways, shift your hips, pull your knee in, post your foot and repeat to the other side."
               },
               "t": {
@@ -2513,25 +2513,25 @@
                 "en": "Back door escape"
               },
               "d": {
-                "pt": "Dê a ponte para jogar ele para a frente, segure o kimono sob as axilas, encaixe os pés sob as axilas dele e empurre até sair por trás.",
-                "en": "Bridge to tip him forward, grip the gi under his armpits, slide your feet under his armpits and push until you come out the back."
+                "pt": "Dê a ponte para jogar a outra pessoa para a frente, segure o kimono sob as axilas, encaixe os pés sob as axilas dela e empurre até sair por trás.",
+                "en": "Bridge to tip your partner forward, grip the gi under their armpits, slide your feet under their armpits and push until you come out the back."
               },
               "s": [
                 [
-                  "Dê a ponte para jogá-lo para a frente e agarre o kimono sob as axilas dele.",
-                  "Bridge to tip him forward and grab the gi under his armpits."
+                  "Dê a ponte para jogar a outra pessoa para a frente e agarre o kimono sob as axilas dela.",
+                  "Bridge to tip your partner forward and grab the gi under their armpits."
                 ],
                 [
-                  "Estique os braços para mantê-lo inclinado e levante os pés.",
-                  "Straighten your arms to keep him leaning and lift your feet."
+                  "Estique os braços para manter a outra pessoa inclinada e levante os pés.",
+                  "Straighten your arms to keep them leaning and lift your feet."
                 ],
                 [
-                  "Encaixe os pés sob as axilas dele e empurre para a frente.",
-                  "Set your feet under his armpits and push forward."
+                  "Encaixe os pés sob as axilas e empurre para a frente.",
+                  "Set your feet under their armpits and push forward."
                 ],
                 [
-                  "Saia por trás, estabeleça a base, sente e controle as pernas dele.",
-                  "Come out the back, set your base, sit back and control his legs."
+                  "Saia por trás, estabeleça a base, sente e controle as pernas da outra pessoa.",
+                  "Come out the back, set your base, sit back and control their legs."
                 ]
               ],
               "t": {
@@ -2560,12 +2560,12 @@
                 "en": "Upa from side control"
               },
               "d": {
-                "pt": "Quando ele passa a perna para montar, abrace a cintura dele e, no momento em que o pé dele toca o chão, faça uma ponte forte e role ele para a sua guarda.",
-                "en": "When he swings a leg over to mount, hug his waist and, as his foot touches the mat, bridge hard and roll him into your guard."
+                "pt": "Quando a outra pessoa passa a perna para montar, abrace a cintura dela e, no momento em que o pé dela toca o chão, faça uma ponte forte e role a pessoa para a sua guarda.",
+                "en": "When your partner swings a leg over to mount, hug their waist and, as their foot touches the mat, bridge hard and roll them into your guard."
               },
               "t": {
-                "pt": "O tempo certo é quando o peso dele ainda está atrás.",
-                "en": "The timing is when his weight is still behind him."
+                "pt": "O tempo certo é quando o peso de quem monta ainda está atrás.",
+                "en": "The timing is when their weight is still behind them."
               },
               "id": "bottom-upa-from-side-control"
             },
@@ -2577,12 +2577,12 @@
                 "en": "Elbow escape from side control"
               },
               "d": {
-                "pt": "Quando ele passa a perna para montar, use o cotovelo para levantar o joelho de trás dele, entre com o seu joelho por baixo, recue o quadril e feche a guarda.",
-                "en": "When he swings a leg over, use your elbow to lift his back knee, slide your knee under, shift your hips back and close your guard."
+                "pt": "Quando a outra pessoa passa a perna para montar, use o cotovelo para levantar o joelho de trás dela, entre com o seu joelho por baixo, recue o quadril e feche a guarda.",
+                "en": "When your partner swings a leg over, use your elbow to lift their back knee, slide your knee under, shift your hips back and close your guard."
               },
               "t": {
-                "pt": "Entre com o joelho quando ele troca o peso de lado. Não tente levantar o quadril.",
-                "en": "Slide your knee in as he shifts his weight. Don't try to lift your hips."
+                "pt": "Entre com o joelho quando o peso troca de lado. Não tente levantar o quadril.",
+                "en": "Slide your knee in as they shift their weight. Don't try to lift your hips."
               },
               "id": "bottom-elbow-escape-from-side-control"
             },
@@ -2594,8 +2594,8 @@
                 "en": "Side headlock: arm frame"
               },
               "d": {
-                "pt": "Faça uma armação com o antebraço no pescoço dele, afaste o quadril, passe a perna sobre a cabeça dele e aperte o pescoço com as pernas.",
-                "en": "Frame your forearm across his neck, move your hips away, swing your leg over his head and squeeze his neck with your legs."
+                "pt": "Faça uma armação com o antebraço no pescoço da outra pessoa, afaste o quadril, passe a perna sobre a cabeça dela e aperte o pescoço com as pernas.",
+                "en": "Frame your forearm across your partner's neck, move your hips away, swing your leg over their head and squeeze their neck with your legs."
               },
               "t": {
                 "pt": "Aperte o pescoço, não a cabeça.",
@@ -2611,8 +2611,8 @@
                 "en": "Side headlock: head down"
               },
               "d": {
-                "pt": "Se ele abaixa a cabeça na gravata, abrace o ombro dele, levante a perna, enganche o pé e suba nas costas abrindo braços e pernas; ele rola junto. Depois faça a armação no pescoço e incline o peso para a frente até ele soltar.",
-                "en": "If he drops his head in the headlock, hug his shoulder, raise your leg, hook your foot and climb onto his back with arms and legs wide; he rolls with you. Then frame across his neck and lean forward until he lets go."
+                "pt": "Se a outra pessoa abaixa a cabeça na gravata, abrace o ombro dela, levante a perna, enganche o pé e suba nas costas abrindo braços e pernas; ela rola junto. Depois faça a armação no pescoço e incline o peso para a frente até a gravata soltar.",
+                "en": "If your partner drops their head in the headlock, hug their shoulder, raise your leg, hook your foot and climb onto their back with arms and legs wide; they roll with you. Then frame across their neck and lean forward until they let go."
               },
               "t": {
                 "pt": "Use o ombro como apoio para ajoelhar e tirar o braço de baixo.",
@@ -2624,16 +2624,16 @@
               "lv": "a",
               "g": 1,
               "n": {
-                "pt": "Gravata lateral: ele encolhido",
+                "pt": "Gravata lateral: pernas encolhidas",
                 "en": "Side headlock: legs tucked"
               },
               "d": {
-                "pt": "Se ele encolhe as pernas, vire de lado, abrace o ombro, ajoelhe apoiado no ombro e use as costas para levantá-lo e rolá-lo para trás. Se ele abrir a perna, leve-o para baixo e pule por cima das costas dele.",
-                "en": "If he tucks his legs, turn sideways, hug the shoulder, get to your knees off your shoulder and use your back to lift and roll him. If he widens a leg, bring him down and hop over his back."
+                "pt": "Se a outra pessoa encolhe as pernas, vire de lado, abrace o ombro, ajoelhe apoiando no ombro e use as costas para levantá-la e rolá-la para trás. Se ela abrir a perna, leve-a para baixo e pule por cima das costas dela.",
+                "en": "If your partner tucks their legs, turn sideways, hug the shoulder, get to your knees off your shoulder and use your back to lift and roll them. If they widen a leg, bring them down and hop over their back."
               },
               "t": {
                 "pt": "Levante com as costas, não com o braço; tire a sua perna do caminho ao rolar.",
-                "en": "Lift with your back, not your arm; move your leg out of the way as you roll him."
+                "en": "Lift with your back, not your arm; move your leg out of the way as you roll your partner."
               },
               "id": "bottom-side-headlock-legs-tucked"
             },
@@ -2645,11 +2645,11 @@
                 "en": "Upa vs. headlock in mount"
               },
               "d": {
-                "pt": "Se ele está montado com uma gravata, prenda o tríceps dele e o pé do mesmo lado, escore a outra mão sob a cintura dele, prenda o braço com a cabeça e dê a ponte para rolar.",
-                "en": "If he is mounted with a headlock, trap his triceps and same-side foot, brace your other hand under his waist, pin his arm with your head and bridge to roll."
+                "pt": "Se a outra pessoa está montada com uma gravata, prenda o tríceps dela e o pé do mesmo lado, escore a outra mão sob a cintura dela, prenda o braço com a cabeça e dê a ponte para rolar.",
+                "en": "If your partner is mounted with a headlock, trap their triceps and same-side foot, brace your other hand under their waist, pin their arm with your head and bridge to roll."
               },
               "t": {
-                "pt": "Faça a ponte apoiado nas costas, não na cabeça.",
+                "pt": "Faça a ponte com o apoio nas costas, não na cabeça.",
                 "en": "Bridge off your upper back, not your head."
               },
               "id": "bottom-upa-vs-headlock-in-mount"
@@ -2662,12 +2662,12 @@
                 "en": "Side headlock: arm trapped"
               },
               "d": {
-                "pt": "Segure o próprio pulso sob a axila dele, recue quadril e ombro para criar folga e, quando ele reajustar, dê a ponte e role ele.",
-                "en": "Grab your own wrist under his armpit, shift hips and shoulder back to make slack and, when he readjusts, bridge and roll him."
+                "pt": "Segure o próprio pulso sob a axila da outra pessoa, recue quadril e ombro para criar folga e, quando ela reajustar, dê a ponte e role.",
+                "en": "Grab your own wrist under your partner's armpit, shift hips and shoulder back to make slack and, when they readjust, bridge and roll them."
               },
               "t": {
-                "pt": "Crie folga quantas vezes for preciso até ele reajustar.",
-                "en": "Make slack as many times as needed until he readjusts."
+                "pt": "Crie folga quantas vezes for preciso até a outra pessoa reajustar.",
+                "en": "Make slack as many times as needed until your partner readjusts."
               },
               "id": "bottom-side-headlock-arm-trapped"
             },
@@ -2679,12 +2679,12 @@
                 "en": "Leg choke from bottom"
               },
               "d": {
-                "pt": "Por baixo do side control, pegue a gola de trás dele com o polegar para dentro; quando ele mover o braço para trás, passe a perna sobre a cabeça e estrangule.",
-                "en": "From bottom side control, grab his back collar thumb-in; when he moves his arm back, swing your leg over his head and choke."
+                "pt": "Por baixo do side control, pegue a gola de trás da outra pessoa com o polegar para dentro; quando ela mover o braço para trás, passe a perna sobre a cabeça e estrangule.",
+                "en": "From bottom side control, grab your partner's back collar thumb-in; when they move their arm back, swing your leg over their head and choke."
               },
               "t": {
-                "pt": "Recue o quadril para convidar ele a mover o braço.",
-                "en": "Shift your hips to invite him to move his arm."
+                "pt": "Recue o quadril para convidar a outra pessoa a mover o braço.",
+                "en": "Shift your hips to invite your partner to move their arm."
               },
               "id": "bottom-leg-choke-from-bottom"
             },
@@ -2711,8 +2711,8 @@
                 "en": "Frame and recover guard"
               },
               "d": {
-                "pt": "Antebraços no pescoço e no quadril dele; com espaço, traga o joelho para dentro e os pés para o quadril dele.",
-                "en": "Forearms on his neck and hip; with space, bring your knee back in and your feet to his hips."
+                "pt": "Antebraços no pescoço e no quadril da outra pessoa; com espaço, traga o joelho para dentro e os pés para o quadril dela.",
+                "en": "Forearms on your partner's neck and hip; with space, bring your knee back in and your feet to their hips."
               },
               "t": {
                 "pt": "Empurre com estrutura, não com força.",
@@ -2729,7 +2729,7 @@
           },
           "goal": {
             "pt": "Proteger o pescoço e virar de frente.",
-            "en": "Protect your neck and turn to face him."
+            "en": "Protect your neck and turn to face your partner."
           },
           "items": [
             {
@@ -2740,17 +2740,17 @@
                 "en": "Back mount escape"
               },
               "d": {
-                "pt": "Levante um braço, proteja o pescoço contra o bíceps e segure o pulso dele; caia para o lado do braço preso, escorregue para trás, vire de frente e passe por cima.",
-                "en": "Raise one arm, protect your neck against your biceps and grab his wrist; fall to the side of the trapped arm, slide back, turn to face him and come over the top."
+                "pt": "Levante um braço, proteja o pescoço contra o bíceps e segure o pulso da outra pessoa; caia para o lado do braço preso, escorregue para trás, vire de frente e passe por cima.",
+                "en": "Raise one arm, protect your neck against your biceps and grab your partner's wrist; fall to the side of the trapped arm, slide back, turn to face them and come over the top."
               },
               "s": [
                 [
-                  "Antes que ele pegue a gola, levante um braço e proteja o pescoço contra o bíceps.",
-                  "Before he grabs the collar, raise an arm and protect your neck against your biceps."
+                  "Antes que peguem a gola, levante um braço e proteja o pescoço contra o bíceps.",
+                  "Before your partner grabs the collar, raise an arm and protect your neck against your biceps."
                 ],
                 [
-                  "Agarre o pulso dele.",
-                  "Grab his wrist."
+                  "Agarre o pulso da outra pessoa.",
+                  "Grab your partner's wrist."
                 ],
                 [
                   "Use os pés para jogar o peso para o lado do braço preso e leve as costas ao chão.",
@@ -2758,11 +2758,11 @@
                 ],
                 [
                   "Solte o pulso, escorregue para trás e vire de frente.",
-                  "Release the wrist, slide back and turn to face him."
+                  "Release the wrist, slide back and turn to face your partner."
                 ],
                 [
-                  "Empurre a perna dele, passe por cima, levante e monte.",
-                  "Push his leg away, step over, come up and mount."
+                  "Empurre a perna da outra pessoa, passe por cima, levante e monte.",
+                  "Push their leg away, step over, come up and mount."
                 ]
               ],
               "t": {
@@ -2779,12 +2779,12 @@
                 "en": "Crossed feet lock"
               },
               "d": {
-                "pt": "Se ele cruzar os pés com os ganchos, coloque a perna certa por cima formando um \"4\" e levante o quadril para pressionar o pé dele.",
-                "en": "If he crosses his feet with the hooks in, put the matching leg over the top to form a \"4\" and lift your hips to press his foot."
+                "pt": "Se a outra pessoa cruzar os pés com os ganchos, coloque a perna certa por cima formando um \"4\" e levante o quadril para pressionar o pé dela.",
+                "en": "If your partner crosses their feet with the hooks in, put the matching leg over the top to form a \"4\" and lift your hips to press their foot."
               },
               "t": {
-                "pt": "Quando alguém pegar suas costas, espere que ele cruze os pés.",
-                "en": "When someone takes your back, expect him to cross his feet."
+                "pt": "Quando alguém pegar suas costas, espere que os pés sejam cruzados.",
+                "en": "When someone takes your back, expect them to cross their feet."
               },
               "id": "bottom-crossed-feet-lock"
             },
@@ -2839,12 +2839,12 @@
                 "en": "Underhook half guard"
               },
               "d": {
-                "pt": "Braço por baixo da axila dele, cabeça colada, suba de lado.",
-                "en": "Arm under his armpit, head tight, come up on your side."
+                "pt": "Braço por baixo da axila da outra pessoa, cabeça colada, suba de lado.",
+                "en": "Arm under your partner's armpit, head tight, come up on your side."
               },
               "t": {
-                "pt": "Sem underhook, ele esmaga.",
-                "en": "No underhook, he smashes you."
+                "pt": "Sem underhook, a pressão esmaga você.",
+                "en": "No underhook, you get smashed."
               },
               "id": "bottom-underhook-half-guard"
             },
@@ -2855,7 +2855,7 @@
                 "en": "Deep half guard"
               },
               "d": {
-                "pt": "Entre debaixo dele abraçando uma perna.",
+                "pt": "Entre por baixo da outra pessoa abraçando uma perna.",
                 "en": "Slide underneath and hug one leg."
               },
               "t": {
@@ -2871,8 +2871,8 @@
                 "en": "Feet on hips"
               },
               "d": {
-                "pt": "Pés no quadril dele, mãos nas mangas. É a base das outras guardas abertas.",
-                "en": "Feet on his hips, hands on the sleeves. The base for the other open guards."
+                "pt": "Pés no quadril da outra pessoa, mãos nas mangas. É a base das outras guardas abertas.",
+                "en": "Feet on your partner's hips, hands on the sleeves. The base for the other open guards."
               },
               "t": {
                 "pt": "Pernas funcionam como molas.",
@@ -2887,8 +2887,8 @@
                 "en": "Butterfly"
               },
               "d": {
-                "pt": "Sentado, ganchos dentro das coxas dele, controle de braço.",
-                "en": "Seated, hooks inside his thighs, arm control."
+                "pt": "Sentando no chão, ganchos dentro das coxas da outra pessoa, controle de braço.",
+                "en": "Seated, hooks inside your partner's thighs, arm control."
               },
               "t": {
                 "pt": "Ótima para levantar e raspar.",
@@ -2903,8 +2903,8 @@
                 "en": "Seated guard"
               },
               "d": {
-                "pt": "Sentado, um pé no quadril dele e uma mão na manga ou no tornozelo.",
-                "en": "Seated, one foot on his hip and one hand on a sleeve or ankle."
+                "pt": "Sentando no chão, um pé no quadril da outra pessoa e uma mão na manga ou no tornozelo.",
+                "en": "Seated, one foot on your partner's hip and one hand on a sleeve or ankle."
               },
               "t": {
                 "pt": "Bom ponto de partida para levantar ou entrar na borboleta.",
@@ -2919,8 +2919,8 @@
                 "en": "Spider"
               },
               "d": {
-                "pt": "Pés nos bíceps dele e pegadas nas mangas. Só com kimono.",
-                "en": "Feet on his biceps and sleeve grips. Gi only."
+                "pt": "Pés nos bíceps da outra pessoa e pegadas nas mangas. Só com kimono.",
+                "en": "Feet on your partner's biceps and sleeve grips. Gi only."
               },
               "t": {
                 "pt": "Abre triângulo e omoplata.",
@@ -2936,12 +2936,12 @@
                 "en": "Lasso"
               },
               "d": {
-                "pt": "Perna enrolada no braço dele, pegada na manga.",
-                "en": "Leg wrapped around his arm, sleeve grip."
+                "pt": "Perna enrolada no braço da outra pessoa, pegada na manga.",
+                "en": "Leg wrapped around your partner's arm, sleeve grip."
               },
               "t": {
-                "pt": "Difícil de passar e cansa o braço dele.",
-                "en": "Hard to pass and tires his arm."
+                "pt": "Difícil de passar e cansa o braço de quem está por cima.",
+                "en": "Hard to pass and tires your partner's arm."
               },
               "id": "bottom-lasso"
             },
@@ -2953,7 +2953,7 @@
               },
               "d": {
                 "pt": "Gancho por fora da perna da frente, mão no tornozelo e na manga.",
-                "en": "Hook outside his lead leg, grips on ankle and sleeve."
+                "en": "Hook outside your partner's lead leg, grips on ankle and sleeve."
               },
               "t": {
                 "pt": "Leva ao berimbolo e às costas.",
@@ -2984,8 +2984,8 @@
                 "en": "X-guard and single leg X"
               },
               "d": {
-                "pt": "Por baixo dele, pernas cruzadas numa perna dele.",
-                "en": "Underneath him, legs crossed on one of his legs."
+                "pt": "Por baixo da outra pessoa, pernas cruzadas numa perna dela.",
+                "en": "Underneath your partner, legs crossed on one of their legs."
               },
               "t": {
                 "pt": "Raspagens de queda e entradas de pé.",
@@ -3000,8 +3000,8 @@
                 "en": "50/50"
               },
               "d": {
-                "pt": "Pernas entrelaçadas na perna dele, de forma espelhada.",
-                "en": "Legs tangled around his leg in a mirrored position."
+                "pt": "Pernas entrelaçadas na perna da outra pessoa, de forma espelhada.",
+                "en": "Legs tangled around your partner's leg in a mirrored position."
               },
               "t": {
                 "pt": "Comum para raspagens e chaves de pé; as regras mudam por faixa.",
@@ -3016,8 +3016,8 @@
                 "en": "Inverted guard"
               },
               "d": {
-                "pt": "Gire de cabeça para baixo para manter os pés entre você e ele.",
-                "en": "Rotate upside down to keep your feet between you and him."
+                "pt": "Gire de cabeça para baixo para manter os pés entre você e a outra pessoa.",
+                "en": "Rotate upside down to keep your feet between you and your partner."
               },
               "t": {
                 "pt": "Só com boa mobilidade de ombros e pescoço.",
@@ -3032,8 +3032,8 @@
                 "en": "Lapel (worm) guard"
               },
               "d": {
-                "pt": "Enrole a lapela dele na perna dele.",
-                "en": "Wrap his own lapel around his leg."
+                "pt": "Enrole a lapela da outra pessoa na perna dela.",
+                "en": "Wrap your partner's own lapel around their leg."
               },
               "t": {
                 "pt": "Só com kimono.",
@@ -3050,12 +3050,12 @@
                 "en": "Leg reach"
               },
               "d": {
-                "pt": "Use as pernas com alcance, um pouco afastadas do quadril, para dar amplitude à guarda. Os pés ficam sempre do lado de fora do corpo dele, numa destas linhas: cintura, joelho ou pé. Assim ele não passa por cima dos seus pés e você continua pronto para atacar.",
-                "en": "Use your legs with reach, a little away from your hips, to give your guard range. Your feet always stay outside his body, on one of these lines: waist, knee or foot. That way he can't step over your feet and you stay ready to attack."
+                "pt": "Use as pernas com alcance, um pouco afastadas do quadril, para dar amplitude à guarda. Os pés ficam sempre do lado de fora do corpo da outra pessoa, numa destas linhas: cintura, joelho ou pé. Assim ninguém passa por cima dos seus pés e a sua guarda continua pronta para atacar.",
+                "en": "Use your legs with reach, a little away from your hips, to give your guard range. Your feet always stay outside your partner's body, on one of these lines: waist, knee or foot. That way they can't step over your feet and you stay ready to attack."
               },
               "t": {
-                "pt": "Pé dentro da linha do corpo dele = guarda passada.",
-                "en": "A foot inside his body line = a passed guard."
+                "pt": "Pé dentro da linha do corpo da outra pessoa = guarda passada.",
+                "en": "A foot inside your partner's body line = a passed guard."
               },
               "id": "bottom-leg-reach"
             },
@@ -3067,12 +3067,12 @@
                 "en": "Push and pull guard"
               },
               "d": {
-                "pt": "Com as duas mangas controladas, um pé empurra (quadril ou bíceps) e a outra perna puxa, mantendo ele desequilibrado e na sua mira.",
-                "en": "With both sleeves controlled, one foot pushes (hip or biceps) and the other leg pulls, keeping him off balance and in your sights."
+                "pt": "Com as duas mangas controladas, um pé empurra (quadril ou bíceps) e a outra perna puxa, mantendo a outra pessoa desequilibrada e na sua mira.",
+                "en": "With both sleeves controlled, one foot pushes (hip or biceps) and the other leg pulls, keeping your partner off balance and in your sights."
               },
               "t": {
-                "pt": "Para descansar, puxe ele de volta para a guarda fechada.",
-                "en": "To rest, pull him back into closed guard."
+                "pt": "Para descansar, puxe a outra pessoa de volta para a guarda fechada.",
+                "en": "To rest, pull your partner back into closed guard."
               },
               "id": "bottom-push-and-pull-guard"
             }
@@ -3136,16 +3136,16 @@
           },
           "mine": 1,
           "d": {
-            "pt": "Começa na guarda. Rodada 1: o de cima tenta escapar da guarda; o de baixo só precisa mantê-lo na mira e, se tiver chance, pega braço ou pescoço e ataca com as pernas. Rodada 2: troca, o de cima usa qualquer passagem.",
-            "en": "Starts in guard. Round 1: top tries to escape the guard; bottom just keeps him in the sights and, given a chance, grabs an arm or the neck and attacks with the legs. Round 2: switch, top uses any pass."
+            "pt": "Começa na guarda. Rodada 1: quem está em cima tenta escapar da guarda; quem está embaixo só precisa manter na mira e, se tiver chance, pega braço ou pescoço e ataca com as pernas. Rodada 2: troca, quem está em cima usa qualquer passagem.",
+            "en": "Starts in guard. Round 1: top tries to escape the guard; bottom just keeps top in the sights and, given a chance, grabs an arm or the neck and attacks with the legs. Round 2: switch, top uses any pass."
           },
           "who": {
             "pt": "Cima tenta sair da mira",
             "en": "Top tries to leave the sights"
           },
           "win": {
-            "pt": "Baixo: mantê-lo na mira por 1 min ou finalizar. Cima: sair da guarda",
-            "en": "Bottom: keep him in the sights for 1 min or submit. Top: escape the guard"
+            "pt": "Baixo: manter na mira por 1 min ou finalizar. Cima: sair da guarda",
+            "en": "Bottom: keep top in the sights for 1 min or submit. Top: escape the guard"
           },
           "time": "1 min × 2",
           "id": "bottom-game-sights-game",
@@ -3158,8 +3158,8 @@
             "en": "Escape the guard"
           },
           "bottom": {
-            "pt": "Mantê-lo na mira por 1 min ou finalizar",
-            "en": "Keep him in the sights for 1 min or submit"
+            "pt": "Manter na mira por 1 min ou finalizar",
+            "en": "Keep top in the sights for 1 min or submit"
           },
           "parts": [
             {
@@ -3170,7 +3170,7 @@
               "seconds": 60,
               "say": {
                 "pt": "Rodada 1: cima tenta sair da guarda. Rodada 2: cima usa qualquer passagem. Baixo mantém na mira e, se tiver chance, pega braço ou pescoço.",
-                "en": "Round 1: top tries to escape the guard. Round 2: top uses any pass. Bottom keeps him in the sights and, given a chance, grabs an arm or the neck."
+                "en": "Round 1: top tries to escape the guard. Round 2: top uses any pass. Bottom keeps top in the sights and, given a chance, grabs an arm or the neck."
               }
             }
           ],
@@ -3181,11 +3181,11 @@
         },
         {
           "n": {
-            "pt": "Ele levanta, eu raspo",
-            "en": "He stands, I sweep"
+            "pt": "Levantou, eu raspo",
+            "en": "You stand, I sweep"
           },
           "d": {
-            "pt": "Começa na guarda fechada; o de cima se levanta para passar. Treina as raspagens clássicas.",
+            "pt": "Começa na guarda fechada; quem está em cima se levanta para passar. Treina as raspagens clássicas.",
             "en": "Starts in closed guard; the top player stands to pass. Trains the classic sweeps."
           },
           "who": {
@@ -3213,8 +3213,8 @@
           "parts": [
             {
               "label": {
-                "pt": "Ele levanta, eu raspo",
-                "en": "He stands, I sweep"
+                "pt": "Levantou, eu raspo",
+                "en": "You stand, I sweep"
               },
               "seconds": 120,
               "say": {
@@ -3234,7 +3234,7 @@
             "en": "Upa or elbow"
           },
           "d": {
-            "pt": "Começa montado. O de baixo escolhe upa ou saída de cotovelo conforme a reação.",
+            "pt": "Começa na montada. Quem está embaixo escolhe upa ou saída de cotovelo conforme a reação.",
             "en": "Starts in mount. The bottom player picks upa or elbow escape based on the reaction."
           },
           "who": {
@@ -3333,7 +3333,7 @@
           },
           "mine": 1,
           "d": {
-            "pt": "Versão por baixo: o de baixo começa com gola e cotovelo já seguros.",
+            "pt": "Versão por baixo: quem está embaixo começa com gola e cotovelo já seguros.",
             "en": "Bottom version: the bottom player starts with collar and elbow already gripped."
           },
           "who": {
@@ -3364,18 +3364,18 @@
           "parts": [
             {
               "label": {
-                "pt": "Primeiro jogador · 3 movimentos",
+                "pt": "Primeira pessoa · 3 movimentos",
                 "en": "First player · 3 moves"
               },
               "seconds": 30,
               "say": {
-                "pt": "Três movimentos, um por vez, em câmera lenta. O outro só observa.",
+                "pt": "Três movimentos, um por vez, em câmera lenta. A outra pessoa só observa.",
                 "en": "Three moves, one at a time, in slow motion. The other player only watches."
               }
             },
             {
               "label": {
-                "pt": "Segundo jogador · 3 movimentos",
+                "pt": "Segunda pessoa · 3 movimentos",
                 "en": "Second player · 3 moves"
               },
               "seconds": 30,
@@ -3402,7 +3402,7 @@
           },
           "who": {
             "pt": "Cima tenta passar; baixo mantém na mira",
-            "en": "Top tries to pass; bottom keeps him in the sights"
+            "en": "Top tries to pass; bottom keeps top in the sights"
           },
           "win": {
             "pt": "Baixo: não deixar passar. Cima: side control por 3 s",
@@ -3472,7 +3472,7 @@
           },
           "mine": 1,
           "d": {
-            "pt": "Um jogador faz 3 movimentos em 20 segundos, o outro responde com 3 movimentos em 20 segundos, e assim por diante.",
+            "pt": "Uma pessoa faz 3 movimentos em 20 segundos, a outra responde com 3 movimentos em 20 segundos, e assim por diante.",
             "en": "One player makes 3 moves in 20 seconds, the other answers with 3 moves in 20 seconds, and so on."
           },
           "who": {
@@ -3500,18 +3500,18 @@
           "parts": [
             {
               "label": {
-                "pt": "Primeiro jogador · 3 movimentos",
+                "pt": "Primeira pessoa · 3 movimentos",
                 "en": "First player · 3 moves"
               },
               "seconds": 20,
               "say": {
-                "pt": "3 movimentos em 20 segundos. O outro espera.",
+                "pt": "3 movimentos em 20 segundos. A outra pessoa espera.",
                 "en": "3 moves in 20 seconds. The other waits."
               }
             },
             {
               "label": {
-                "pt": "Segundo jogador · 3 movimentos",
+                "pt": "Segunda pessoa · 3 movimentos",
                 "en": "Second player · 3 moves"
               },
               "seconds": 20,
@@ -3535,7 +3535,7 @@
       "en": "The method"
     },
     "intro": {
-      "pt": "Uma forma de dar aula que qualquer professor pode repetir: conceito, posições, jogo e registro. A base técnica segue o livro Gracie Jiu-Jitsu, de Helio Gracie.",
+      "pt": "Uma forma de dar aula que qualquer pessoa que ensina pode repetir: conceito, posições, jogo e registro. A base técnica segue o livro Gracie Jiu-Jitsu, de Helio Gracie.",
       "en": "A way of teaching any coach can repeat: concept, positions, game and log. The technical base follows Helio Gracie's Gracie Jiu-Jitsu book."
     },
     "steps": [
@@ -3567,7 +3567,7 @@
           "en": "Game"
         },
         "d": {
-          "pt": "Um jogo com regra e objetivo claros. O aluno descobre a técnica sob pressão.",
+          "pt": "Um jogo com regra e objetivo claros. Quem treina descobre a técnica sob pressão.",
           "en": "One game with a clear rule and goal. The student finds the technique under pressure."
         },
         "m": "20"
@@ -3641,7 +3641,7 @@
           "en": "Fixed numbers and names"
         },
         "s": {
-          "pt": "Ex.: side control 1 a 5. O aluno lembra e o professor corrige mais rápido.",
+          "pt": "Ex.: side control 1 a 5. A turma lembra e quem ensina corrige mais rápido.",
           "en": "E.g. side control 1 to 5. Students remember and coaches correct faster."
         }
       }
@@ -3695,7 +3695,7 @@
           "en": "The defender stays comfortable. If it feels awkward or too heavy, the execution is wrong: start again."
         },
         {
-          "pt": "Não testar a eficiência do colega antes de ele repetir muitas vezes.",
+          "pt": "Não testar a eficiência da sua dupla antes de ela repetir muitas vezes.",
           "en": "Don't test your partner's technique before they've repeated it many times."
         },
         {
@@ -3807,11 +3807,11 @@
       },
       "q": [
         {
-          "pt": "O que o aluno fez bem?",
+          "pt": "O que cada estudante fez bem?",
           "en": "What did the student do well?"
         },
         {
-          "pt": "Onde ele travou?",
+          "pt": "Onde travou?",
           "en": "Where did they get stuck?"
         },
         {

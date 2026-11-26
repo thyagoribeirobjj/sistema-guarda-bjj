@@ -977,7 +977,7 @@ await step('a Portuguese browser gets Portuguese, the privacy page too', async (
   await visit.locator('main h2', { hasText: 'Privacidade e seus dados' }).waitFor();
   assert.match(await visit.locator('main').textContent(), /menos as anotações/);
   assert.match(await visit.locator('main').textContent(), /Estatísticas de visitas e cookies/);
-  assert.match(await visit.locator('main').textContent(), /Para a turma kids[\s\S]*não pergunta a idade nem a data de nascimento[\s\S]*pai, mãe ou responsável[\s\S]*as visitas não são contadas/);
+  assert.match(await visit.locator('main').textContent(), /Para a turma kids[\s\S]*não pergunta a idade nem a data de nascimento[\s\S]*alguém da família ou responsável[\s\S]*as visitas não são contadas/);
   assert.match(await visit.locator('main').textContent(), /opcional e fica desligado até você aceitar/);
   assert.match(await visit.locator('main').textContent(), /guarda os detalhes de cada visita por 14 meses/);
   assert.equal(await visit.locator('[data-delete-data="ask"]').textContent(), 'Apagar deste navegador');
