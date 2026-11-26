@@ -5,7 +5,7 @@ import { settings } from './settings.js';
 import { newCode, randomLetterIndex, isCode } from './tv-code.js';
 import { showSteps, advance, caughtUp } from './game-clock.js';
 import { buildShow, needsCoachGames } from './tv-show.js';
-import { waitingScreen, gameScreen, tickScreen } from './tv-screen-view.js';
+import { waitingScreen, gameScreen, tickScreen, fitList } from './tv-screen-view.js';
 
 // The TV screen (/?tv#screen): a code to pair with, then the game a coach runs from the phone (js/remote.js).
 // The TV only reads: it listens to its own tv/{code} with the database's live updates and never writes. It runs the
@@ -69,6 +69,7 @@ function drawWhole() {
   if (session?.show && show) {
     const now = position();
     screen.innerHTML = gameScreen({ show, steps, position: now, sound });
+    fitList();
     tickScreen(steps, now);
     drawnStep = `${now.step}:${now.running}`;
   } else {

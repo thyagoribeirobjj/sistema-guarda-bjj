@@ -76,6 +76,12 @@ export function stepShare(steps, position) {
   return length ? Math.round(100 * (1 - position.left / length)) : 0;
 }
 
+// A plan's techniques block: every technique, sized to fit by fitList().
+function techniqueList(step) {
+  if (!step?.list) return '';
+  return html`<ol class="tvs-list" id="tvsList">${step.list.map((each) => html`<li><b>${text(each.n)}</b>${each.t ? html`<span class="tvs-tip">: ${text(each.t)}</span>` : ''}</li>`)}</ol>`;
+}
+
 export function gameScreen({ show, steps, position, sound }) {
   const step = isOver(steps, position) ? null : steps[position.step];
   const title = step?.game && show.blocks.length ? step.game.n : show.title;
@@ -83,10 +89,10 @@ export function gameScreen({ show, steps, position, sound }) {
     const where = i < position.step ? 'past' : i === position.step ? 'now' : '';
     return html`<i class="${where}" style="--w:${each.seconds}"${i === position.step ? html` id="tvsNow"` : ''}></i>`;
   });
-  return html`<div class="tvs tvs-game" data-kind="${kindOf(steps, position)}" id="tvsGame">
+  return html`<div class="tvs tvs-game${step?.list ? ' with-list' : ''}" data-kind="${kindOf(steps, position)}" id="tvsGame">
     <div class="tvs-top"><span class="tvs-title">${text(title)}</span><span class="tvs-round">${whereLine(show, step, steps[steps.length - 1])}</span></div>
     <div class="tvs-mid"><div class="tvs-clock" id="tvsClock">${clockText(position.left)}</div>
-      <div class="tvs-now"><div class="tvs-phase">${label(step)}</div><div class="tvs-say">${says(step)}</div></div></div>
+      <div class="tvs-now"><div class="tvs-phase">${label(step)}</div>${step?.list ? '' : html`<div class="tvs-say">${says(step)}</div>`}</div>${techniqueList(step)}</div>
     ${sides(step)}
     <div class="tvs-foot"><div class="tvs-bar">${bar}</div><div class="tvs-next">${nextLine(steps, position)}<span id="tvsLeft">${leftLine(steps, position)}</span></div></div>
     ${soundButton(sound)}
@@ -104,4 +110,28 @@ export function tickScreen(steps, position) {
   document.getElementById('tvsNow')?.style.setProperty('--p', `${stepShare(steps, position)}%`);
   const step = steps[position.step];
   document.getElementById('tvsGame').classList.toggle('last', Boolean(position.running && step && step.kind !== 'ready' && position.left <= 10));
+}
+
+// The techniques block shows every technique in the largest type that fits: with their tips, then names only, in up
+// to five columns (sizes in --u, a share of the screen). Only past the smallest do the last ones give way to "+N more".
+const listSizes = [[1, 2.6, true], [2, 2.2, true], [1, 2.6, false], [2, 2.4, false], [2, 2, false], [3, 1.9, false], [3, 1.6, false], [4, 1.45, false], [4, 1.25, false], [5, 1.15, false]];
+
+export function fitList() {
+  const list = document.getElementById('tvsList');
+  if (!list) return;
+  const fits = () => list.scrollHeight <= list.clientHeight + 1 && list.scrollWidth <= list.clientWidth + 1;
+  for (const [columns, size, tips] of listSizes) {
+    list.style.setProperty('--columns', columns);
+    list.style.setProperty('--size', size);
+    list.dataset.tips = tips;
+    if (fits()) return;
+  }
+  const items = [...list.children];
+  const more = document.createElement('li');
+  more.className = 'tvs-more';
+  list.append(more);
+  for (let shown = items.length - 1; shown > 0 && !fits(); shown--) {
+    items[shown].hidden = true;
+    more.textContent = `+${items.length - shown} ${t('tvMore')}`;
+  }
 }

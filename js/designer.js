@@ -3,7 +3,8 @@ import { settings } from './settings.js';
 import { t } from './strings.js';
 import { translate } from './firebase.js';
 import { saveCoachGame } from './firebase-tv.js';
-import { coachGames, keepCoachGame, newGameId } from './coach-games.js';
+import { coachGames, keepCoachGame, newGameId, tellCoachGameSaved } from './coach-games.js';
+import { updateTvsShowing } from './tv-follow.js';
 import { allGames, findGame, gameChoice } from './plan.js';
 import { limits, gameLength, clockText, clockGame, gameProblems } from './game-clock.js';
 
@@ -138,6 +139,16 @@ async function translateChanged(game) {
   }
 }
 
+// A saved (or deleted) game is the one the TVs showing it run from now on, and this browser's remote hears of it.
+// The save itself already worked, so a failure here only waits for the next press on the phone.
+async function keepAndShow(id, game) {
+  const before = coachGames.games;
+  await saveCoachGame(id, game);
+  keepCoachGame(id, game);
+  await updateTvsShowing(id, before, coachGames.games).catch((error) => console.error(error));
+  tellCoachGameSaved(id);
+}
+
 async function saveDesign(redraw) {
   if (saving) return;
   const game = copy(design.game);
@@ -153,8 +164,7 @@ async function saveDesign(redraw) {
     const translated = await translateChanged(game);
     if (gameProblems(game).length) throw new Error(`Not a game the clock can run: ${gameProblems(game).join(', ')}`);
     const id = design.id || newGameId();
-    await saveCoachGame(id, game);
-    keepCoachGame(id, game);
+    await keepAndShow(id, game);
     design = { id, from: id, base: copy(game), game: copy(game), status: t(translated ? 'gameSaved' : 'gameSavedUntranslated'), deleting: false };
   } catch (error) {
     console.error(error);
@@ -174,8 +184,7 @@ async function deleteDesign(answer, redraw) {
     return;
   }
   try {
-    await saveCoachGame(design.id, null);
-    keepCoachGame(design.id, null);
+    await keepAndShow(design.id, null);
     startDesign('');
     design.status = t('gameDeleted');
   } catch (error) {

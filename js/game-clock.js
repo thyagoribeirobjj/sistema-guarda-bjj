@@ -4,7 +4,7 @@
 // A game: n (name), start (where it starts), top and bottom (how each side wins), parts [{ label, seconds, say }]
 // (one round), rounds, rest (seconds between rounds), ready (seconds to get ready, once at the start) and switch
 // (the players change roles after each round). Every text is { pt, en }.
-// What the TV shows, once built from what the TV session names (js/tv-show.js): { title, blocks: [{ title, say, seconds }],
+// What the TV shows, once built from what the TV session names (js/tv-show.js): { title, blocks: [{ title, say, list, seconds }],
 // game, gameAt }. The game, when there is one, runs its own parts in place of blocks[gameAt] (after the last block
 // when gameAt is past them): a single game has no blocks, a lesson plan has one block per part of the class.
 // The clock: { running, step, left, added }: the step showing, its seconds left at that moment, and the seconds
@@ -25,7 +25,7 @@ export function gameSteps(game) {
 
 export function showSteps(show) {
   if (!show) return [];
-  const blocks = show.blocks.map((block, index) => ({ kind: 'block', label: block.title, say: block.say, seconds: block.seconds, block: index }));
+  const blocks = show.blocks.map((block, index) => ({ kind: 'block', label: block.title, say: block.say, list: block.list || null, seconds: block.seconds, block: index }));
   if (!show.game) return blocks;
   const at = Math.min(show.gameAt, blocks.length);
   return [...blocks.slice(0, at), ...gameSteps(show.game), ...blocks.slice(at + 1)];
@@ -105,6 +105,22 @@ export function addTime(steps, clock, seconds = 30) {
 }
 
 export const restart = (steps) => startClock(steps);
+
+// A game changed while a TV shows it (the game designer): the clock carries on at the same place in the new steps
+// (the same block of the plan, or the same round and part of the game), with the time already spent there kept, so a
+// part made longer runs on and one made shorter than that hands over to the next. A place the game no longer has:
+// the step at the same position from its start, or the end.
+const placeOf = (step) => [step.kind, step.block, step.round, step.part].join(':');
+
+export function carryClock(before, after, clock) {
+  if (isOver(before, clock)) return over(after);
+  const place = placeOf(before[clock.step]);
+  const step = after.findIndex((each) => placeOf(each) === place);
+  if (step < 0) return clock.step < after.length ? { running: clock.running, step: clock.step, left: after[clock.step].seconds, added: 0 } : over(after);
+  const spent = before[clock.step].seconds + clock.added - clock.left;
+  const left = after[step].seconds + clock.added - spent;
+  return left > 0 ? { running: clock.running, step, left, added: clock.added } : nextPart(after, { ...clock, step });
+}
 
 // The length of the step showing, "+30 s" included (for its share of the progress bar).
 export function stepLength(steps, clock) {

@@ -1,12 +1,12 @@
 import { html } from './html.js';
 import { settings } from './settings.js';
 import { t } from './strings.js';
-import { readTv, writeTv, deleteTv } from './firebase-tv.js';
-import { coachGames, followCoachGames } from './coach-games.js';
+import { readTv, writeTv, deleteTv, listTvs } from './firebase-tv.js';
+import { coachGames, followCoachGames, reloadCoachGames, onCoachGameSaved } from './coach-games.js';
 import { gameId, chosenGame, lessonModule } from './plan.js';
 import { isCode, typedCode } from './tv-code.js';
 import { showSteps, startClock, advance, toggle, nextPart, backPart, addTime, restart, clockText } from './game-clock.js';
-import { buildShow } from './tv-show.js';
+import { buildShow, needsCoachGames, newStamp } from './tv-show.js';
 import { remotePage, clockPart, phaseLine, toggleLabel } from './remote-view.js';
 
 // The coach's phone as the TV's remote (admin page, "Run on the TV", admin.html#tv; the TV's square opens
@@ -30,7 +30,7 @@ let ticker = null;
 let following = null;
 let wake = null;
 let awake = false; // whether the phone was last asked to stay awake
-let built = { named: undefined, steps: [] };
+let built = { named: undefined, games: null, steps: [] };
 
 export const remoteAsked = () => /^#tv(=|$)/.test(location.hash);
 
@@ -47,10 +47,12 @@ function keepTvs() {
   try { localStorage.setItem(tvsKey, JSON.stringify(tvs)); } catch {}
 }
 
-// The session's steps, built again only when what it shows changes.
+// The session's steps, built again only when what it shows, or the coaches' games, change.
 function steps() {
   const named = JSON.stringify(session?.show ?? null);
-  if (built.named !== named) built = { named, steps: showSteps(buildShow(session?.show, coachGames.games)) };
+  if (built.named !== named || built.games !== coachGames.games) {
+    built = { named, games: coachGames.games, steps: showSteps(buildShow(session?.show, coachGames.games)) };
+  }
   return built.steps;
 }
 
@@ -89,11 +91,13 @@ function tick() {
   if (now.running !== awake) keepAwake(now.running);
 }
 
-// Someone else's change: its clock was set when it was saved, by the database's time.
-function adopt(stored) {
+// Someone else's change: its clock was set when it was saved, by the database's time. A coach's game on a session
+// changed since the games were read may have been changed too (js/tv-follow.js): they are read again.
+async function adopt(stored) {
   if (stored && stored.stamp === mine) return;
   session = stored;
   knownAt = performance.now() - Math.max(0, Date.now() - (stored?.updatedAt ?? Date.now()));
+  if (needsCoachGames(stored?.show) && stored.updatedAt > coachGames.readAt) await reloadCoachGames();
 }
 
 async function follow() {
@@ -103,14 +107,13 @@ async function follow() {
     const stored = await readTv(code);
     if (code !== current) return;
     const before = JSON.stringify(session);
-    adopt(stored);
-    if (JSON.stringify(session) !== before) drawClock();
+    const games = coachGames.games;
+    await adopt(stored);
+    if (JSON.stringify(session) !== before || games !== coachGames.games) drawClock();
   } catch (error) {
     console.error(error);
   }
 }
-
-const newMark = () => Math.random().toString(36).slice(2, 12);
 
 function lessonToShow() {
   const lesson = settings.lesson || {};
@@ -140,10 +143,10 @@ function send(change) {
 async function sendNow(change) {
   const code = current;
   try {
-    adopt(await readTv(code));
+    await adopt(await readTv(code));
     const base = session || { name: tvs.find((tv) => tv.code === code)?.name || '', show: null, clock: startClock([]), beeps: true };
     const now = session?.show ? position() : base.clock;
-    const next = { ...base, language: settings.language, ...change(base, steps(), now), stamp: newMark() };
+    const next = { ...base, language: settings.language, ...change(base, steps(), now), stamp: newStamp() };
     mine = next.stamp;
     session = next;
     knownAt = performance.now();
@@ -233,16 +236,14 @@ async function keepAwake(running) {
   } catch {}
 }
 
-// Sessions untouched for a day are deleted when a coach opens the remote (only those this phone knows: nobody can
-// list the TVs). The phone still remembers the TV; its next game starts a new session.
+// Every session untouched for a day is deleted when a coach opens the remote, whichever phone started it (admins can
+// list the TVs). A phone still remembers its TV; its next game starts a new session.
 async function deleteOldSessions() {
-  for (const tv of tvs) {
-    try {
-      const stored = await readTv(tv.code);
-      if (stored?.updatedAt && Date.now() - stored.updatedAt > dayMs) await deleteTv(tv.code);
-    } catch (error) {
-      console.error(error);
-    }
+  try {
+    const old = (await listTvs()).filter(({ session: stored }) => stored.updatedAt && Date.now() - stored.updatedAt > dayMs);
+    await Promise.all(old.map(({ code }) => deleteTv(code).catch((error) => console.error(error))));
+  } catch (error) {
+    console.error(error);
   }
 }
 
@@ -264,6 +265,8 @@ function listen() {
     } else if (button.dataset.remote === 'forget') forgetTv();
     else commands[button.dataset.remote]?.();
   });
+  // A game saved in the designer in another tab of this browser: at once, not at the next look.
+  onCoachGameSaved(() => reloadCoachGames().then(follow));
   // Coming back to the page: the other coaches' changes, and the screen kept on again (the browser let it go).
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return;

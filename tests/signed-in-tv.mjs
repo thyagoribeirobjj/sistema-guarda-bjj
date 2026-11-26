@@ -43,6 +43,7 @@ export async function tvSteps({ visitor, step, until, stored, seed, address, peo
     await remote.locator('#pairForm [type="submit"]').click();
   };
   const press = (remote, button) => remote.locator(`[data-remote="${button}"]`).click();
+  const seconds = (text) => text.split(':').reduce((sum, part) => sum * 60 + Number(part), 0);
 
   await seed(`admins/${people.coach2.email}`, { name: 'Duda Coach' });
   let tv;
@@ -51,17 +52,45 @@ export async function tvSteps({ visitor, step, until, stored, seed, address, peo
 
   await step('the TV screen shows a code and its square, signed out, and never writes to the database', async () => {
     tv = await openTv();
-    assert.match(tv.code, /^[2-9A-HJKMNP-Z]{4}$/);
+    assert.match(tv.code, /^[2-9A-HJKMNP-Z]{5}$/);
     assert.ok(await tv.locator('svg.tvs-qr').count());
     await tv.waitForTimeout(1500);
     assert.deepEqual(tv.writes, []);
     assert.equal(await stored(`tv/${tv.code}`), null);
   });
 
+  await step('opening the remote deletes every session untouched for a day, whichever phone started it; a student cannot list them', async () => {
+    const hours = (count) => new Date(Date.now() - count * 60 * 60 * 1000);
+    const old = { name: 'Old', language: 'en', show: null, clock: { running: false, step: 0, left: 0, added: 0 }, beeps: true, stamp: 'old' };
+    await seed('tv/K7P3N', { ...old, updatedAt: hours(30) });
+    await seed('tv/K7P4', { ...old, updatedAt: hours(30) }); // from before codes had 5 characters
+    await seed('tv/ABCPS', { ...old, updatedAt: hours(2) });
+    const student = await openRemote(people.other);
+    await student.locator('main', { hasText: 'can only view the site' }).waitFor();
+    student.tryingRefused = true;
+    const answer = await student.evaluate(async () => {
+      const { listTvs } = await import('/js/firebase-tv.js');
+      try {
+        await listTvs();
+        return 'allowed';
+      } catch (error) {
+        return error.code || error.message;
+      }
+    });
+    student.tryingRefused = false;
+    await student.context().close();
+    const remote = await openRemote(people.coach);
+    await remote.locator('#tvCode').waitFor();
+    await until(async () => (await stored('tv/K7P3N')) === null && (await stored('tv/K7P4')) === null, 'the old sessions are deleted');
+    assert.equal((await stored('tv/ABCPS')).name, 'Old', 'one used today is kept');
+    await remote.context().close();
+    assert.equal(answer, 'permission-denied', 'a student cannot list the TVs');
+  });
+
   await step('pairing with a wrong code is refused, and nothing is written', async () => {
     coach = await openRemote(people.coach);
     await coach.locator('#tvCode').waitFor();
-    const wrong = tv.code.slice(0, 3) + (tv.code[3] === 'A' ? 'B' : 'A');
+    const wrong = tv.code.slice(0, 4) + (tv.code[4] === 'A' ? 'B' : 'A');
     await pair(coach, wrong, 'Front mat');
     await coach.locator('#remoteStatus', { hasText: 'No TV shows that code' }).waitFor();
     assert.equal(await stored(`tv/${wrong}`), null);
@@ -194,13 +223,34 @@ export async function tvSteps({ visitor, step, until, stored, seed, address, peo
     await tvShows(tv, '#tvsClock', '0:45', 'its first part, 45 s');
   });
 
+  await step('a coach\'s game changed in the designer while a TV shows it: the TV and the phone pick it up by themselves, the clock carrying on', async () => {
+    await press(coach, 'toggle');
+    await until(async () => seconds(await tvClock(tv)) < 44, 'the 45 s part runs', soon);
+    const otherTv = (await stored(`tv/${second.code}`)).stamp;
+    const builder = await coach.context().newPage();
+    await builder.goto(`${address}/?emulators=${encodeURIComponent(JSON.stringify(people.coach))}#lesson`);
+    await builder.locator('[data-designer="open"]').click();
+    await builder.selectOption('#designFrom', made);
+    await builder.locator('#designName').fill('Mount marathon, longer');
+    await builder.locator('#partSeconds0').fill('90');
+    await builder.locator('[data-designer="save"]').click();
+    await builder.locator('#designStatus', { hasText: 'Saved' }).waitFor();
+    await tvShows(tv, '.tvs-title', 'Mount marathon, longer', 'the TV shows the game as saved, nobody sending it again');
+    const onTv = seconds(await tvClock(tv));
+    assert.ok(onTv > 45 && onTv < 90, `the part carries on, 90 s long now (${onTv} s left)`);
+    await until(async () => Math.abs(seconds(await coach.locator('#remoteTime').textContent()) - seconds(await tvClock(tv))) <= 1, 'the phone shows the same time', soon);
+    assert.equal((await stored(`tv/${second.code}`)).stamp, otherTv, 'the other TV, showing another game, is left alone');
+    assert.deepEqual(tv.writes, [], 'the TV still wrote nothing');
+    await press(coach, 'toggle');
+    await builder.close();
+  });
+
   // The TV counts on from the coach's last press, not from when it loaded: a reload mid-run keeps the phone's time.
   await step('a TV reloaded while its clock runs shows the same time as the phone', async () => {
     await coach.selectOption('#remoteShow', 'lesson');
     await press(coach, 'show');
     await tvShows(tv, '.tvs-phase', 'Warm-up', 'the plan is on the TV');
     await press(coach, 'toggle');
-    const seconds = (text) => text.split(':').reduce((sum, part) => sum * 60 + Number(part), 0);
     await until(async () => seconds(await tvClock(tv)) < 600, 'the TV clock runs', soon);
     await tv.waitForTimeout(8000);
     await tv.reload();

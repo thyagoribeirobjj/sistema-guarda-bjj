@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { localDate, nextMonday } from '../js/week.js';
 import { tvSteps } from './signed-in-tv.mjs';
+import { routeAnalytics, hits } from './analytics-fake.mjs';
 
 const project = 'demo-sistema-guarda';
 const firestore = `http://${process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080'}`;
@@ -23,6 +24,7 @@ const people = {
   other: { sub: 'student-bia', email: 'bia@example.com', email_verified: true, name: 'Bia Test' },
   newcomer: { sub: 'student-dan', email: 'dan@example.com', email_verified: true, name: 'Dan Test' },
   kid: { sub: 'student-kai', email: 'kai@example.com', email_verified: true, name: 'Kai Test' },
+  kidElsewhere: { sub: 'student-eva', email: 'eva@example.com', email_verified: true, name: 'Eva Test' },
   coach: { sub: 'coach-caio', email: 'caio@example.com', email_verified: true, name: 'Caio Coach' },
   coach2: { sub: 'coach-duda', email: 'duda@example.com', email_verified: true, name: 'Duda Coach' },
 };
@@ -48,6 +50,7 @@ const address = `http://127.0.0.1:${server.address().port}`;
 // ---- the database, read and seeded as its owner (the emulator's "Bearer owner" skips the rules) ----
 function toValue(value) {
   if (value === null) return { nullValue: null };
+  if (value instanceof Date) return { timestampValue: value.toISOString() };
   if (typeof value === 'string') return { stringValue: value };
   if (typeof value === 'number') return { integerValue: String(value) };
   if (typeof value === 'boolean') return { booleanValue: value };
@@ -95,6 +98,11 @@ async function until(check, what, timeout = 10000) {
     await new Promise((done) => setTimeout(done, 200));
   }
   throw new Error(`${what} (last seen: ${JSON.stringify(last)})`);
+}
+
+// A promise that must settle within a few seconds, or the step fails saying what it waited for.
+function within(promise, what, timeout = 10000) {
+  return Promise.race([promise, new Promise((_, fail) => setTimeout(() => fail(new Error(`waited for ${what}`)), timeout))]);
 }
 
 // The emulator gives each made-up person a uid of its own on their first sign-in; signing them in here first tells
@@ -783,6 +791,122 @@ await step('on another device the kid sees Done, the XP and "Try again", and can
   await until(async () => (await stored(`users/${uid.kid}`)).claims['queda-costas'] > kidClaims['queda-costas'], 'the new claim is saved');
   await pad.context().close();
   await kid.context().close();
+});
+
+await step('a kids account signing in where an adult accepted cookies: nothing is counted until its class arrives, nor after', async () => {
+  const measurementId = 'G-MADEUP123';
+  await seed(`users/${uid.kidElsewhere}`, { email: people.kidElsewhere.email, language: 'en', theme: '', audience: 'kids', favorites: [] });
+  const device = await visitor(people.kidElsewhere);
+  const requests = [];
+  await routeAnalytics(device.context(), requests, measurementId);
+  await device.context().addInitScript(() => { if (!localStorage.getItem('sg-cookies')) localStorage.setItem('sg-cookies', 'accepted'); });
+  // The account's settings arrive late, while the page is used.
+  let release = () => {};
+  let held = () => {};
+  const holdSettings = () => {
+    const asked = new Promise((resolve) => { held = resolve; });
+    const answer = new Promise((resolve) => { release = resolve; });
+    return { asked, answer };
+  };
+  let holding = null;
+  await device.context().route(/documents:batchGet/, async (route) => {
+    if (holding && (route.request().postData() || '').includes(`/users/${uid.kidElsewhere}"`)) {
+      held();
+      await holding.answer;
+    }
+    return route.continue();
+  });
+  const usePage = async () => {
+    await device.locator('#sidebar a[href="#top"]').click();
+    await device.locator('main [data-technique]').first().click();
+    await device.locator('#panelClose').click();
+    await device.locator('#sidebar a[href="#fund"]').click();
+    await device.waitForTimeout(1500);
+  };
+  await device.goto(`${address}/?emulators=${encodeURIComponent(JSON.stringify(people.kidElsewhere))}&analytics=${measurementId}#curriculum`);
+  await until(() => hits(requests).some((hit) => hit.page_location.endsWith('/#curriculum')), 'signed out, as an adult who accepted: counted');
+  const before = hits(requests).length;
+  holding = holdSettings();
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signIn').click();
+  await within(holding.asked, 'the page asks for the account\'s settings');
+  await usePage();
+  release();
+  await device.locator('#account[aria-label*="Eva Test"]').waitFor({ timeout: 10000 });
+  await device.waitForTimeout(1000);
+  assert.deepEqual(hits(requests).slice(before).map((hit) => hit.page_location), [], 'nothing counted once signed in');
+  assert.equal(await device.evaluate(() => JSON.parse(localStorage.getItem('sg-settings')).audience), 'kids');
+
+  // The account was switched to the kids class on another device; this browser still keeps "Adult class". Reloaded,
+  // it counts nothing before the account says so.
+  await device.evaluate(() => localStorage.setItem('sg-settings', JSON.stringify({ ...JSON.parse(localStorage.getItem('sg-settings')), audience: 'adult' })));
+  holding = holdSettings();
+  await device.reload();
+  await within(holding.asked, 'the reloaded page asks for the account\'s settings');
+  await usePage();
+  release();
+  await device.locator('#sidebar a[href="#kids"]').waitFor({ timeout: 10000 });
+  await device.waitForTimeout(1000);
+  assert.deepEqual(hits(requests).slice(before).map((hit) => hit.page_location), [], 'nothing counted after a reload either');
+  assert.deepEqual((await device.context().cookies()).filter((cookie) => cookie.name.startsWith('_ga')), [], 'and no _ga cookie left');
+  await device.context().close();
+});
+
+await step('a claim the account holds as something other than a whole number: the coach\'s Try again, Undo and Approve still save', async () => {
+  // An older account may hold such a claim (the rules now refuse a new one); the owner writes it here.
+  const response = await fetch(`${documents}/users/${uid.kid}?updateMask.fieldPaths=claims.camarao`, {
+    method: 'PATCH', headers: owner, body: JSON.stringify({ fields: { claims: { mapValue: { fields: { camarao: { doubleValue: 1764000000000.5 } } } } } }),
+  });
+  assert.ok(response.ok, `seeding the odd claim: ${response.status}`);
+  await coach.open('admin.html');
+  await coach.locator('[data-load-students]').click();
+  const row = coach.locator(`[data-student="${uid.kid}"]`);
+  await row.locator('summary').click();
+  const answer = row.locator('[data-kid-challenge="camarao"]');
+  const saved = (status) => until(async () => (await stored(`approvals/${uid.kid}`))?.challenges?.camarao?.status === status, `"${status}" is saved`);
+  await answer.locator('button', { hasText: 'Try again' }).click();
+  await saved('again');
+  assert.equal(await answer.locator('.kid-status').innerText(), 'Try again');
+  assert.equal(await answer.locator('.status').count(), 0, 'no "Couldn\'t save"');
+  await answer.locator('button', { hasText: 'Undo' }).click();
+  await until(async () => !(await stored(`approvals/${uid.kid}`)).challenges.camarao, 'the answer is taken back');
+  await answer.locator('button', { hasText: 'Approve' }).click();
+  await saved('approved');
+  assert.equal(await answer.locator('.kid-status').innerText(), 'Done');
+  assert.equal((await stored(`approvals/${uid.kid}`)).challenges.camarao.claim, 1764000000000);
+});
+
+await step('a kid\'s "Delete my data" deletes the coach\'s answers too, and a second press finishes a delete that was cut off', async () => {
+  assert.ok(await stored(`approvals/${uid.kid}`), 'the kid has answers to delete');
+  const device = await visitor(people.kid);
+  let cutOff = 0;
+  await device.context().route(/documents:commit/, (route) => {
+    const body = route.request().postData() || '';
+    if (body.includes('"delete"') && body.includes(`/approvals/${uid.kid}`) && cutOff++ === 0) return route.abort();
+    return route.continue();
+  });
+  await device.open('', '#privacy');
+  await device.locator('#account').waitFor();
+  await signInOnSite(device);
+  device.failuresExpected = true;
+  await device.locator('[data-delete-data="ask"]').click();
+  await device.locator('[data-delete-data="yes"]').click();
+  await device.locator('#deleteStatus', { hasText: "Couldn't delete everything" }).waitFor();
+  assert.equal(await stored(`users/${uid.kid}`), null, 'cut off after the settings');
+  assert.ok(await stored(`approvals/${uid.kid}`), 'before the answers');
+  await device.waitForTimeout(1000);
+  assert.equal(await stored(`users/${uid.kid}`), null, 'nothing brought the settings back meanwhile');
+  assert.match(await device.locator('#account').getAttribute('aria-label'), /Kai Test/, 'still signed in, to press again');
+  await device.locator('[data-delete-data="ask"]').click();
+  await device.locator('[data-delete-data="yes"]').click();
+  await device.locator('#deleteStatus', { hasText: /deleted/ }).waitFor();
+  assert.equal(await stored(`approvals/${uid.kid}`), null, 'the coach\'s answers are gone');
+  assert.equal(await stored(`users/${uid.kid}`), null);
+  const lookup = await fetch(`${authEmulator}/identitytoolkit.googleapis.com/v1/projects/${project}/accounts:lookup`, {
+    method: 'POST', headers: { ...owner, 'Content-Type': 'application/json' }, body: JSON.stringify({ localId: [uid.kid] }),
+  });
+  assert.equal((await lookup.json()).users, undefined, 'and the sign-in record');
+  await device.context().close();
 });
 
 await step('"Delete my data" deletes the account\'s settings, notes and sign-in record, and signs out', async () => {

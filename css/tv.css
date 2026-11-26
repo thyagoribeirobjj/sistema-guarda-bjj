@@ -10,7 +10,7 @@ html.tv-screen body::before{display:none}
 .tvs-game[data-kind="work"],.tvs-game[data-kind="block"]{--phase:var(--tv-work)}
 .tvs-game[data-kind="rest"]{--phase:var(--tv-rest)}
 .tvs-game[data-kind="done"]{--phase:var(--tv-done)}
-.tvs-game{grid-template-rows:auto minmax(0,1fr) auto auto}
+.tvs-game{grid-template-rows:auto minmax(0,1fr) auto auto auto}
 .tvs-top{display:flex;justify-content:space-between;align-items:baseline;gap:calc(2*var(--u));padding:calc(2*var(--u)) calc(3*var(--u)) 0;font-family:var(--display);text-transform:uppercase}
 .tvs-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:calc(4.2*var(--u));font-weight:700;line-height:1.1}
 .tvs-round{font-size:calc(3*var(--u));font-weight:700;color:var(--muted);white-space:nowrap}
@@ -22,6 +22,16 @@ html.tv-screen body::before{display:none}
 .tvs-now{display:grid;gap:var(--u);min-width:0}
 .tvs-phase{font:700 calc(5*var(--u))/1 var(--display);text-transform:uppercase;color:var(--phase)}
 .tvs-say{font-size:calc(2.5*var(--u));line-height:1.25;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
+/* A plan's techniques block: every technique below the clock, as large as fits (fitList() in js/tv-screen-view.js). */
+.tvs-game.with-list .tvs-mid{grid-template-rows:auto minmax(0,1fr);align-items:start;row-gap:calc(1.2*var(--u));padding-top:calc(1.2*var(--u))}
+.tvs-game.with-list .tvs-clock{font-size:calc(10*var(--u))}
+.tvs-game.with-list .tvs-now{align-self:center}
+.tvs-list{grid-column:1/-1;min-height:0;height:100%;overflow:hidden;columns:var(--columns,1);column-gap:calc(2*var(--u));column-fill:balance;margin:0;padding:0;list-style:none;font-size:calc(var(--size,2.6)*var(--u));line-height:1.15;overflow-wrap:anywhere}
+.tvs-list li{break-inside:avoid;margin-bottom:calc(.35*var(--size,2.6)*var(--u));padding-left:calc(.7*var(--u));border-left:calc(.35*var(--u)) solid var(--phase)}
+.tvs-list b{font-weight:700}
+.tvs-list[data-tips="false"] .tvs-tip{display:none}
+.tvs-tip{color:var(--muted)}
+.tvs-list .tvs-more{border-left-color:transparent;color:var(--muted);font-weight:700}
 .tvs-sides{display:grid;grid-template-columns:1fr 1fr;gap:calc(1.5*var(--u));padding:0 calc(3*var(--u)) calc(1.5*var(--u))}
 .tvs-side{min-width:0;padding:calc(1.1*var(--u)) calc(1.5*var(--u));background:var(--surface);border-left:calc(.5*var(--u)) solid var(--phase)}
 .tvs-side b{display:block;font:700 calc(1.9*var(--u))/1.1 var(--display);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
@@ -40,9 +50,11 @@ html.tv-screen body::before{display:none}
 .tvs-qr{grid-column:2;grid-row:2/4;width:calc(20*var(--u));height:auto}
 .tvs-qr-light{fill:var(--qr-light)}
 .tvs-qr-dark{fill:var(--qr-dark)}
-.tvs-sound{position:absolute;top:calc(.8*var(--u));left:50%;transform:translateX(-50%);padding:calc(.6*var(--u)) calc(1.6*var(--u));border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:600 calc(1.8*var(--u)) var(--body);cursor:pointer}
+/* Sound: a line of its own at the foot of the screen, so it never covers the game's words or the clock. */
+.tvs-sound{justify-self:center;margin:0 0 calc(1.2*var(--u));padding:calc(.6*var(--u)) calc(1.6*var(--u));border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:600 calc(1.8*var(--u)) var(--body);cursor:pointer}
 .tvs-sound:focus-visible{outline:calc(.3*var(--u)) solid var(--tv-ready)}
-.tvs-sound-note{position:absolute;top:calc(.8*var(--u));left:50%;transform:translateX(-50%);margin:0;font-size:calc(1.5*var(--u));color:var(--muted);white-space:nowrap}
+.tvs-sound-note{justify-self:center;margin:0 calc(3*var(--u)) calc(1.2*var(--u));font-size:calc(1.5*var(--u));color:var(--muted);text-align:center}
+.tvs-wait .tvs-sound,.tvs-wait .tvs-sound-note{grid-column:1/-1;margin:calc(1.5*var(--u)) 0 0}
 /* A screen standing up (a phone, a tablet): one column, sized by the width. */
 @container (orientation:portrait){
   .tvs{--u:min(2.2cqw,1cqh)}
