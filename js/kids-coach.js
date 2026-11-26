@@ -1,7 +1,7 @@
 import { html } from './html.js';
 import { kids, loadKids } from './content.js';
 import { loadAllApprovals, saveApproval } from './firebase.js';
-import { challengeStatus, kidsSummary } from './kids-progress.js';
+import { challengeStatus, kidsSummary, claimMark, answerFor } from './kids-progress.js';
 import { t, text } from './strings.js';
 
 // The kids' challenges in the admin page's Students list (js/students.js): what each kid said they did, with
@@ -29,7 +29,7 @@ export function kidsFacts(user) {
 }
 
 function answerButtons(uid, challenge, status, claim) {
-  const button = (answer, label, primary = false) => html`<button type="button" class="${primary ? 'primary' : 'chipbtn'}" data-answer="${uid}:${challenge.id}:${answer}:${claim || 0}">${t(label)}</button>`;
+  const button = (answer, label, primary = false) => html`<button type="button" class="${primary ? 'primary' : 'chipbtn'}" data-answer="${uid}:${challenge.id}:${answer}:${claimMark(claim)}">${t(label)}</button>`;
   if (status === 'waiting') return html`${button('approved', 'approve', true)}${button('again', 'sendBack')}`;
   return button('undo', 'undoAnswer');
 }
@@ -54,7 +54,7 @@ export async function answerChallenge(value) {
   const [uid, id, answer, claim] = value.split(':');
   const key = `${uid}:${id}`;
   failed.delete(key);
-  const saved = answer === 'undo' ? null : { status: answer, claim: Number(claim) };
+  const saved = answer === 'undo' ? null : answerFor(answer, Number(claim));
   try {
     await saveApproval(uid, id, saved);
     const mine = { ...approvals[uid] };

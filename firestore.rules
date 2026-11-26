@@ -21,7 +21,7 @@ service cloud.firestore {
         && (!('belt' in data) || data.belt in ['', 'white', 'blue', 'purple', 'brown', 'black', 'gray-white', 'gray', 'gray-black',
           'yellow-white', 'yellow', 'yellow-black', 'orange-white', 'orange', 'orange-black', 'green-white', 'green', 'green-black'])
         && (!('audience' in data) || data.audience in ['adult', 'kids', 'both'])
-        && (!('claims' in data) || (data.claims is map && data.claims.size() <= 100))
+        && (!('claims' in data) || (data.claims is map && data.claims.size() <= 100 && validClaims(data.claims)))
         && (!('seenWeek' in data) || (data.seenWeek is string && data.seenWeek.size() <= 100))
         && data.language in ['pt', 'en']
         && data.theme in ['', 'light', 'dark', 'orange', 'gold', 'royal', 'emerald']
@@ -30,6 +30,28 @@ service cloud.firestore {
         && (!('lesson' in data) || (data.lesson is map && data.lesson.keys().hasOnly(['mod', 'dur', 'items', 'game'])
           && (!('items' in data.lesson) || (data.lesson.items is list && data.lesson.items.size() <= 200))))
         && data.updatedAt == request.time;
+    }
+    // A kid's claims ("I did it") are { <challenge id>: <when, in ms> }, each a whole number. The rules have no loops
+    // and may evaluate only 1,000 expressions per save, so the values a save adds (those not stored before) are
+    // checked, at most 50 per save: "I did it" adds one, and a first sign-in at most one per challenge (there are 25).
+    function validClaims(claims) {
+      let before = resource != null && 'claims' in resource.data && resource.data.claims is map ? resource.data.claims.values() : [];
+      let added = claims.values().removeAll(before);
+      return added.size() <= 50 && wholeNumbers(added.concat([
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), added.size());
+    }
+    // values has at least 50 entries; the first `count` are checked, five at a time.
+    function wholeNumbers(values, count) {
+      return count == 0 || (fiveWhole(values, 0) && (count <= 5 || (fiveWhole(values, 5)
+        && (count <= 10 || (fiveWhole(values, 10) && (count <= 15 || (fiveWhole(values, 15)
+        && (count <= 20 || (fiveWhole(values, 20) && (count <= 25 || (fiveWhole(values, 25)
+        && (count <= 30 || (fiveWhole(values, 30) && (count <= 35 || (fiveWhole(values, 35)
+        && (count <= 40 || (fiveWhole(values, 40)
+        && (count <= 45 || fiveWhole(values, 45)))))))))))))))))));
+    }
+    function fiveWhole(values, at) {
+      return values[at] is int && values[at + 1] is int && values[at + 2] is int && values[at + 3] is int && values[at + 4] is int;
     }
     // Notes are saved one technique at a time: each save names the note it changes (changed), and only that
     // note may differ from what was stored. A note is short text.
@@ -144,12 +166,14 @@ service cloud.firestore {
     }
 
     // What one TV shows and its clock, named by the code the TV shows (js/tv-code.js). Anyone may read one by its
-    // code (the TV never signs in, and never writes); nobody can list them, so a code is only known to who sees
-    // the TV. Only admins (coaches) start, change and end them.
+    // code (the TV never signs in, and never writes); only admins can list them (to delete old ones, and to find the
+    // TVs showing a game they changed), so a code is only known to who sees the TV and to coaches.
+    // Only admins (coaches) start, change and end them.
     match /tv/{code} {
       allow get: if true;
+      allow list: if isAdmin();
       allow delete: if isAdmin();
-      allow create, update: if isAdmin() && code.matches('[2-9A-HJKMNP-Z]{4}') && validSession();
+      allow create, update: if isAdmin() && code.matches('[2-9A-HJKMNP-Z]{5}') && validSession();
     }
 
     // One diagram per move, as a small image stored in the document. Everyone reads, admins write.
@@ -178,10 +202,11 @@ service cloud.firestore {
     }
 
     // The coaches' answers to a kid's challenges. The kid reads their own; only coaches write them, so nobody can
-    // approve their own challenges. The kid may delete them with the rest of their data ("Delete my data").
+    // approve their own challenges, nor take back a "Try again". The kid may delete them with the rest of their data
+    // ("Delete my data"), only once their settings are deleted.
     match /approvals/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow delete: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin() || (isOwner(uid) && !exists(/databases/$(database)/documents/users/$(uid)));
       allow create, update: if isAdmin() && validApprovals();
     }
 

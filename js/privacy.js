@@ -45,9 +45,9 @@ async function deleteEverything(render) {
   } catch (error) {
     console.error(error);
     state.deleting = 'failed';
-    // Back to saving to the account, so nothing is quietly kept on this device only (signed out instead, if the
-    // account's settings are already gone).
-    await useAccount(account);
+    // Back to saving to the account, so nothing is quietly kept on this device only. Once the settings are gone,
+    // nothing is saved again: pressing "Delete my data" again finishes the job.
+    if (!error.settingsDeleted) await useAccount(account);
   }
   render();
 }

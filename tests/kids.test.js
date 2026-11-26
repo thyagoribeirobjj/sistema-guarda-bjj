@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { challengeStatus, levelOf, kidsProgress, kidsSummary } from '../js/kids-progress.js';
+import { readFileSync } from 'node:fs';
+import { challengeStatus, levelOf, kidsProgress, kidsSummary, claimMark, answerFor } from '../js/kids-progress.js';
 
 const game = {
   worlds: [{ id: 'w1' }, { id: 'w2' }, { id: 'w3' }, { id: 'w4', alwaysOpen: true }],
@@ -57,4 +58,24 @@ test('a world opens after 2 challenges of the world before are done; the first a
 test('the coach\'s summary counts what is done and what waits', () => {
   assert.deepEqual(kidsSummary(game, { a: 1, f: 2 }, { a: { status: 'approved', claim: 1 } }), { done: 1, waiting: 1, xp: 10 });
   assert.deepEqual(kidsSummary(game, undefined, undefined), { done: 0, waiting: 0, xp: 0 });
+});
+
+test('there are fewer challenges than the 50 claims firestore.rules lets one save add', () => {
+  const kids = JSON.parse(readFileSync(new URL('../data/kids.json', import.meta.url), 'utf8'));
+  assert.ok(kids.challenges.length <= 50, `${kids.challenges.length} challenges`);
+});
+
+test('a coach\'s answer always names the claim as a whole number, whatever the kid\'s account holds', () => {
+  for (const stored of [1764000000000, 1764000000000.5, '1764000000000', 'yesterday', true, { at: 1 }, [1], null, undefined, NaN, Infinity, 1e300, -3.7]) {
+    const answer = answerFor('again', stored);
+    assert.ok(Number.isSafeInteger(answer.claim), `${JSON.stringify(stored)} → ${answer.claim}`);
+    assert.deepEqual(answerFor('approved', stored), { status: 'approved', claim: answer.claim });
+    assert.equal(claimMark(stored), answer.claim, 'the same claim gives the same number');
+    // "Try again" shows as sent back for the claim it answered, and a new "I did it" waits for the coach again.
+    if (stored) assert.equal(challengeStatus(stored, answer), 'again', JSON.stringify(stored));
+    assert.equal(challengeStatus(1764000009999, answer), 'waiting');
+    assert.equal(challengeStatus(stored, answerFor('approved', stored)), 'done');
+  }
+  assert.equal(claimMark(1764000000000), 1764000000000, 'an ordinary claim is itself');
+  assert.equal(claimMark(1764000000000.5), 1764000000000);
 });
