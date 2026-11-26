@@ -71,6 +71,21 @@ export function tvRuleTests({ test, assert, read, write, remove }) {
     assert.equal(await remove('tv/K7P3N', 'admin'), 'allowed');
   });
 
+  test('a TV session\'s lesson names its techniques as the lesson builder does: "<stage>-<technique>", each once, at most 100', async () => {
+    const save = (items) => write('tv/K7P3N', session(coach, { show: { lesson: { mod: 'bottom', dur: '90', items, game: '' } } }), 'admin');
+    // Every technique of the largest part of the fight (9 stages, up to 16 techniques in one), and room to grow.
+    const every = Array.from({ length: 100 }, (_, i) => `${Math.floor(i / 16)}-${i % 16}`);
+    assert.equal(await save([]), 'allowed', 'none chosen');
+    assert.equal(await save(['0-0']), 'allowed');
+    assert.equal(await save(['0-0', '8-15', '1-2', '12-99']), 'allowed');
+    assert.equal(await save(every), 'allowed', '100 techniques');
+    const bad = [
+      [...every, '9-9'], ['0-0', '0-0'], [0], ['0-0', 1], [null], [{ key: '0-0' }], [''], ['0'], ['0-'], ['-0'], ['a-b'],
+      ['0-0-0'], ['100-0'], ['0-100'], [' 0-0'], ['0-0 '], ['0-0,1-1'], ['0-0', '1-1,2-2'], ['0_0'], ['x'.repeat(200)], 'many',
+    ];
+    for (const items of bad) assert.equal(await save(items), 'denied', JSON.stringify(items).slice(0, 80));
+  });
+
   test('a TV session has the expected shape and limits, and a TV code\'s letters', async () => {
     const save = (change, code = 'K7P3N') => write(`tv/${code}`, session(coach, change), 'admin');
     assert.equal(await save({ show: null }), 'allowed', 'nothing on the TV yet');

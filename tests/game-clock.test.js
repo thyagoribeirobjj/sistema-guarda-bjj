@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   gameSteps, showSteps, totalSeconds, gameLength, clockText, startClock, advance, toggle, nextPart, backPart, addTime,
-  restart, stepLength, timeLeft, rolesSwitched, gameProblems, clockGame, isOver, caughtUp, freshSlack, carryClock,
+  restart, stepLength, timeLeft, rolesSwitched, gameProblems, clockGame, isOver, caughtUp, freshSlack, carryClock, pageAt, pageSeconds,
 } from '../js/game-clock.js';
 import { newCode, isCode, typedCode, codeLetters } from '../js/tv-code.js';
 
@@ -133,6 +133,21 @@ test('a game changed while a TV shows it: the clock carries on at the same place
   const plan = showSteps({ title: say('Class'), blocks, game, gameAt: 1 });
   const planShorter = showSteps({ title: say('Class'), blocks, game: { ...game, rounds: 1 }, gameAt: 1 });
   assert.deepEqual(carryClock(plan, planShorter, { running: true, step: 7, left: 100, added: 0 }), { running: true, step: 4, left: 100, added: 0 }, 'the log block, after a shorter game');
+});
+
+test('a block shown in pages turns them with its own clock: the same page on any screen, after a reload, and while paused', () => {
+  const blocks = [{ title: say('Techniques'), say: say(''), seconds: 1200 }];
+  const steps = showSteps({ title: say('Class'), blocks, game: null, gameAt: 9 });
+  const at = (left, added = 0, running = true) => ({ running, step: 0, left, added });
+  assert.equal(pageAt(steps, at(1200), 3), 0, 'the first page at the start');
+  assert.equal(pageAt(steps, at(1200 - pageSeconds + 0.1), 3), 0);
+  assert.equal(pageAt(steps, at(1200 - pageSeconds), 3), 1, 'the next after pageSeconds');
+  assert.equal(pageAt(steps, at(1200 - 3 * pageSeconds), 3), 0, 'and round again');
+  assert.equal(pageAt(steps, at(1200 - pageSeconds - 1, 0, false), 3), 1, 'paused: the page stays');
+  assert.equal(pageAt(steps, at(1230 - pageSeconds, 30), 3), 1, '"+30 s" does not turn the page');
+  assert.equal(pageAt(steps, at(500), 1), 0, 'one page');
+  assert.equal(pageAt(steps, { running: false, step: 1, left: 0, added: 0 }, 3), 0, 'the end');
+  assert.equal(pageAt(steps, advance(steps, at(1200), 2.5 * pageSeconds), 4), 2, 'from how far the clock has run');
 });
 
 test('a TV code is 5 unmistakable characters whose last two check the others', () => {

@@ -3,6 +3,7 @@
 
 /* ---- the TV screen: every size is a share of the screen (--u), so it fills a 16:9 TV without scrolling ---- */
 html.tv-screen,html.tv-screen body{height:100%;overflow:hidden}
+html.tv-screen{scrollbar-gutter:auto}
 html.tv-screen body>:not(#tvScreen){display:none!important}
 html.tv-screen body::before{display:none}
 .tvscreen{position:fixed;inset:0;container-type:size;background:var(--bg);color:var(--ink)}
@@ -22,7 +23,7 @@ html.tv-screen body::before{display:none}
 .tvs-now{display:grid;gap:var(--u);min-width:0}
 .tvs-phase{font:700 calc(5*var(--u))/1 var(--display);text-transform:uppercase;color:var(--phase)}
 .tvs-say{font-size:calc(2.5*var(--u));line-height:1.25;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
-/* A plan's techniques block: every technique below the clock, as large as fits (fitList() in js/tv-screen-view.js). */
+/* A plan's techniques block: every technique below the clock, as large as fits, in pages past that (js/tv-list.js). */
 .tvs-game.with-list .tvs-mid{grid-template-rows:auto minmax(0,1fr);align-items:start;row-gap:calc(1.2*var(--u));padding-top:calc(1.2*var(--u))}
 .tvs-game.with-list .tvs-clock{font-size:calc(10*var(--u))}
 .tvs-game.with-list .tvs-now{align-self:center}
@@ -31,6 +32,7 @@ html.tv-screen body::before{display:none}
 .tvs-list b{font-weight:700}
 .tvs-list[data-tips="false"] .tvs-tip{display:none}
 .tvs-tip{color:var(--muted)}
+.tvs-pages{font:700 calc(3*var(--u))/1 var(--display);letter-spacing:.06em;color:var(--muted)}
 .tvs-list .tvs-more{border-left-color:transparent;color:var(--muted);font-weight:700}
 .tvs-sides{display:grid;grid-template-columns:1fr 1fr;gap:calc(1.5*var(--u));padding:0 calc(3*var(--u)) calc(1.5*var(--u))}
 .tvs-side{min-width:0;padding:calc(1.1*var(--u)) calc(1.5*var(--u));background:var(--surface);border-left:calc(.5*var(--u)) solid var(--phase)}

@@ -144,6 +144,17 @@ async function allowSound() {
   drawWhole();
 }
 
+// A window made larger or smaller, or full screen: the screen fits itself again, without waiting for the next step.
+let refitting = 0;
+function refit() {
+  cancelAnimationFrame(refitting);
+  refitting = requestAnimationFrame(() => {
+    if (!session?.show || !show) return;
+    fitList();
+    tickScreen(steps, position());
+  });
+}
+
 async function keepAwake() {
   try {
     if (wake || document.visibilityState !== 'visible' || !navigator.wakeLock) return;
@@ -165,6 +176,8 @@ export async function startTvScreen() {
   screen.addEventListener('click', (event) => { if (event.target.closest('[data-tv-sound]')) allowSound(); });
   document.addEventListener('keydown', (event) => { if (sound === 'off' && (event.key === 'Enter' || event.key === ' ')) allowSound(); });
   document.addEventListener('visibilitychange', keepAwake);
+  window.addEventListener('resize', refit);
+  document.addEventListener('fullscreenchange', refit);
   setInterval(tick, 200);
   screen.querySelector('[data-tv-sound]')?.focus();
   await loadContent();
