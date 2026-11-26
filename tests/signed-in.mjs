@@ -25,6 +25,9 @@ const people = {
   newcomer: { sub: 'student-dan', email: 'dan@example.com', email_verified: true, name: 'Dan Test' },
   kid: { sub: 'student-kai', email: 'kai@example.com', email_verified: true, name: 'Kai Test' },
   kidElsewhere: { sub: 'student-eva', email: 'eva@example.com', email_verified: true, name: 'Eva Test' },
+  quitter: { sub: 'student-fay', email: 'fay@example.com', email_verified: true, name: 'Fay Test' },
+  returner: { sub: 'student-gil', email: 'gil@example.com', email_verified: true, name: 'Gil Test' },
+  adult: { sub: 'student-hal', email: 'hal@example.com', email_verified: true, name: 'Hal Test' },
   coach: { sub: 'coach-caio', email: 'caio@example.com', email_verified: true, name: 'Caio Coach' },
   coach2: { sub: 'coach-duda', email: 'duda@example.com', email_verified: true, name: 'Duda Coach' },
 };
@@ -82,6 +85,13 @@ async function stored(path) {
   if (response.status === 404) return null;
   assert.ok(response.ok, `reading ${path}: ${response.status}`);
   return fromFields((await response.json()).fields || {});
+}
+
+// Saves a document again just as it is, with a new updatedAt: as if its last change reached everyone once more.
+async function touch(path) {
+  const { fields } = await (await fetch(`${documents}/${path}`, { headers: owner })).json();
+  const response = await fetch(`${documents}/${path}`, { method: 'PATCH', headers: owner, body: JSON.stringify({ fields: { ...fields, updatedAt: { timestampValue: new Date().toISOString() } } }) });
+  assert.ok(response.ok, `saving ${path} again: ${response.status}`);
 }
 
 // Waits until the database (or the page) shows what is expected; the site saves in the background.
@@ -852,6 +862,47 @@ await step('a kids account signing in where an adult accepted cookies: nothing i
   await device.context().close();
 });
 
+await step('an adult who accepted cookies signs in: Google Analytics is switched off until the account\'s class is known, then counts as before', async () => {
+  const measurementId = 'G-MADEUP456';
+  await seed(`users/${uid.adult}`, { email: people.adult.email, language: 'en', theme: '', audience: 'adult', favorites: [] });
+  const device = await visitor(people.adult);
+  const requests = [];
+  await routeAnalytics(device.context(), requests, measurementId);
+  await device.context().addInitScript(() => { if (!localStorage.getItem('sg-cookies')) localStorage.setItem('sg-cookies', 'accepted'); });
+  let release = () => {};
+  let held = () => {};
+  const asked = new Promise((resolve) => { held = resolve; });
+  const answer = new Promise((resolve) => { release = resolve; });
+  let holding = false;
+  await device.context().route(/documents:batchGet/, async (route) => {
+    if (holding && (route.request().postData() || '').includes(`/users/${uid.adult}"`)) {
+      held();
+      await answer;
+    }
+    return route.continue();
+  });
+  const switchedOff = () => device.evaluate((id) => window[`ga-disable-${id}`] === true, measurementId);
+  await device.goto(`${address}/?emulators=${encodeURIComponent(JSON.stringify(people.adult))}&analytics=${measurementId}#curriculum`);
+  await until(() => hits(requests).some((hit) => hit.page_location.endsWith('/#curriculum')), 'signed out, as an adult who accepted: counted');
+  assert.equal(await switchedOff(), false, 'counting');
+  holding = true;
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signIn').click();
+  await within(asked, 'the page asks for the account\'s settings');
+  assert.equal(await switchedOff(), true, 'switched off while the class is not known, so it sends nothing of its own');
+  const before = hits(requests).length;
+  await device.locator('#sidebar a[href="#top"]').click();
+  await device.waitForTimeout(1000);
+  assert.equal(hits(requests).length, before, 'and no page is counted');
+  release();
+  await device.locator('#account[aria-label*="Hal Test"]').waitFor({ timeout: 10000 });
+  await until(async () => !(await switchedOff()), 'an adult: switched on again');
+  await device.locator('#sidebar a[href="#fund"]').click();
+  await until(() => hits(requests).slice(before).some((hit) => hit.page_location.endsWith('/#fund')), 'counted from the next page, as before');
+  assert.ok((await device.context().cookies()).some((cookie) => cookie.name.startsWith('_ga')), 'its cookies kept');
+  await device.context().close();
+});
+
 await step('a claim the account holds as something other than a whole number: the coach\'s Try again, Undo and Approve still save', async () => {
   // An older account may hold such a claim (the rules now refuse a new one); the owner writes it here.
   const response = await fetch(`${documents}/users/${uid.kid}?updateMask.fieldPaths=claims.camarao`, {
@@ -906,6 +957,67 @@ await step('a kid\'s "Delete my data" deletes the coach\'s answers too, and a se
     method: 'POST', headers: { ...owner, 'Content-Type': 'application/json' }, body: JSON.stringify({ localId: [uid.kid] }),
   });
   assert.equal((await lookup.json()).users, undefined, 'and the sign-in record');
+  await device.context().close();
+});
+
+// "Delete my data" pressed on a device whose deleting of the coach's answers is cut off (after the settings are gone).
+async function deleteCutOff(name) {
+  await seed(`approvals/${uid[name]}`, { challenges: {}, changed: '', updatedBy: people.coach.email });
+  const device = await visitor(people[name]);
+  let cutOff = 0;
+  await device.context().route(/documents:commit/, (route) => {
+    const body = route.request().postData() || '';
+    if (body.includes('"delete"') && body.includes(`/approvals/${uid[name]}`) && cutOff++ === 0) return route.abort();
+    return route.continue();
+  });
+  await device.open('', '#privacy');
+  await device.locator('#account').waitFor();
+  await signInOnSite(device);
+  await until(() => stored(`users/${uid[name]}`), 'the settings are saved');
+  device.failuresExpected = true;
+  await device.locator('[data-delete-data="ask"]').click();
+  await device.locator('[data-delete-data="yes"]').click();
+  await device.locator('#deleteStatus', { hasText: "Couldn't delete everything" }).waitFor();
+  assert.equal(await stored(`users/${uid[name]}`), null, 'cut off after the settings');
+  assert.ok(await stored(`approvals/${uid[name]}`), 'before the answers');
+  return device;
+}
+
+async function signInRecord(name) {
+  const lookup = await fetch(`${authEmulator}/identitytoolkit.googleapis.com/v1/projects/${project}/accounts:lookup`, {
+    method: 'POST', headers: { ...owner, 'Content-Type': 'application/json' }, body: JSON.stringify({ localId: [uid[name]] }),
+  });
+  return (await lookup.json()).users?.[0] || null;
+}
+
+await step('"Delete my data" cut off half way, then a reload: the visit finishes it by itself and signs out', async () => {
+  const device = await deleteCutOff('quitter');
+  // Once the sign-in record is gone, what the page still asks for as that person is refused.
+  device.refusalsExpected = true;
+  await device.reload();
+  await until(async () => (await stored(`approvals/${uid.quitter}`)) === null, 'the coach\'s answers are deleted, nobody pressing again');
+  await until(async () => (await signInRecord('quitter')) === null, 'and the sign-in record');
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signIn').waitFor();
+  assert.equal(await device.evaluate(() => localStorage.getItem('sg-deleting')), null, 'nothing left to finish');
+  await device.waitForTimeout(1000);
+  assert.equal(await stored(`users/${uid.quitter}`), null, 'nothing was brought back');
+  await device.context().close();
+});
+
+await step('a cut-off "Delete my data" is never finished for an account used again since', async () => {
+  const device = await deleteCutOff('returner');
+  // Signed in again on another device, and used: the account's settings are saved anew.
+  await seed(`users/${uid.returner}`, { email: people.returner.email, language: 'en', theme: '', favorites: [fromOtherDevice], updatedAt: new Date() });
+  device.failuresExpected = false;
+  await device.reload();
+  await device.locator('#account[aria-label*="Gil Test"]').waitFor();
+  await device.waitForTimeout(1500);
+  assert.match(await device.locator('#account').getAttribute('aria-label'), /Gil Test/, 'still signed in');
+  assert.deepEqual((await stored(`users/${uid.returner}`)).favorites, [fromOtherDevice], 'the settings are kept');
+  assert.ok(await stored(`approvals/${uid.returner}`), 'the coach\'s answers are kept');
+  assert.ok(await signInRecord('returner'), 'the sign-in record is kept');
+  assert.equal(await device.evaluate(() => localStorage.getItem('sg-deleting')), null, 'and this browser no longer asks for it');
   await device.context().close();
 });
 
@@ -993,7 +1105,7 @@ await step('"Delete my data" deletes the account\'s settings, notes and sign-in 
   assert.equal(await stored(`users/${uid.student}/private/notes`), null);
 });
 
-await tvSteps({ visitor, step, until, stored, seed, address, people });
+await tvSteps({ visitor, step, until, stored, seed, touch, address, people });
 
 await browser.close();
 server.close();

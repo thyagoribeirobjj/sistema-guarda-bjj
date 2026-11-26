@@ -1,6 +1,7 @@
 import { loadUserSettings, saveUserSettings, signOut } from './firebase.js';
 import { belts, kidsBelts } from './content.js';
 import { useNotesAccount, leaveNotesAccount, forgetNotes } from './notes.js';
+import { deletionAsked, finishDeletion } from './delete-data.js';
 
 // Each visitor's language, theme, class (audience), belt, favorites, progress, kids' challenges and lesson plan. Kept in this browser, and in the
 // database (users/{uid}) once they sign in, so they follow them to other devices.
@@ -183,6 +184,15 @@ export async function useAccount(user) {
     return;
   } finally {
     loading = false;
+  }
+  // "Delete my data" was pressed here for this account and cut off: it is finished now, and signs out. If it can't
+  // finish, nothing is written to the account and the next visit or sign-in tries again.
+  if (deletionAsked(user.uid)) {
+    const finished = await finishDeletion(user.uid, fromDatabase).catch((error) => {
+      console.warn('"Delete my data" could not finish yet:', error.code || error.message);
+      return true;
+    });
+    if (finished) return accountDeleted();
   }
   // This browser saw the account's settings before: gone now means the person used "Delete my data" on another device.
   // (A first sign-in whose first save never arrived is only "not saved yet": what is here is kept and saved now.)
