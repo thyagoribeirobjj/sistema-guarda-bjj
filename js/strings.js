@@ -60,6 +60,8 @@ export const strings = {
   wins: { pt: 'Vence', en: 'Wins' },
   time: { pt: 'Tempo', en: 'Time' },
   techniques: { pt: 'técnicas', en: 'techniques' },
+  technique: { pt: 'técnica', en: 'technique' },
+  inTheName: { pt: 'No nome', en: 'In the name' },
 
   search: { pt: 'Buscar técnica', en: 'Search techniques' },
   searchResults: { pt: 'Busca', en: 'Search' },

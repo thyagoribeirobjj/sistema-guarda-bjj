@@ -789,6 +789,20 @@ await step('the coach approves one challenge and sends the other back from the S
   assert.equal(await row.locator('[data-kid-challenge="rolamento"] .kid-status').innerText(), 'Done');
 });
 
+await step('the kid\'s page, back in view a few minutes later, shows the coach\'s answers without a reload; sooner, it reads nothing', async () => {
+  assert.equal(await kidStatus(kid, 'rolamento'), 'Waiting for coach', 'read before the coach answered');
+  const reads = kid.approvalReads;
+  const backInView = () => kid.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  // Back in view at once: nothing read (the one read below is the only one).
+  await backInView();
+  await kid.clock.install();
+  await kid.clock.fastForward('03:05');
+  await backInView();
+  await kid.locator('[data-challenge="rolamento"] .kid-status', { hasText: 'Done' }).waitFor();
+  assert.equal(await kidStatus(kid, 'queda-costas'), 'Try again');
+  assert.equal(kid.approvalReads, reads + 1, 'one read, for the return after 3 minutes only');
+});
+
 await step('on another device the kid sees Done, the XP and "Try again", and can say "I did it" again', async () => {
   const pad = await visitor(people.kid);
   await pad.open();

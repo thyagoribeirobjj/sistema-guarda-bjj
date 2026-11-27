@@ -9,6 +9,7 @@ import { changeLesson, redrawPlan } from './lesson.js';
 import { designerInput, designerChange } from './designer.js';
 import { $, drawn, adoptMain, render, search, route, keepFirstPage } from './page.js';
 import { clickActions, changeMedia } from './actions.js';
+import { followKidsOnReturn } from './kids.js';
 
 // The site's page listening: clicks, changes, typing, keys, the menus' focus and the address. Set up once, when
 // js/app.js loads.
@@ -102,5 +103,6 @@ for (const type of ['pointerdown', 'keydown', 'wheel', 'focusin', 'hashchange'])
   window.addEventListener(type, keepFirstPage, { capture: true, passive: true });
 }
 window.addEventListener('hashchange', route);
+document.addEventListener('visibilitychange', () => followKidsOnReturn(render));
 // A Google photo that doesn't load leaves the letter under it showing.
 document.addEventListener('error', (event) => { if (event.target.matches?.('#account img')) event.target.remove(); }, true);

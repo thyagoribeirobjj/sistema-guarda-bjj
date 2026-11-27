@@ -27,7 +27,8 @@ export const beltMark = (belt, label = false) => (label
   ? html`<i class="belt" data-belt="${belt}" role="img" aria-label="${t('minBelt')}: ${beltName(belt)}" title="${t('minBelt')}: ${beltName(belt)}"></i>`
   : html`<i class="belt" data-belt="${belt}" aria-hidden="true"></i>`);
 
-export function techniqueChip(id, tag = '') {
+// tag: a word after the name ("next", "combo"). An option, so a bare .map(techniqueChip) never shows the list's index.
+export function techniqueChip(id, { tag = '' } = {}) {
   const place = findTechnique(id);
   if (!place) return '';
   const technique = place.technique;
@@ -35,8 +36,8 @@ export function techniqueChip(id, tag = '') {
   const progress = progressOf(id);
   return html`<button type="button" class="tech b${favorite ? ' on' : ''}" data-technique="${id}">${text(technique.n)}${tag ? html` <span class="rel">${tag}</span>` : ''}${minBeltOf(id) ? html` ${beltMark(minBeltOf(id), true)}` : ''}${
     progress ? html` <span class="ptag" aria-label="${t(progress)}">${progressMarks[progress]}</span>` : ''}${
-    technique.mine ? html` <span class="mine">★</span>` : ''}${
-    technique.g ? html` <span class="gtag">G</span>` : ''}${
+    technique.mine ? html` <span class="mine" aria-label="${t('mine')}">★</span>` : ''}${
+    technique.g ? html` <span class="gtag" aria-label="${t('bookTag')}">G</span>` : ''}${
     state.media[id]?.video ? html` <span class="vtag" aria-label="${t('video')}">▶</span>` : ''}${
     favorite ? html` <span class="heart" aria-label="${t('inTree')}">♥</span>` : ''}</button>`;
 }
@@ -59,6 +60,9 @@ function gameCard(game) {
   return html`<div class="card"><h4>${text(game.n)}${game.mine ? html` <span class="mine">★ ${t('mine')}</span>` : ''}</h4><p>${text(game.d)}</p><div class="rule"><b>${t('who')}</b><span>${text(game.who)}</span><b>${t('wins')}</b><span>${text(game.win)}</span><b>${t('time')}</b><span>${text(game.time)}</span></div></div>`;
 }
 
+// "1 technique", "12 techniques".
+const techniqueCount = (count) => `${count} ${t(count === 1 ? 'technique' : 'techniques')}`;
+
 // Every technique in a part of the fight, once.
 function techniqueIds(module) {
   return [...new Set(module.stages.flatMap((stage) => stage.items.map((technique) => technique.id)))];
@@ -71,7 +75,7 @@ export function curriculumView() {
   const cards = content.order.map((key, i) => {
     const module = content.modules[key];
     const ids = techniqueIds(module);
-    return html`<a class="card part-card" href="#${key}"><span class="part-n" aria-hidden="true">${i + 1}</span><h3>${text(module.title)}</h3><p>${text(module.intro)}</p><span class="part-count">${ids.length} ${t('techniques')}</span>${progressBar(ids)}</a>`;
+    return html`<a class="card part-card" href="#${key}"><span class="part-n" aria-hidden="true">${i + 1}</span><h3>${text(module.title)}</h3><p>${text(module.intro)}</p><span class="part-count">${techniqueCount(ids.length)}</span>${progressBar(ids)}</a>`;
   });
   return html`${intro(t('curriculum'), t('curriculumLead'))}<div class="grid parts">${cards}</div>`;
 }
@@ -113,12 +117,16 @@ function progressBar(ids) {
   return html`<div class="progress"><span>${t('done')}: <b>${done}</b> ${t('of')} ${ids.length}</span><div class="lad-bar"><i style="width:${Math.round((done / ids.length) * 100)}%"></i></div></div>`;
 }
 
+// Techniques whose name matches come first, in the order searchTechniques() ranks them; the others follow by part.
 export function searchView() {
   const found = searchTechniques(state.search);
   if (!found.length) return html`${intro(t('searchResults'), `“${state.search}”`)}<div class="empty"><h3>${t('nothingFound')}</h3><p class="note">${t('nothingFoundHint')}</p></div>`;
-  const groups = content.order.map((key) => ({ key, places: found.filter((place) => place.moduleKey === key) })).filter((group) => group.places.length);
-  return html`${intro(t('searchResults'), `“${state.search}” · ${found.length} ${t(found.length === 1 ? 'foundOne' : 'found')}`)}<div class="results">${groups.map((group) => html`<section class="week"><h3 class="sect-title"><a class="plain" href="#${group.key}">${text(content.modules[group.key].title)}</a></h3>
-    <div class="techs">${group.places.map((place) => techniqueChip(place.technique.id))}</div></section>`)}</div>`;
+  const byName = found.filter((place) => place.byName);
+  const groups = content.order.map((key) => ({ key, places: found.filter((place) => !place.byName && place.moduleKey === key) })).filter((group) => group.places.length);
+  const chips = (places) => html`<div class="techs">${places.map((place) => techniqueChip(place.technique.id))}</div>`;
+  const nameGroup = byName.length ? html`<section class="week" data-search-names><h3 class="sect-title">${t('inTheName')}</h3>${chips(byName)}</section>` : '';
+  return html`${intro(t('searchResults'), `“${state.search}” · ${found.length} ${t(found.length === 1 ? 'foundOne' : 'found')}`)}<div class="results">${nameGroup}${groups.map((group) => html`<section class="week"><h3 class="sect-title"><a class="plain" href="#${group.key}">${text(content.modules[group.key].title)}</a></h3>
+    ${chips(group.places)}</section>`)}</div>`;
 }
 
 // "Week of 24 Nov" from "2026-11-24"; nothing when the date is missing or not a date.
@@ -195,7 +203,7 @@ function fightOrderList(favorites, removeButton) {
       const here = group.places.filter((place) => place.stageIndex === stageIndex).sort((a, b) => a.index - b.index);
       return here.length ? html`<p class="goal sub">${text(stage.name)}</p><div class="techs">${here.map((place) => html`<span class="chipx">${techniqueChip(place.technique.id)}${removeButton(place.technique.id)}</span>`)}</div>` : '';
     });
-    return stageBlock(n + 1, html`<a class="plain" href="#${group.key}">${text(module.title)}</a>`, `${group.places.length} ${t('techniques')}`, stages);
+    return stageBlock(n + 1, html`<a class="plain" href="#${group.key}">${text(module.title)}</a>`, techniqueCount(group.places.length), stages);
   })}</div>`;
 }
 

@@ -14,7 +14,9 @@ const statusLabels = { todo: 'statusTodo', waiting: 'statusWaiting', done: 'stat
 
 // The kids' content and, signed in, the coaches' answers: read only for the kids class or both, so an adult's visit
 // costs nothing more. state.approvals stays null until the answers are known (the buttons wait for them).
-export async function followKids() {
+// again: read the answers again even when they are known (the page coming back into view).
+let approvalsReadAt = 0;
+export async function followKids({ again = false } = {}) {
   if (settings.audience === 'adult') {
     state.approvals = null;
     return;
@@ -29,8 +31,9 @@ export async function followKids() {
     state.approvals = null;
     return;
   }
-  if (state.approvalsOf === uid && state.approvals) return;
+  if (state.approvalsOf === uid && state.approvals && !again) return;
   state.approvalsOf = uid;
+  approvalsReadAt = Date.now();
   try {
     const approvals = await loadApprovals(uid);
     if (state.account?.uid === uid) state.approvals = approvals;
@@ -41,6 +44,17 @@ export async function followKids() {
 }
 
 export const kidsPage = () => settings.audience !== 'adult' && kids.loaded;
+
+// A coach may have answered while the kid was away: coming back to the page reads the answers again, at most once
+// every 3 minutes, and draws the page only when they changed.
+const answersFresh = 3 * 60 * 1000;
+export async function followKidsOnReturn(render) {
+  if (document.visibilityState !== 'visible' || !state.account || !state.approvals || settings.audience === 'adult') return;
+  if (Date.now() - approvalsReadAt < answersFresh) return;
+  const before = JSON.stringify(state.approvals);
+  await followKids({ again: true });
+  if (JSON.stringify(state.approvals) !== before) render();
+}
 
 function levelLine(xp) {
   const { level, next } = levelOf(kids.levels, xp);
@@ -77,7 +91,7 @@ function worldCard(world, number, progress) {
 
 export function kidsView() {
   const progress = kidsProgress(kids, settings.claims, state.approvals || {}, { allOpen: state.admin });
-  const signIn = state.online && !state.account ? html`<p class="note kids-sign-in">${t('kidsSignIn')}</p>` : '';
+  const signIn = state.online && !state.account ? html`<p class="note kids-sign-in">${t('kidsSignIn')} ${t('kidsOwnAccount')}</p>` : '';
   return html`${intro(t('kids'), t('kidsLead'), levelLine(progress.xp))}${signIn}<div class="worlds">${kids.worlds.map((world, i) => worldCard(world, i + 1, progress))}</div>`;
 }
 

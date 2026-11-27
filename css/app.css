@@ -146,7 +146,7 @@ select{width:100%;font:500 14px var(--body);padding:8px 10px;border:1px solid va
 .panel-actions .chipbtn{min-height:40px}
 .navcount{display:inline-block;min-width:18px;height:18px;margin-left:6px;padding:0 5px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:700 11px/18px var(--body);text-align:center;vertical-align:2px}
 .navcount:empty{display:none}
-.pback{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;height:34px;padding:0 12px;font:600 13px var(--body);cursor:pointer;margin-right:46px}
+.pback{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;height:34px;padding:0 12px;font:600 13px var(--body);cursor:pointer;margin-right:auto}
 .pback[hidden]{display:none}
 .panel h5.grp{color:var(--accent)}
 .key-p{border-left:3px solid var(--accent);padding-left:10px}
@@ -189,7 +189,10 @@ select{width:100%;font:500 14px var(--body);padding:8px 10px;border:1px solid va
 .menu-who b,.menu-who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .menu-who span{font-size:13px;color:var(--muted)}
 /* small helpers that replace inline styles */
-.panel-top{display:flex;align-items:center;min-height:34px}
+/* Sticky offsets count from inside the sheet's padding, so top takes the padding back: nothing shows above the row. */
+.panel-top{display:flex;align-items:center;justify-content:flex-end;gap:12px;min-height:34px;position:sticky;top:calc(-24px - env(safe-area-inset-top,0px));z-index:1;margin-top:-10px;padding:10px 0 8px;background:var(--surface)}
+@media (max-width:640px){.panel-top{top:-20px}}
+.panel-top .close{position:static;flex:none}
 .center{justify-content:center}
 .plain{color:inherit;text-decoration:none}
 .goal.sub{display:block;margin:8px 0 6px}
@@ -288,7 +291,7 @@ a.primary{text-decoration:none;display:inline-block}
 .belt-filter{margin:-4px 0 14px}
 .belt-hint{margin:-4px 0 14px;font-size:13.5px}
 /* previous and next inside an open technique */
-.panel-steps{display:flex;align-items:center;gap:6px;margin-left:auto;margin-right:46px}
+.panel-steps{display:flex;align-items:center;gap:6px}
 .step{width:34px;height:34px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:600 20px/1 var(--body);cursor:pointer}
 .step:hover:not(:disabled){border-color:var(--accent)}
 .step:disabled{opacity:.3;cursor:default}

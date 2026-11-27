@@ -93,7 +93,7 @@ function whereToGo(technique) {
   const current = groups.find(({ group }) => group === whereGroup);
   const tabs = groups.map(({ group, list }) => html`<button type="button" role="tab" class="gtab" data-where-group="${group}" aria-selected="${group === whereGroup}">${groupMeta[group].icon} ${t(groupMeta[group].label)} <span class="gn">${list.length}</span></button>`);
   return html`<h5 class="grp">${t('whereTo')}</h5><div class="gpick" role="tablist" aria-label="${t('whereTo')}">${tabs}</div>
-    <p class="note where-hint">${t(groupMeta[whereGroup].hint)}</p><div class="next" role="tabpanel">${current.list.map(([target, kind]) => techniqueChip(target, t(kind)))}</div>`;
+    <p class="note where-hint">${t(groupMeta[whereGroup].hint)}</p><div class="next" role="tabpanel">${current.list.map(([target, kind]) => techniqueChip(target, { tag: t(kind) }))}</div>`;
 }
 
 // Choosing a "where to go" group redraws the open technique on that group.
@@ -118,22 +118,23 @@ function panelContent(id) {
   const steps = (technique.s || []).map((pair) => html`<li>${settings.language === 'pt' ? pair[0] : pair[1]}</li>`);
   const links = whereToGo(technique);
   const nextStage = module.stages[stageIndex + 1];
-  return html`<div class="panel-top"><button type="button" class="pback" id="panelBack" ${state.panel.history.length ? '' : 'hidden'}>← ${t('back')}</button>${stepButtons(id)}</div>
-    <button type="button" class="close" id="panelClose" aria-label="${t('close')}">×</button>
+  // The kids class: no free text, no "Drilling" / "Got it" to mix up with "I did it", no TV.
+  const kidsOnly = settings.audience === 'kids';
+  return html`<div class="panel-top"><button type="button" class="pback" id="panelBack" ${state.panel.history.length ? '' : 'hidden'}>← ${t('back')}</button>${stepButtons(id)}<button type="button" class="close" id="panelClose" aria-label="${t('close')}">×</button></div>
     ${technique.mine ? html`<span class="mine">★ ${t('mine')}</span> ` : ''}${technique.g ? html`<span class="gtag">G</span>` : ''}
     <h3 id="panelTitle">${text(technique.n)}</h3>
     <div class="from">${text(module.title)} · ${t('stage')} ${stageIndex + 1}: ${text(stage.name)}${minBeltOf(id) ? ` · ${t('minBelt')}: ${beltName(minBeltOf(id))}` : ''}</div>
     <div class="actions panel-actions"><button type="button" class="fav-btn" data-favorite="${id}" aria-pressed="${favorite}">${heart(favorite)}${t(favorite ? 'inTree' : 'addToTree')}</button>
     <button type="button" class="chipbtn" data-share="${id}">${t('share')}</button>
-    <button type="button" class="chipbtn" data-tv>📺 ${t('showOnTv')}</button><span class="status" id="shareStatus" role="status"></span></div>
-    <div class="marks" role="group" aria-label="${t('myProgress')}">${['learning', 'done'].map((mark) => html`<button type="button" class="chipbtn" data-progress="${id}:${mark}" aria-pressed="${progressOf(id) === mark}">${progressMarks[mark]} ${t(mark)}</button>`)}</div>
-    ${notesBox(id)}
+    ${kidsOnly ? '' : html`<button type="button" class="chipbtn" data-tv>📺 ${t('showOnTv')}</button>`}<span class="status" id="shareStatus" role="status"></span></div>
+    ${kidsOnly ? '' : html`<div class="marks" role="group" aria-label="${t('myProgress')}">${['learning', 'done'].map((mark) => html`<button type="button" class="chipbtn" data-progress="${id}:${mark}" aria-pressed="${progressOf(id) === mark}">${progressMarks[mark]} ${t(mark)}</button>`)}</div>`}
     ${videoPreview(media.video)}
     ${media.diagram ? html`<div class="diagram" id="panelDiagram"></div>` : ''}
     <h5>${t('whatItIs')}</h5><p>${text(technique.d)}</p>
     ${steps.length ? html`<h5>${t('steps')}</h5><ol class="steplist">${steps}</ol>` : ''}
     ${technique.t ? html`<h5>${t('keyPoint')}</h5><p class="key-p">${text(technique.t)}</p>` : ''}
     <h5>${t('drill')}</h5><p>${drill}</p>
+    ${kidsOnly ? '' : notesBox(id)}
     ${technique.g || technique.bk ? html`<p class="note">${t('bookReference')}</p>` : ''}
     ${links}
     ${nextStage ? nextStageBlock(nextStage) : ''}
@@ -208,7 +209,7 @@ function drawPanel(id, markup, again, focus) {
     typingNote.readOnly = box.readOnly;
     typingNote.placeholder = box.placeholder;
     box.replaceWith(typingNote);
-  } else fillNoteBox(box, id, typingNote || box);
+  } else if (box) fillNoteBox(box, id, typingNote || box);
   panel().hidden = false;
   scrim().hidden = false;
   document.documentElement.classList.add('panel-open');
@@ -256,11 +257,14 @@ export function panelBack() {
 }
 
 // fromHistory: the back button (or another link) already left the technique's step in the history.
+// The keyboard focus goes back to the technique on the page, where there is one.
 export function closePanel({ fromHistory = false } = {}) {
+  const chip = state.panel.current && document.querySelector(`main [data-technique="${CSS.escape(state.panel.current)}"]`);
   panel().hidden = true;
   scrim().hidden = true;
   document.documentElement.classList.remove('panel-open');
   state.panel = { current: null, history: [], list: [] };
+  chip?.focus();
   if (fromHistory) return;
   // A technique opened from a shared link has no step of ours to go back to: going back would leave the site.
   if (history.state?.panel) history.back();

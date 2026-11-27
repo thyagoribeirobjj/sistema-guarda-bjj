@@ -7,6 +7,8 @@ export const whereGroups = ['trans', 'sub', 'pos', 'esc', 'def', 'train'];
 
 const places = new Map();
 
+// index.html preloads content.json and curriculum.json; this fetch takes that download over (a preload is matched by
+// its address and mode, not by `cache`), so each is fetched once, still asked of the server on every visit.
 async function loadJson(path) {
   const response = await fetch(path, { cache: 'no-cache' });
   if (!response.ok) throw new Error(`${path}: ${response.status}`);
@@ -104,7 +106,7 @@ function textOf(technique) {
 
 // Techniques where every word typed is in the name (in either language) or in the rest of the text.
 // Names with every word that start with the first word come first, then other name matches, then the rest.
-// Each result is what findTechnique() returns.
+// Each result is what findTechnique() returns, with byName: whether every word is in its name.
 export function searchTechniques(query) {
   const words = plain(query).split(/\s+/).filter(Boolean);
   if (!words.length) return [];
@@ -117,5 +119,5 @@ export function searchTechniques(query) {
     if (words.every(inName)) rank = names.some((name) => name.startsWith(words[0])) ? 0 : 1;
     found.push({ id, rank });
   }
-  return found.sort((a, b) => a.rank - b.rank).map(({ id }) => findTechnique(id));
+  return found.sort((a, b) => a.rank - b.rank).map(({ id, rank }) => ({ ...findTechnique(id), byName: rank < 2 }));
 }
