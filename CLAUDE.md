@@ -171,7 +171,8 @@ week just appears in the navigation (`firstPage()` in `js/page.js`).
   bar's place tells the person to press "Delete my data" again, and they stay signed in (with the settings already
   gone, nothing is saved that visit and the browser forgets the account, so the next visit starts fresh instead of
   signing out). A request left by an account whose sign-in record is already gone (the answer to that last step was
-  lost) is cleared by the next signed-out visit. Only that account, and only while its settings are
+  lost) is cleared by the next signed-out visit; one whose person signed out on purpose (the menu's "Sign out") is
+  kept for their next sign-in, since the page can't tell a lost answer from a failed last step. Only that account, and only while its settings are
   the ones it asked to delete or gone: an account used again since (settings saved anew) keeps everything, and the
   request is dropped. A press that failed before the settings were deleted goes back to the account and is dropped too.
   Once a device knows the account's documents exist it only updates them, never

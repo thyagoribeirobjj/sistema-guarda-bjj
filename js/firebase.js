@@ -84,6 +84,8 @@ export function signOut() {
   return fb.signOut(auth);
 }
 
+export const signedInId = () => auth?.currentUser?.uid ?? null;
+
 export async function read(path) {
   const snapshot = await fb.getDoc(fb.doc(db, path));
   return snapshot.exists() ? snapshot.data() : null;

@@ -1,5 +1,6 @@
 import { html } from './html.js';
-import { signIn, signOut, loadWeek, saveWeek, loadPastWeeks } from './firebase.js';
+import { signIn, loadWeek, saveWeek, loadPastWeeks } from './firebase.js';
+import { signOutOnPurpose } from './delete-data.js';
 import { settings } from './settings.js';
 import { t } from './strings.js';
 import { translatedFields, translationPlan, answerPlan, handFixedAfter, writtenAfter, translationLabel } from './translation.js';
@@ -268,7 +269,7 @@ main.addEventListener('click', (event) => {
   if (event.target.closest('[data-reuse]')) showPastWeeks();
   if (answer) save(answer.dataset.answer);
   if (event.target.id === 'signIn') signIn().catch(() => alert(t('signInFailed')));
-  if (event.target.id === 'signOut') signOut();
+  if (event.target.id === 'signOut') signOutOnPurpose();
 });
 
 // The admin page always reads site/week fresh, and starts a prepared week whose date has come.

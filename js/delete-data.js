@@ -1,11 +1,12 @@
-import { deleteMyData, settingsSavedAt } from './firebase.js';
+import { deleteMyData, settingsSavedAt, signOut, signedInId } from './firebase.js';
 
 // "Delete my data", remembered in this browser until it is done: { uid, settingsAt, lastStep, signInNext, signedInAgain }.
 // A press cut off half way (the page closed or reloaded, the connection lost) is finished by that account's next visit
 // or sign-in here, and only while its settings are the very ones it asked to delete: settingsAt is when they were last
 // saved, by the database's clock (null when there were none). An account used again since, on purpose, keeps
 // everything; another account signing in here is never touched. lastStep: the sign-in record was being deleted.
-// signInNext: Google wanted a fresh sign-in, so the person was signed out and their next sign-in here finishes it.
+// signInNext: the person was signed out, by Google wanting a fresh sign-in or on purpose, and their next sign-in here
+// finishes it.
 const askedKey = 'sg-deleting';
 
 function kept() {
@@ -46,7 +47,14 @@ export async function deleteAccountData(uid) {
 
 export const deletionAsked = (uid) => Boolean(asked(uid));
 
-// Nobody is signed in here: a request that got as far as the sign-in record, and is not waiting for a sign-in, belongs
+// The person signs out on purpose: a request still waiting here for their account is kept for their next sign-in.
+export function signOutOnPurpose() {
+  const pending = asked(signedInId());
+  if (pending) keep({ ...pending, signInNext: true });
+  return signOut();
+}
+
+// Nobody is signed in here, and nobody signed out on purpose: a request that got as far as the sign-in record belongs
 // to an account that is gone (the answer to its last step was lost), so nothing is left to finish.
 export function signedOutHere() {
   const pending = kept();

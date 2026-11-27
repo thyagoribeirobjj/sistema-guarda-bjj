@@ -32,6 +32,7 @@ const people = {
   fresh: { sub: 'student-jon', email: 'jon@example.com', email_verified: true, name: 'Jon Test' },
   stale: { sub: 'student-kit', email: 'kit@example.com', email_verified: true, name: 'Kit Test' },
   lost: { sub: 'student-lia', email: 'lia@example.com', email_verified: true, name: 'Lia Test' },
+  leaver: { sub: 'student-max', email: 'max@example.com', email_verified: true, name: 'Max Test' },
   coach: { sub: 'coach-caio', email: 'caio@example.com', email_verified: true, name: 'Caio Coach' },
   coach2: { sub: 'coach-duda', email: 'duda@example.com', email_verified: true, name: 'Duda Coach' },
 };
@@ -1106,6 +1107,36 @@ await step('a request left behind by an account whose sign-in record is gone is 
   await until(async () => (await deletingMark(device)) === null, 'the next visit, signed out, drops the request');
   await device.locator('#account').click();
   await device.locator('#accountMenu #signIn').waitFor();
+  await device.context().close();
+});
+
+await step('a "Delete my data" whose last step failed is kept when the person signs out, and their next sign-in finishes it', async () => {
+  const device = await visitor(people.leaver);
+  await device.open('', '#privacy');
+  await device.locator('#account').waitFor();
+  await signInOnSite(device);
+  await until(() => stored(`users/${uid.leaver}`), 'the settings are saved');
+  device.failuresExpected = true;
+  const refuse = (route) => route.abort();
+  await device.context().route(signInDeletes, refuse);
+  await device.locator('[data-delete-data="ask"]').click();
+  await device.locator('[data-delete-data="yes"]').click();
+  await device.locator('#deleteStatus', { hasText: "Couldn't delete everything" }).waitFor();
+  await device.context().unroute(signInDeletes, refuse);
+  assert.ok(await signInRecord('leaver'), 'the sign-in record is still there');
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signOut').click();
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signIn').waitFor();
+  assert.ok(await deletingMark(device), 'signing out keeps the request');
+  await device.reload();
+  await device.locator('#account').waitFor();
+  assert.ok(await deletingMark(device), 'and so does the next visit, signed out');
+  device.refusalsExpected = true; // what the page still asks for as that person once the sign-in record is gone
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signIn').click();
+  await until(async () => (await signInRecord('leaver')) === null, 'the next sign-in deletes the sign-in record');
+  await until(async () => (await deletingMark(device)) === null, 'and nothing is left to finish');
   await device.context().close();
 });
 
