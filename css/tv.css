@@ -23,12 +23,13 @@ html.tv-screen body::before{display:none}
 .tvs-now{display:grid;gap:var(--u);min-width:0}
 .tvs-phase{font:700 calc(5*var(--u))/1 var(--display);text-transform:uppercase;color:var(--phase)}
 .tvs-say{font-size:calc(2.5*var(--u));line-height:1.25;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
-/* A plan's techniques block: every technique below the clock, as large as fits, in pages past that (js/tv-list.js). */
+/* A plan's techniques block: every technique below the clock, as large as fits, in pages past that (js/tv-list.js).
+   Never below 3% of the screen's shorter side (its height, lying down), whatever its shape: 1.7 u on 16:9. */
 .tvs-game.with-list .tvs-mid{grid-template-rows:auto minmax(0,1fr);align-items:start;row-gap:calc(1.2*var(--u));padding-top:calc(1.2*var(--u))}
 .tvs-game.with-list .tvs-clock{font-size:calc(10*var(--u))}
 .tvs-game.with-list .tvs-now{align-self:center}
-.tvs-list{grid-column:1/-1;min-height:0;height:100%;overflow:hidden;columns:var(--columns,1);column-gap:calc(2*var(--u));column-fill:balance;margin:0;padding:0;list-style:none;font-size:calc(var(--size,2.6)*var(--u));line-height:1.15;overflow-wrap:anywhere}
-.tvs-list li{break-inside:avoid;margin-bottom:calc(.35*var(--size,2.6)*var(--u));padding-left:calc(.7*var(--u));border-left:calc(.35*var(--u)) solid var(--phase)}
+.tvs-list{grid-column:1/-1;min-height:0;height:100%;overflow:hidden;columns:var(--columns,1);column-gap:calc(2*var(--u));column-fill:balance;margin:0;padding:0;list-style:none;font-size:max(calc(var(--size,2.6)*var(--u)),3cqmin);line-height:1.15;overflow-wrap:anywhere}
+.tvs-list li{break-inside:avoid;margin-bottom:.35em;padding-left:calc(.7*var(--u));border-left:calc(.35*var(--u)) solid var(--phase)}
 .tvs-list b{font-weight:700}
 .tvs-list[data-tips="false"] .tvs-tip{display:none}
 .tvs-tip{color:var(--muted)}
