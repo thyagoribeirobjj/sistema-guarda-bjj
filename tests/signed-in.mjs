@@ -28,6 +28,11 @@ const people = {
   quitter: { sub: 'student-fay', email: 'fay@example.com', email_verified: true, name: 'Fay Test' },
   returner: { sub: 'student-gil', email: 'gil@example.com', email_verified: true, name: 'Gil Test' },
   adult: { sub: 'student-hal', email: 'hal@example.com', email_verified: true, name: 'Hal Test' },
+  stuck: { sub: 'student-ivy', email: 'ivy@example.com', email_verified: true, name: 'Ivy Test' },
+  fresh: { sub: 'student-jon', email: 'jon@example.com', email_verified: true, name: 'Jon Test' },
+  stale: { sub: 'student-kit', email: 'kit@example.com', email_verified: true, name: 'Kit Test' },
+  lost: { sub: 'student-lia', email: 'lia@example.com', email_verified: true, name: 'Lia Test' },
+  leaver: { sub: 'student-max', email: 'max@example.com', email_verified: true, name: 'Max Test' },
   coach: { sub: 'coach-caio', email: 'caio@example.com', email_verified: true, name: 'Caio Coach' },
   coach2: { sub: 'coach-duda', email: 'duda@example.com', email_verified: true, name: 'Duda Coach' },
 };
@@ -1018,6 +1023,120 @@ await step('a cut-off "Delete my data" is never finished for an account used aga
   assert.ok(await stored(`approvals/${uid.returner}`), 'the coach\'s answers are kept');
   assert.ok(await signInRecord('returner'), 'the sign-in record is kept');
   assert.equal(await device.evaluate(() => localStorage.getItem('sg-deleting')), null, 'and this browser no longer asks for it');
+  await device.context().close();
+});
+
+const signInDeletes = /identitytoolkit\.googleapis\.com\/v1\/accounts:delete/;
+// The auth emulator never asks for a fresh sign-in; Google does when the sign-in is old.
+const askForFreshSignIn = (route) => route.fulfill({ status: 400, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
+  body: JSON.stringify({ error: { code: 400, message: 'CREDENTIAL_TOO_OLD_LOGIN_AGAIN', errors: [] } }) });
+const deletionNote = (device) => device.locator('#cookieBar', { hasText: 'could not all be deleted' });
+const signedInAs = (device, name) => device.locator(`#account[aria-label*="${people[name].name}"]`).waitFor();
+const deletingMark = (device) => device.evaluate(() => JSON.parse(localStorage.getItem('sg-deleting')));
+
+await step('a cut-off "Delete my data" that fails every time is dropped: the person is told how to try again and stays signed in', async () => {
+  const device = await deleteCutOff('stuck');
+  const refuseAnswers = (route) => ((route.request().postData() || '').includes(`/approvals/${uid.stuck}`) ? route.abort() : route.continue());
+  await device.context().route(/documents:commit/, refuseAnswers);
+  await device.reload();
+  await deletionNote(device).waitFor();
+  await signedInAs(device, 'stuck');
+  assert.equal(await deletingMark(device), null, 'the request is dropped, so it is never tried in a loop');
+  await device.reload();
+  await until(() => stored(`users/${uid.stuck}`), 'the next visit starts fresh, signed in');
+  await signedInAs(device, 'stuck');
+  assert.equal(await deletionNote(device).count(), 0, 'and says nothing more');
+  await device.context().unroute(/documents:commit/, refuseAnswers);
+  await device.locator('[data-delete-data="ask"]').click();
+  await device.locator('[data-delete-data="yes"]').click();
+  await device.locator('#deleteStatus', { hasText: /deleted/ }).waitFor();
+  assert.equal(await stored(`approvals/${uid.stuck}`), null, 'pressing "Delete my data" again finishes it');
+  assert.equal(await signInRecord('stuck'), null);
+  await device.context().close();
+});
+
+await step('a cut-off "Delete my data" Google wants a fresh sign-in for: it signs out, and the next sign-in finishes it', async () => {
+  const device = await deleteCutOff('fresh');
+  device.refusalsExpected = true;
+  await device.context().route(signInDeletes, askForFreshSignIn);
+  await device.reload();
+  await until(async () => (await deletingMark(device))?.signInNext, 'it waits for a fresh sign-in');
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signIn').waitFor();
+  await device.context().unroute(signInDeletes, askForFreshSignIn);
+  await device.locator('#accountMenu #signIn').click();
+  await until(async () => (await signInRecord('fresh')) === null, 'that sign-in deletes the sign-in record');
+  await until(async () => (await deletingMark(device)) === null, 'and nothing is left to finish');
+  assert.equal(await stored(`approvals/${uid.fresh}`), null);
+  await device.context().close();
+});
+
+await step('a cut-off "Delete my data" still refused after that fresh sign-in is dropped, and the person stays signed in', async () => {
+  const device = await deleteCutOff('stale');
+  device.refusalsExpected = true;
+  await device.context().route(signInDeletes, askForFreshSignIn);
+  await device.reload();
+  await until(async () => (await deletingMark(device))?.signInNext, 'it waits for a fresh sign-in');
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signIn').click();
+  await deletionNote(device).waitFor();
+  await signedInAs(device, 'stale');
+  assert.equal(await deletingMark(device), null, 'the request is dropped');
+  assert.ok(await signInRecord('stale'), 'the sign-in record is still there, for the person to press again');
+  await device.locator('#closeDeletionNote').click();
+  await deletionNote(device).waitFor({ state: 'detached' });
+  await device.context().close();
+});
+
+await step('a request left behind by an account whose sign-in record is gone is cleared', async () => {
+  const device = await visitor(people.lost);
+  // The sign-in record is deleted, but the answer never reaches the page.
+  await device.context().route(signInDeletes, async (route) => { await route.fetch(); await route.abort(); });
+  await device.open('', '#privacy');
+  await device.locator('#account').waitFor();
+  await signInOnSite(device);
+  await until(() => stored(`users/${uid.lost}`), 'the settings are saved');
+  device.failuresExpected = true;
+  device.refusalsExpected = true;
+  await device.locator('[data-delete-data="ask"]').click();
+  await device.locator('[data-delete-data="yes"]').click();
+  await device.locator('#deleteStatus', { hasText: "Couldn't delete everything" }).waitFor();
+  assert.equal(await signInRecord('lost'), null, 'the sign-in record is gone');
+  assert.ok(await deletingMark(device), 'the page could not tell');
+  await device.reload();
+  await until(async () => (await deletingMark(device)) === null, 'the next visit, signed out, drops the request');
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signIn').waitFor();
+  await device.context().close();
+});
+
+await step('a "Delete my data" whose last step failed is kept when the person signs out, and their next sign-in finishes it', async () => {
+  const device = await visitor(people.leaver);
+  await device.open('', '#privacy');
+  await device.locator('#account').waitFor();
+  await signInOnSite(device);
+  await until(() => stored(`users/${uid.leaver}`), 'the settings are saved');
+  device.failuresExpected = true;
+  const refuse = (route) => route.abort();
+  await device.context().route(signInDeletes, refuse);
+  await device.locator('[data-delete-data="ask"]').click();
+  await device.locator('[data-delete-data="yes"]').click();
+  await device.locator('#deleteStatus', { hasText: "Couldn't delete everything" }).waitFor();
+  await device.context().unroute(signInDeletes, refuse);
+  assert.ok(await signInRecord('leaver'), 'the sign-in record is still there');
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signOut').click();
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signIn').waitFor();
+  assert.ok(await deletingMark(device), 'signing out keeps the request');
+  await device.reload();
+  await device.locator('#account').waitFor();
+  assert.ok(await deletingMark(device), 'and so does the next visit, signed out');
+  device.refusalsExpected = true; // what the page still asks for as that person once the sign-in record is gone
+  await device.locator('#account').click();
+  await device.locator('#accountMenu #signIn').click();
+  await until(async () => (await signInRecord('leaver')) === null, 'the next sign-in deletes the sign-in record');
+  await until(async () => (await deletingMark(device)) === null, 'and nothing is left to finish');
   await device.context().close();
 });
 

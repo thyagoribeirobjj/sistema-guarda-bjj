@@ -1,7 +1,7 @@
 import { loadUserSettings, saveUserSettings, signOut } from './firebase.js';
 import { belts, kidsBelts } from './content.js';
 import { useNotesAccount, leaveNotesAccount, forgetNotes } from './notes.js';
-import { deletionAsked, finishDeletion } from './delete-data.js';
+import { deletionAsked, finishDeletion, signedOutHere } from './delete-data.js';
 
 // Each visitor's language, theme, class (audience), belt, favorites, progress, kids' challenges and lesson plan. Kept in this browser, and in the
 // database (users/{uid}) once they sign in, so they follow them to other devices.
@@ -134,6 +134,17 @@ async function accountDeleted() {
   await signOut().catch((error) => console.error(error));
 }
 
+// A cut-off "Delete my data" that can't finish by itself, after the settings were deleted: the person stays signed in
+// (js/delete-data.js tells them to press again) and nothing is saved this visit. This browser forgets the account and
+// its marks, so the next visit is a fresh start, never a sign-out.
+function deletionStopped() {
+  forgetPersonalMarks();
+  forgetAccount();
+  store();
+  forgetNotes();
+  return true;
+}
+
 document.addEventListener('account-deleted', () => { if (accountId) accountDeleted(); });
 
 // Signed out, "delete my data" clears what this browser keeps.
@@ -163,6 +174,7 @@ export async function useAccount(user) {
   const settingsReady = new Promise((resolve) => { settingsSaved = resolve; });
   useNotesAccount(user, previous, settingsReady);
   if (!user) {
+    signedOutHere();
     // Signed out: the tree and progress stay in the account, not on a device someone else may use next.
     if (previous) {
       forgetPersonalMarks();
@@ -185,14 +197,12 @@ export async function useAccount(user) {
   } finally {
     loading = false;
   }
-  // "Delete my data" was pressed here for this account and cut off: it is finished now, and signs out. If it can't
-  // finish, nothing is written to the account and the next visit or sign-in tries again.
+  // "Delete my data" was pressed here for this account and cut off: it is finished now, and signs out.
   if (deletionAsked(user.uid)) {
-    const finished = await finishDeletion(user.uid, fromDatabase).catch((error) => {
-      console.warn('"Delete my data" could not finish yet:', error.code || error.message);
-      return true;
-    });
-    if (finished) return accountDeleted();
+    const finishing = await finishDeletion(user.uid, fromDatabase);
+    if (finishing.error) console.warn('"Delete my data" could not finish:', finishing.error.code || finishing.error.message);
+    if (finishing.outcome === 'finished' || finishing.outcome === 'sign-in') return accountDeleted();
+    if (finishing.outcome === 'stopped' && finishing.settingsGone) return deletionStopped();
   }
   // This browser saw the account's settings before: gone now means the person used "Delete my data" on another device.
   // (A first sign-in whose first save never arrived is only "not saved yet": what is here is kept and saved now.)

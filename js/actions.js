@@ -1,5 +1,6 @@
 import { findTechnique, belts, kidsBelts } from './content.js';
-import { signIn, signOut, loadPastWeeks, saveVideo, removeDiagram } from './firebase.js';
+import { signIn, loadPastWeeks } from './firebase.js';
+import { saveVideo, removeDiagram } from './firebase-media.js';
 import { settings, changeSettings, toggleFavorite, markProgress } from './settings.js';
 import { state } from './state.js';
 import { t, text } from './strings.js';
@@ -10,6 +11,7 @@ import { youtubeId, videoPlayer } from './media.js';
 import { planText, remember as rememberLesson } from './lesson.js';
 import { designerActions } from './designer.js';
 import { privacyActions } from './privacy.js';
+import { closeDeletionNote, signOutOnPurpose } from './delete-data.js';
 import { chooseCookies, reopenCookieChoice, followAudience } from './analytics.js';
 import { kidsActions, followKids } from './kids.js';
 import { openTvSheet, castToTv, copyTvAddress, sendTvLink, toggleBigScreen } from './tv.js';
@@ -163,8 +165,9 @@ export const clickActions = [
   ['[aria-haspopup="menu"]', (el) => (el.getAttribute('aria-expanded') === 'true' ? closeMenus() : openMenu(el))],
   ['#signIn', () => { closeMenus(); signIn().catch(() => alert(t('signInFailed'))); }],
   // A note typed just now is saved to the account before signing out clears it from this device.
-  ['#signOut', async () => { closeMenus(true); await sendWaiting(); signOut(); }],
+  ['#signOut', async () => { closeMenus(true); await sendWaiting(); signOutOnPurpose(); }],
   ...privacyActions(() => render()),
+  ['#closeDeletionNote', () => { closeDeletionNote(); renderCookieBar(); }],
   ['[data-cookies]', (el) => { chooseCookies(el.dataset.cookies); renderCookieBar(); }],
   ['#cookieChoice', () => {
     closeMenus();

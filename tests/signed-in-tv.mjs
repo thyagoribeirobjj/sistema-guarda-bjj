@@ -241,6 +241,30 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     await other.context().close();
   });
 
+  await step('a phone whose clock is wrong takes in another coach\'s press at the time the TV shows', async () => {
+    const other = await visitor(people.coach2, { device: phone });
+    // This phone's clock is 100 s ahead of the database's (not a whole number of the game's parts).
+    await other.context().addInitScript(() => {
+      const real = Date.now;
+      Date.now = () => real() + 100000;
+    });
+    await other.open('admin.html', '#tv');
+    await other.locator('#signIn').click();
+    await pair(other, tv.code, 'Front mat');
+    await other.locator('#remoteToggle', { hasText: 'Resume' }).waitFor({ timeout: soon });
+    await press(coach, 'toggle');
+    await other.locator('#remoteToggle', { hasText: 'Pause' }).waitFor({ timeout: soon });
+    const apart = async () => Math.abs(seconds(await other.locator('#remoteTime').textContent()) - seconds(await tvClock(tv)));
+    const before = await tvClock(tv);
+    await until(async () => (await tvClock(tv)) !== before, 'the TV runs', soon);
+    const round = (text) => /Round (\d+)/.exec(text)?.[1];
+    assert.ok(await apart() <= 1, `the phone shows the TV's time (${await other.locator('#remoteTime').textContent()} against ${await tvClock(tv)})`);
+    assert.equal(round(await other.locator('#remotePhase').textContent()), round(await tv.locator('.tvs-round').textContent()), 'and its round');
+    await press(coach, 'toggle');
+    await other.locator('#remoteToggle', { hasText: 'Resume' }).waitFor({ timeout: soon });
+    await other.context().close();
+  });
+
   await step('a student cannot control a TV: no remote, and the database refuses', async () => {
     const student = await openRemote(people.other);
     await student.locator('main', { hasText: 'can only view the site' }).waitFor();
@@ -463,6 +487,38 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     assert.ok(first.pages > 1, `in pages (${first.pages})`);
     assert.equal(first.mark, `1 / ${first.pages}`);
     assert.ok(first.fits && first.size >= 0.03 * 720 - 0.5, `nothing cut, and large enough (${first.size} px)`);
+    // A TV whose fonts arrive after it drew the block fits it again for them. The body's font is swapped for a much
+    // wider one (a real one from Google Fonts), so the fit surely changes when it arrives.
+    const late = await visitor({ email: 'a TV whose fonts arrive late' }, { device: television });
+    let releaseFonts;
+    const fontsHeld = new Promise((resolve) => { releaseFonts = resolve; });
+    await late.context().route(/fonts\.googleapis\.com\/css2/, async (route) => {
+      const wide = await route.fetch({ url: 'https://fonts.googleapis.com/css2?family=Rubik+Mono+One&display=swap' });
+      await route.fulfill({ response: wide, body: (await wide.text()).replaceAll('Rubik Mono One', 'Inter') });
+    });
+    await late.context().route(/fonts\.gstatic\.com/, async (route) => { await fontsHeld; await route.continue(); });
+    await late.context().addInitScript((code) => localStorage.setItem('sg-tv-code', code), tv.code);
+    await late.goto(`${address}/?tv&emulators=${encodeURIComponent(JSON.stringify({ sub: 'tv' }))}#screen`, { waitUntil: 'domcontentloaded' });
+    await late.locator('#tvsList li').first().waitFor();
+    const fitNow = () => late.evaluate(() => {
+      const list = document.getElementById('tvsList');
+      return { columns: list.style.getPropertyValue('--columns'), size: list.style.getPropertyValue('--size'), pages: [...list.children].map((item) => item.dataset.page ?? '').join(',') };
+    });
+    const fitFresh = () => late.evaluate(async () => {
+      (await import('/js/tv-screen-view.js')).fitList();
+      const list = document.getElementById('tvsList');
+      return { columns: list.style.getPropertyValue('--columns'), size: list.style.getPropertyValue('--size'), pages: [...list.children].map((item) => item.dataset.page ?? '').join(',') };
+    });
+    const withoutFonts = await fitNow();
+    releaseFonts();
+    await late.waitForFunction(() => [...document.fonts].some((font) => font.status === 'loaded') && document.fonts.status === 'loaded');
+    await until(async () => JSON.stringify(await fitNow()) !== JSON.stringify(withoutFonts), 'the block is fitted again once the fonts arrive', soon);
+    const settled = await fitNow();
+    assert.deepEqual(settled, await fitFresh(), 'as a fresh drawing would');
+    await late.context().close();
+    // The phone can't know the TV's pages (the TV never writes): it says how many techniques and when a page turns.
+    const paging = await coach.locator('#remotePaging').textContent();
+    assert.match(paging, new RegExp(`^${every.length} techniques\\. If they don't all fit on the TV, it shows them in pages\\. Next page turn in [1-8] s\\.$`), paging);
     await press(coach, 'toggle');
     await until(async () => (await layout()).mark === `2 / ${first.pages}`, 'the next page, by itself', 8000 + soon);
     const pageNow = async () => {

@@ -1,11 +1,12 @@
 import { html } from './html.js';
-import { content, findTechnique } from './content.js';
-import { signIn, signOut, loadWeek, saveWeek, loadPastWeeks } from './firebase.js';
+import { signIn, loadWeek, saveWeek, loadPastWeeks } from './firebase.js';
+import { signOutOnPurpose } from './delete-data.js';
 import { settings } from './settings.js';
-import { t, text } from './strings.js';
+import { t } from './strings.js';
 import { translatedFields, translationPlan, answerPlan, handFixedAfter, writtenAfter, translationLabel } from './translation.js';
 import { localDate, firstStart, dateProblem, classOf } from './week.js';
 import { page, accountLine, field } from './admin-page.js';
+import { fieldLabel, question, techniquePicker, startFromPast, nextWeekStatus } from './admin-week-view.js';
 import { startPreparedWeek, fillTranslations, archiveIfNew } from './admin-saving.js';
 
 // The admin page's class of the week: this week's and next week's forms, their translations and saving them
@@ -25,8 +26,6 @@ let saving = false;
 let confirmingCancel = false;
 let pastWeeks = null; // read when the admin asks to start from one
 const otherLanguage = () => (writingIn === 'pt' ? 'en' : 'pt');
-const fieldLabel = (name) => t(name === 'title' ? 'weekTitle' : 'note');
-const dayName = (date) => new Date(`${date}T12:00`).toLocaleDateString(settings.language === 'pt' ? 'pt-BR' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
 // The field in the language the admin writes in, with its translation underneath.
 function writingField(name, kind = 'text') {
@@ -47,59 +46,21 @@ function translationLine(name, kind) {
   return html`<p class="translation">${shown} <button type="button" class="linkbtn" data-edit="${name}">${t('editTranslation')}</button></p>`;
 }
 
-function question() {
-  if (!asking) return '';
-  const names = asking.map(fieldLabel).join(', ');
-  return html`<div class="confirm" role="alert"><span><b>${names}:</b> ${t(asking.length > 1 ? 'handFixedChangedBoth' : 'handFixedChanged')}</span>
-    <button type="button" class="primary" data-answer="translate">${t('translateAgain')}</button>
-    <button type="button" class="chipbtn" data-answer="keep">${t('keepMyTranslation')}</button></div>`;
-}
-
-// Each technique once, in the tab where it is written (shared techniques also show up in other tabs).
-function techniquePicker() {
-  const chosen = week.techniques || [];
-  return content.order.map((key) => {
-    const module = content.modules[key];
-    return html`<div class="grp">${text(module.title)}</div>${module.stages.map((stage) => {
-      const own = stage.items.filter((item) => findTechnique(item.id).moduleKey === key);
-      return own.map((item) => html`<label><input type="checkbox" value="${item.id}" ${chosen.includes(item.id) ? 'checked' : ''}><i class="dot b"></i>${text(item.n)} · ${text(stage.name)}</label>`);
-    })}`;
-  });
-}
-
-// "Start from a past week": a button, then (once past weeks are read) a list to pick one from.
-function startFromPast() {
-  if (!pastWeeks) return html`<div class="field"><button type="button" class="chipbtn" data-reuse>${t('startFromPast')}</button></div>`;
-  if (!pastWeeks.length) return html`<p class="note">${t('noPastWeeks')}</p>`;
-  const options = pastWeeks.map((past, i) => html`<option value="${i}">${past.weekOf} · ${text(past.title)}</option>`);
-  return html`<div class="field"><label for="reuseWeek">${t('startFromPast')}</label><select id="reuseWeek"><option value="">${t('pickPastWeek')}</option>${options}</select></div>`;
-}
-
-// Next week: whether one is prepared, and a way to cancel it.
-function nextWeekStatus() {
-  if (showing !== 'next') return '';
-  const prepared = saved;
-  if (!prepared) return html`<p class="sect-sub">${t('nextWeekLead')} ${t('nextNotReady')}</p>`;
-  const cancel = confirmingCancel
-    ? html`<div class="confirm" role="alert"><span>${t('cancelNextQuestion')}</span><button type="button" class="primary" data-cancel-next="yes">${t('yesCancelNext')}</button><button type="button" class="chipbtn" data-cancel-next="no">${t('keepIt')}</button></div>`
-    : html`<button type="button" class="chipbtn" data-cancel-next="ask">${t('cancelNext')}</button>`;
-  return html`<p class="sect-sub">${t('nextWeekLead')}</p><div class="next-ready"><span>${t('nextReady')} <b>${dayName(prepared.weekOf)}</b>.</span> ${cancel}</div>`;
-}
 
 function showForm(email, status = '') {
   const languageButtons = ['pt', 'en'].map((language) => html`<button type="button" class="chipbtn" data-writing="${language}" aria-pressed="${writingIn === language}">${language.toUpperCase()}</button>`);
   const formButtons = ['week', 'next'].map((which) => html`<button type="button" class="chipbtn" data-form="${which}" aria-pressed="${showing === which}">${t(which === 'week' ? 'thisWeekForm' : 'nextWeekForm')}</button>`);
   page(html`<p class="sect-sub">${t('adminLead')}</p>${accountLine(email)}
     <p class="actions"><a class="chipbtn plain" href="#tv">📺 ${t('runOnTv')}</a></p>
-    <div class="filters admin-forms" role="group">${formButtons}</div>${nextWeekStatus()}
+    <div class="filters admin-forms" role="group">${formButtons}</div>${nextWeekStatus(showing === 'next', saved, confirmingCancel)}
     <form class="form card" id="weekForm">
       <div class="field"><span class="lbl">${t('writingIn')}</span><div class="filters" role="group">${languageButtons}</div></div>
-      ${startFromPast()}
+      ${startFromPast(pastWeeks)}
       ${field('weekOf', t(showing === 'next' ? 'startsOn' : 'weekOf'), week.weekOf || '', 'date')}
       ${writingField('title')}
       ${writingField('note', 'textarea')}
-      <div class="field"><span class="lbl">${t('pickTechniques')}</span><div class="picks" id="picks">${techniquePicker()}</div></div>
-      ${question()}
+      <div class="field"><span class="lbl">${t('pickTechniques')}</span><div class="picks" id="picks">${techniquePicker(week.techniques || [])}</div></div>
+      ${question(asking)}
       <div class="actions"><button type="submit" class="primary">${t('save')}</button><span class="status" id="status" role="status">${status}</span></div>
     </form>`);
 }
@@ -308,7 +269,7 @@ main.addEventListener('click', (event) => {
   if (event.target.closest('[data-reuse]')) showPastWeeks();
   if (answer) save(answer.dataset.answer);
   if (event.target.id === 'signIn') signIn().catch(() => alert(t('signInFailed')));
-  if (event.target.id === 'signOut') signOut();
+  if (event.target.id === 'signOut') signOutOnPurpose();
 });
 
 // The admin page always reads site/week fresh, and starts a prepared week whose date has come.

@@ -2,7 +2,7 @@ import { html } from './html.js';
 import { state } from './state.js';
 import { t } from './strings.js';
 import { intro } from './views.js';
-import { deleteAccountData, deletionDone } from './delete-data.js';
+import { deleteAccountData, deletionDone, closeDeletionNote } from './delete-data.js';
 import { leaveAccount, clearThisBrowser, useAccount } from './settings.js';
 import { forgetCookieChoice } from './analytics.js';
 
@@ -29,6 +29,7 @@ export function privacyView() {
 // Either way the cookie choice is forgotten (the bar asks again), so a "Reject" never quietly turns into a yes.
 async function deleteEverything(render) {
   forgetCookieChoice();
+  closeDeletionNote();
   if (!state.account) {
     clearThisBrowser();
     state.deleting = 'cleared';

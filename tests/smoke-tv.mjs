@@ -5,6 +5,8 @@ import assert from 'node:assert/strict';
 
 const television = { viewport: { width: 1920, height: 1080 } };
 const screens = [{ width: 1280, height: 720 }, { width: 1920, height: 1080 }];
+// The techniques block on screens of other shapes too: 4:3, 16:10 and a window standing up.
+const listScreens = [{ width: 1024, height: 768 }, { width: 1280, height: 800 }, ...screens, { width: 800, height: 1280 }];
 
 // Inside a TV screen page: draws, in place of the TV's own screen, the game screen for each show and each of its
 // steps (js/tv-screen-view.js, the TV's own CSS), with the sound button and with the "sound is blocked" note, and
@@ -177,8 +179,8 @@ export async function tvSteps({ open, step, routeAnalytics, measurementId }) {
     }
   });
 
-  await step('on the TV, a lesson plan\'s techniques block shows every technique, as large as fits and never below a size read across the room, in pages past that, at both sizes', async () => {
-    for (const size of screens) {
+  await step('on the TV, a lesson plan\'s techniques block shows every technique, as large as fits and never below a size read across the room, in pages past that, on every shape of screen', async () => {
+    for (const size of listScreens) {
       for (const [locale, language] of [['en-US', 'en'], ['pt-BR', 'pt']]) {
         const tv = await open('/?tv#screen', locale, { viewport: size });
         await tv.locator('.tvs-code').waitFor();
@@ -204,7 +206,10 @@ export async function tvSteps({ open, step, routeAnalytics, measurementId }) {
         assert.equal(shown(5).pages, 1, 'a few techniques on one page');
         // 1.7 u is 3% of a 16:9 screen's height: about 22 px on a 720p TV, 33 px on a 1080p one.
         for (const fit of fits) assert.ok(fit.size >= 1.7 * fit.unit - 0.01, `${fit.count} techniques in type of at least 3% of the screen's height (${(fit.size / fit.unit).toFixed(2)} u)`);
-        for (const fit of fits) assert.ok(fit.size >= 0.03 * size.height - 0.5, `${fit.count} techniques: ${fit.size.toFixed(1)} px on a ${size.height} px screen`);
+        // On any shape: 3% of the screen's shorter side (its height, lying down), as a screen of the same size read from
+        // the same place needs whichever way it stands.
+        const shorter = Math.min(size.width, size.height);
+        for (const fit of fits) assert.ok(fit.size >= 0.03 * shorter - 0.5, `${fit.count} techniques: ${fit.size.toFixed(1)} px on a screen ${shorter} px across`);
         assert.equal(shown(200).listed, items.limit, 'past what a lesson can name, the list stops there');
         assert.equal(shown(200).more, `+${200 - items.limit} ${language === 'pt' ? 'mais' : 'more'}`, 'and says how many more');
         await tv.context().close();

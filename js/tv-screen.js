@@ -144,7 +144,8 @@ async function allowSound() {
   drawWhole();
 }
 
-// A window made larger or smaller, or full screen: the screen fits itself again, without waiting for the next step.
+// A window made larger or smaller, full screen, or the fonts loaded: the screen fits itself again, without waiting
+// for the next step.
 let refitting = 0;
 function refit() {
   cancelAnimationFrame(refitting);
@@ -178,6 +179,8 @@ export async function startTvScreen() {
   document.addEventListener('visibilitychange', keepAwake);
   window.addEventListener('resize', refit);
   document.addEventListener('fullscreenchange', refit);
+  // The site's own fonts arriving after the first drawing take a different room than the ones drawn meanwhile.
+  document.fonts?.addEventListener('loadingdone', refit);
   setInterval(tick, 200);
   screen.querySelector('[data-tv-sound]')?.focus();
   await loadContent();

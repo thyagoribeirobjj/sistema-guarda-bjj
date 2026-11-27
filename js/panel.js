@@ -6,7 +6,7 @@ import { t, text } from './strings.js';
 import { heart, techniqueChip, progressMarks, beltName, minBeltOf } from './views.js';
 import { noteOf, noteLength, readNotes, notesLoading, notesEpoch } from './notes.js';
 import { videoPreview } from './media.js';
-import { loadDiagram } from './firebase.js';
+import { loadDiagram } from './firebase-media.js';
 import { countTechnique } from './analytics.js';
 
 // The technique, big; below it, the branches to where you can go next.

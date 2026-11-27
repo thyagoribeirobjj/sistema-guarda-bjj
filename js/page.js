@@ -1,4 +1,5 @@
 import { findTechnique, isModule } from './content.js';
+import { html } from './html.js';
 import { settings } from './settings.js';
 import { state, readHash } from './state.js';
 import { t } from './strings.js';
@@ -12,6 +13,7 @@ import { privacyView } from './privacy.js';
 import { cookieBar, countView } from './analytics.js';
 import { kidsView, kidsPage } from './kids.js';
 import { tvScreenAsked } from './tv.js';
+import { deletionStoppedNote } from './delete-data.js';
 
 // The site's page (index.html): which page shows, drawing it (the header, the navigation, the page itself, the cookie
 // bar) and following the link in the address. js/app.js starts it.
@@ -102,10 +104,16 @@ function mainView() {
   return isModule(state.view) ? moduleView(state.view) : pages[state.view]();
 }
 
-// The cookie bar, while there is a choice to make (js/analytics.js).
+// The cookie bar, while there is a choice to make (js/analytics.js). A note that "Delete my data" could not finish
+// takes its place until it is closed.
+function deletionNote() {
+  return html`<p>${t('deleteStopped')} <a href="#privacy">${t('privacy')}</a></p><div class="cookie-actions"><button type="button" class="chipbtn" id="closeDeletionNote">${t('closeNote')}</button></div>`;
+}
+
 export function renderCookieBar() {
-  const bar = String(cookieBar());
-  $('cookieBar').setAttribute('aria-label', t('cookies'));
+  const note = deletionStoppedNote();
+  const bar = String(note ? deletionNote() : cookieBar());
+  $('cookieBar').setAttribute('aria-label', t(note ? 'privacyDeleteTitle' : 'cookies'));
   draw($('cookieBar'), bar);
   $('cookieBar').hidden = !bar;
 }
