@@ -49,10 +49,7 @@ document.addEventListener('change', (event) => {
     changeMedia(minBeltId, 'minBelt', async () => { await saveMinBelt(minBeltId, event.target.value); return event.target.value || null; });
     return;
   }
-  if (designerChange(event.target)) {
-    render();
-    return;
-  }
+  if (designerChange(event.target, render)) return;
   const redraw = changeLesson(event.target);
   if (redraw === true) render();
   else if (redraw === false) redrawPlan();

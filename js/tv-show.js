@@ -1,7 +1,7 @@
 import { content } from './content.js';
-import { text } from './strings.js';
-import { findGame, planBlocks, gameBlock, lessonModule } from './plan.js';
-import { clockGame, hasClock } from './game-clock.js';
+import { t, text } from './strings.js';
+import { findGame, planBlocks, gameBlock, lessonModule, gameId, chosenGame } from './plan.js';
+import { clockGame, hasClock, lessonItems } from './game-clock.js';
 
 // What a TV session names ({ game: <id> } or { lesson: { mod, dur, items, game } }, firestore.rules), built into what
 // the clock runs (js/game-clock.js). The TV and the coach's phone each build it from the site's own files and the
@@ -27,11 +27,25 @@ export function buildShow(named, coachGames = {}) {
   if (!named?.lesson) return null;
   const blocks = planBlocks(named.lesson, coachGames);
   const game = blocks[gameBlock].game;
+  const shown = blocks.map(showBlock);
+  // The game fills its block of the plan; what is left after its last whole round says so.
+  shown[gameBlock].after = t('tvGameBlockLeft');
   return {
     title: content.modules[lessonModule(named.lesson)].title,
-    blocks: blocks.map(showBlock),
+    blocks: shown,
     game: hasClock(game) ? clockGame(game) : null,
     gameAt: gameBlock,
+    gameSeconds: shown[gameBlock].seconds,
+  };
+}
+
+// The lesson builder's choices (settings.lesson) as a TV session names them.
+export function lessonShow(lesson, coachGames = {}) {
+  const chosen = lesson || {};
+  return {
+    mod: lessonModule(chosen), dur: chosen.dur === '90' ? '90' : '60',
+    items: lessonItems(chosen.items),
+    game: gameId(chosen.game) || chosenGame(chosen, coachGames)?.id || '',
   };
 }
 

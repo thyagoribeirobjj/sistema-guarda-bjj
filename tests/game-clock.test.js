@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   gameSteps, showSteps, totalSeconds, gameLength, clockText, startClock, advance, toggle, nextPart, backPart, addTime,
   restart, stepLength, timeLeft, rolesSwitched, gameProblems, clockGame, isOver, caughtUp, freshSlack, carryClock, pageAt, pageSeconds,
+  blockSteps,
 } from '../js/game-clock.js';
 import { newCode, isCode, typedCode, codeLetters } from '../js/tv-code.js';
 
@@ -33,6 +34,28 @@ test('a lesson plan runs its blocks, with the game\'s own parts in place of the 
   assert.deepEqual(showSteps({ title: say('One game'), blocks: [], game, gameAt: 0 }).map((step) => step.kind), gameSteps(game).map((step) => step.kind));
   assert.equal(showSteps({ title: say('No game'), blocks, game: null, gameAt: 1 }).length, 3);
   assert.deepEqual(showSteps(null), []);
+});
+
+test('in a lesson plan the game fills its block: whole rounds again and again, then the block\'s own step for what is left', () => {
+  const after = { label: say('Game'), say: 'Water', block: 1 };
+  const steps = blockSteps(game, 900, after);
+  // 10 s to get ready, then rounds of 90 s with 90 s rests: 5 whole rounds use 820 s, so 80 s are left.
+  assert.deepEqual(steps.map((step) => [step.kind, step.seconds, step.round ?? null]), [
+    ['ready', 10, 1],
+    ...[1, 2, 3, 4].flatMap((round) => [['work', 60, round], ['work', 30, round], ['rest', 90, round]]),
+    ['work', 60, 5], ['work', 30, 5], ['block', 80, null],
+  ]);
+  assert.equal(totalSeconds(steps), 900, 'exactly the block');
+  assert.ok(steps.filter((step) => step.game).every((step) => step.game.rounds === 5), '"round 2 of 5": the rounds the block holds');
+  assert.deepEqual(steps.filter((step) => step.kind === 'work' && step.part === 0).map(rolesSwitched), [false, true, false, true, false], 'the roles switch as the game says');
+  assert.deepEqual(steps.at(-1), { kind: 'block', label: after.label, say: 'Water', list: null, seconds: 80, block: 1 });
+  assert.deepEqual(blockSteps(game, 100, after).map((step) => step.seconds), [10, 60, 30], 'one round that fits exactly: nothing left over');
+  assert.deepEqual(blockSteps(game, 50, after).map((step) => [step.kind, step.seconds]), [['ready', 10], ['work', 40]], 'a round longer than the block is cut where the block ends');
+  const blocks = [{ title: say('Warm-up'), say: '', seconds: 600 }, { title: say('Game'), say: 'Win', after: 'Water', seconds: 900 }, { title: say('Log'), say: '', seconds: 180 }];
+  const plan = showSteps({ title: say('Class'), blocks, game, gameAt: 1, gameSeconds: 900 });
+  assert.equal(totalSeconds(plan), 600 + 900 + 180, 'the TV runs the plan\'s own minutes');
+  assert.deepEqual([plan[0].kind, plan.at(-2).kind, plan.at(-2).say, plan.at(-2).block, plan.at(-1).block], ['block', 'block', 'Water', 1, 2]);
+  assert.equal(totalSeconds(showSteps({ title: say('One game'), blocks: [], game, gameAt: 0 })), gameLength(game), 'a game by itself keeps its own length');
 });
 
 test('the clock counts down through the steps by itself, and stops at the end', () => {
