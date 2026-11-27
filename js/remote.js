@@ -8,7 +8,8 @@ import { gameId, chosenGame, lessonModule } from './plan.js';
 import { isCode, typedCode } from './tv-code.js';
 import { lessonItems, showSteps, startClock, advance, toggle, nextPart, backPart, addTime, restart, clockText } from './game-clock.js';
 import { buildShow, needsCoachGames, newStamp } from './tv-show.js';
-import { remotePage, clockPart, phaseLine, toggleLabel } from './remote-view.js';
+import { remotePage, clockPart, phaseLine, pagingLine, toggleLabel } from './remote-view.js';
+import { elapsedSince, pressAnswered, pressSaved, forgetPresses } from './remote-time.js';
 
 // The coach's phone as the TV's remote (admin page, "Run on the TV", admin.html#tv; the TV's square opens
 // admin.html#tv=<code>). The phone remembers its TVs (sg-tvs, this browser only). Each TV has its own session,
@@ -88,17 +89,18 @@ function tick() {
   const now = position();
   document.getElementById('remoteTime').textContent = clockText(now.left);
   document.getElementById('remotePhase').textContent = phaseLine(steps(), now);
+  document.getElementById('remotePaging').textContent = pagingLine(steps(), now);
   document.getElementById('remoteToggle').textContent = toggleLabel(steps(), now, freshClock());
   if (now.running !== awake) keepAwake(now.running);
 }
 
-// Someone else's change: its clock was set when it was saved, by the database's time. A coach's game on a session
-// changed since the games were read may have been changed too (js/tv-follow.js): they are read again.
-async function adopt(stored) {
+// Someone else's change: its clock was set when it was saved, by the database's time (js/remote-time.js). A coach's
+// game on a session changed since the games were read may have been changed too (js/tv-follow.js): they are read again.
+async function adopt(stored, live = false) {
   // What the phone shows already, or its own earlier change coming back after a later one.
   if (stored?.stamp && (stored.stamp === session?.stamp || (sent.has(stored.stamp) && stored.stamp !== mine))) return;
   session = stored;
-  knownAt = performance.now() - Math.max(0, Date.now() - (stored?.updatedAt ?? Date.now()));
+  knownAt = performance.now() - elapsedSince(stored?.updatedAt, live) * 1000;
   if (needsCoachGames(stored?.show) && stored.updatedAt > coachGames.readAt) await reloadCoachGames();
 }
 
@@ -107,18 +109,25 @@ async function adopt(stored) {
 function follow() {
   unfollow?.();
   sent.clear();
+  forgetPresses();
   const code = current;
   if (!code) return Promise.resolve();
+  let answered = false;
   return new Promise((ready) => {
-    unfollow = followTv(code, (stored) => heard(code, stored).finally(ready), (error) => { console.error(error); ready(); });
+    unfollow = followTv(code, (stored) => {
+      const live = answered;
+      answered = true;
+      return heard(code, stored, live).finally(ready);
+    }, (error) => { console.error(error); ready(); });
   });
 }
 
-async function heard(code, stored) {
+async function heard(code, stored, live) {
   if (code !== current) return;
+  if (sent.has(stored?.stamp)) pressSaved(stored.stamp, stored.updatedAt);
   const before = JSON.stringify(session);
   const games = coachGames.games;
-  await adopt(stored);
+  await adopt(stored, live);
   if (JSON.stringify(session) !== before || games !== coachGames.games) drawClock();
 }
 
@@ -153,6 +162,7 @@ function send(change) {
 async function sendNow(change) {
   const code = current;
   const known = { session, knownAt, mine };
+  let sentAt = 0;
   try {
     await changeTv(code, async (stored) => {
       ({ session, knownAt, mine } = known);
@@ -166,8 +176,10 @@ async function sendNow(change) {
       knownAt = performance.now();
       status = '';
       drawClock();
+      sentAt = Date.now();
       return next;
     });
+    if (code === current) pressAnswered(mine, sentAt, Date.now());
   } catch (error) {
     console.error(error);
     say(t('tvSendFailed'));

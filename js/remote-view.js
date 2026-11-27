@@ -1,7 +1,7 @@
 import { html } from './html.js';
 import { t, text } from './strings.js';
 import { allGames, gameChoice } from './plan.js';
-import { clockText, isOver } from './game-clock.js';
+import { clockText, isOver, stepLength, pageSeconds } from './game-clock.js';
 
 // The markup of the coach's phone remote (admin page, "Run on the TV"; js/remote.js runs it).
 
@@ -34,6 +34,16 @@ export function phaseLine(steps, position) {
   return step.game ? `${name} · ${t('tvRound')} ${step.round} ${t('tvOf')} ${step.game.rounds}` : name;
 }
 
+// A techniques block: how many there are, and when the TV turns its page if it shows them in pages. Only the TV knows
+// whether they fit its screen (it never writes), so the phone never claims a page number.
+export function pagingLine(steps, position) {
+  const step = steps[position.step];
+  if (!step?.list || isOver(steps, position)) return '';
+  const spent = Math.max(0, stepLength(steps, position) - position.left);
+  const turn = Math.max(1, Math.ceil(pageSeconds - (spent % pageSeconds)));
+  return `${step.list.length} ${t('remoteTechniques')}. ${t('remotePaging')} ${turn} s.`;
+}
+
 export function toggleLabel(steps, position, fresh) {
   if (position.running) return t('clockPause');
   if (isOver(steps, position)) return t('clockAgain');
@@ -46,7 +56,8 @@ export function clockPart({ session, steps, position, fresh }) {
   return html`<div class="remote-now"><span id="remoteTime">${clockText(position.left)}</span><span id="remotePhase">${phaseLine(steps, position)}</span></div>
     <button type="button" class="primary remote-go" data-remote="toggle" id="remoteToggle">${toggleLabel(steps, position, fresh)}</button>
     <div class="remote-keys">${key('back', t('clockBack'))}${key('next', t('clockNext'))}${key('more', t('clockMore'))}${key('restart', t('clockRestart'))}
-      ${key('beeps', t('clockBeeps'), html`aria-pressed="${Boolean(session.beeps)}"`)}${key('end', t('clockEnd'))}</div>`;
+      ${key('beeps', t('clockBeeps'), html`aria-pressed="${Boolean(session.beeps)}"`)}${key('end', t('clockEnd'))}</div>
+    <p class="note" id="remotePaging">${pagingLine(steps, position)}</p>`;
 }
 
 export function remotePage(view) {

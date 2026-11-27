@@ -30,6 +30,8 @@ export const tvStrings = {
 
   // the coach's phone
   runOnTv: { pt: 'Rodar na TV', en: 'Run on the TV' },
+  remoteTechniques: { pt: 'técnicas', en: 'techniques' },
+  remotePaging: { pt: 'Se não couberem todas na TV, ela mostra em páginas. A página vira em', en: "If they don't all fit on the TV, it shows them in pages. Next page turn in" },
   remoteLead: { pt: 'No navegador da TV, abra sistemaguarda.com/?tv#screen. Ela mostra um código: digite aqui, ou aponte a câmera deste celular para o quadrado na TV.', en: 'In the TV’s browser, open sistemaguarda.com/?tv#screen. It shows a code: type it here, or point this phone’s camera at the square on the TV.' },
   tvCode: { pt: 'Código na TV', en: 'Code on the TV' },
   tvName: { pt: 'Nome da TV', en: 'The TV’s name' },
