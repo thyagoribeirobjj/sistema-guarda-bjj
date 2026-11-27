@@ -40,7 +40,7 @@ function mediaControls(id, media) {
     <h5>${t('admin')} · ${t('diagram')}</h5>
     <div class="row"><label class="chipbtn">${t(media.diagram ? 'replaceDiagram' : 'addDiagram')}<input type="file" accept="image/*" data-diagram-file="${id}" hidden></label>${
       media.diagram ? html`<button type="button" class="chipbtn" data-remove-diagram="${id}">${t('remove')}</button>` : ''}</div>
-    <p class="status" id="mediaStatus" role="status"></p></section>`;
+    <p class="status" id="mediaStatus" role="status" tabindex="-1"></p></section>`;
 }
 
 // Read once per visit, and only once the database is there: a read that failed, or came too early, is tried again

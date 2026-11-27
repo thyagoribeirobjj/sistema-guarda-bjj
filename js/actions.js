@@ -49,7 +49,8 @@ export async function changeMedia(id, field, save) {
     if (!value) delete state.media[id][field];
     forgetDiagram(id);
     render();
-    redrawPanel();
+    // The sheet stays where the admin was, at the line that says it is saved.
+    redrawPanel('#mediaStatus');
     $('mediaStatus').textContent = t('saved');
   } catch (error) {
     console.error(error);

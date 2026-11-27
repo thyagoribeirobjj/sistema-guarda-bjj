@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 // Portuguese keeps its usual forms ("o professor", "o aluno", "ele"): the coach's call.
 const readText = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const dataFiles = ['data/content.json', 'data/curriculum.json', 'data/kids.json'];
-const stringFiles = ['js/strings.js', 'js/strings-kids.js', 'js/strings-tv.js'];
+const stringFiles = ['js/strings.js', 'js/strings-kids.js', 'js/strings-tv.js', 'js/strings-coach.js'];
 // Texts written in the code itself (the lesson plan's blocks), and the pages' own words and share-preview tags.
 const inlineFiles = ['js/plan.js'];
 const pageFiles = ['index.html', 'admin.html'];

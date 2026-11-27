@@ -6,7 +6,7 @@ import { t } from './strings.js';
 import { translatedFields, translationPlan, answerPlan, handFixedAfter, writtenAfter, translationLabel } from './translation.js';
 import { localDate, firstStart, dateProblem, classOf } from './week.js';
 import { page, accountLine, field } from './admin-page.js';
-import { fieldLabel, question, techniquePicker, startFromPast, nextWeekStatus } from './admin-week-view.js';
+import { fieldLabel, question, techniquePicker, chosenRow, showChosen, unpick, startFromPast, nextWeekStatus, dayName } from './admin-week-view.js';
 import { startPreparedWeek, fillTranslations, archiveIfNew } from './admin-saving.js';
 
 // The admin page's class of the week: this week's and next week's forms, their translations and saving them
@@ -29,7 +29,7 @@ const otherLanguage = () => (writingIn === 'pt' ? 'en' : 'pt');
 
 // The field in the language the admin writes in, with its translation underneath.
 function writingField(name, kind = 'text') {
-  return html`${field(name, `${fieldLabel(name)} (${writingIn.toUpperCase()})`, week[name]?.[writingIn] || '', kind)}${translationLine(name, kind)}`;
+  return html`${field(name, `${fieldLabel(name, showing === 'next')} (${writingIn.toUpperCase()})`, week[name]?.[writingIn] || '', kind)}${translationLine(name, kind)}`;
 }
 
 // The translation as a quiet line with an "Edit translation" button, or, once opened, as its own input.
@@ -46,21 +46,23 @@ function translationLine(name, kind) {
   return html`<p class="translation">${shown} <button type="button" class="linkbtn" data-edit="${name}">${t('editTranslation')}</button></p>`;
 }
 
-
 function showForm(email, status = '') {
   const languageButtons = ['pt', 'en'].map((language) => html`<button type="button" class="chipbtn" data-writing="${language}" aria-pressed="${writingIn === language}">${language.toUpperCase()}</button>`);
   const formButtons = ['week', 'next'].map((which) => html`<button type="button" class="chipbtn" data-form="${which}" aria-pressed="${showing === which}">${t(which === 'week' ? 'thisWeekForm' : 'nextWeekForm')}</button>`);
-  page(html`<p class="sect-sub">${t('adminLead')}</p>${accountLine(email)}
+  const next = showing === 'next';
+  page(html`<p class="sect-sub">${t(next ? 'adminLeadNext' : 'adminLead')}</p>${accountLine(email)}
     <p class="actions"><a class="chipbtn plain" href="#tv">📺 ${t('runOnTv')}</a></p>
-    <div class="filters admin-forms" role="group">${formButtons}</div>${nextWeekStatus(showing === 'next', saved, confirmingCancel)}
+    <div class="filters admin-forms" role="group">${formButtons}</div>${nextWeekStatus(next, saved, confirmingCancel)}
     <form class="form card" id="weekForm">
       <div class="field"><span class="lbl">${t('writingIn')}</span><div class="filters" role="group">${languageButtons}</div></div>
       ${startFromPast(pastWeeks)}
-      ${field('weekOf', t(showing === 'next' ? 'startsOn' : 'weekOf'), week.weekOf || '', 'date')}
+      ${field('weekOf', t(next ? 'startsOn' : 'weekOf'), week.weekOf || '', 'date')}
       ${writingField('title')}
       ${writingField('note', 'textarea')}
-      <div class="field"><span class="lbl">${t('pickTechniques')}</span><div class="picks" id="picks">${techniquePicker(week.techniques || [])}</div></div>
-      ${question(asking)}
+      <div class="field"><span class="lbl" id="picksLabel">${t(next ? 'pickTechniquesNext' : 'pickTechniques')}</span>
+        <div class="chosen" id="chosen" role="group" aria-label="${t('chosenTechniques')}"><span class="lbl">${t('chosenTechniques')}:</span> ${chosenRow(week.techniques || [])}</div>
+        <div class="picks" id="picks" role="group" aria-labelledby="picksLabel">${techniquePicker(week.techniques || [])}</div></div>
+      ${question(asking, next)}
       <div class="actions"><button type="submit" class="primary">${t('save')}</button><span class="status" id="status" role="status">${status}</span></div>
     </form>`);
 }
@@ -130,6 +132,11 @@ async function save(answer) {
     document.getElementById('weekOf').focus();
     return;
   }
+  if (!draft.techniques.length) {
+    document.getElementById('status').textContent = t('noTechniquesPicked');
+    document.querySelector('#picks input').focus();
+    return;
+  }
   const from = writingIn;
   const to = otherLanguage();
   const handFixed = basis.handFixed || [];
@@ -164,7 +171,8 @@ async function save(answer) {
     week = doc;
     basis = doc;
     editing.clear();
-    const messages = [t(translatedOk ? 'saved' : 'translateFailed'), archivedOk ? '' : t('archiveFailed')];
+    const savedLine = showing === 'next' ? t('savedNext').replace('{day}', dayName(doc.weekOf)) : t('saved');
+    const messages = [translatedOk ? savedLine : t('translateFailed'), archivedOk ? '' : t('archiveFailed')];
     showForm(main.dataset.email, messages.filter(Boolean).join(' '));
   } catch (error) {
     console.error(error);
@@ -232,6 +240,7 @@ function redraw(change, status = '') {
 
 main.addEventListener('change', (event) => {
   if (event.target.id === 'reuseWeek' && event.target.value) startFrom(pastWeeks[Number(event.target.value)]);
+  if (event.target.closest('#picks')) showChosen();
 });
 
 main.addEventListener('click', (event) => {
@@ -267,6 +276,8 @@ main.addEventListener('click', (event) => {
     }
   }
   if (event.target.closest('[data-reuse]')) showPastWeeks();
+  const unpicked = event.target.closest('[data-unpick]');
+  if (unpicked) unpick(unpicked.dataset.unpick);
   if (answer) save(answer.dataset.answer);
   if (event.target.id === 'signIn') signIn().catch(() => alert(t('signInFailed')));
   if (event.target.id === 'signOut') signOutOnPurpose();
