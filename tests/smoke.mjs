@@ -65,7 +65,9 @@ async function open(path, locale, device = {}, prepare = async () => {}) {
 // made-up Firebase settings, the Firebase code held back, and a database that holds only what `stored` gives, in the
 // database's own form ({ 'site/media': fields }); anything else is "nothing stored". `kept`: what this browser
 // already keeps ({ localStorage key: value }) when the page opens.
-// release() returns once the page has been drawn again for all three (the header is drawn three more times).
+// release() returns once the page has been drawn again for all three (the header is drawn three more times). The page
+// has 30 s for that from the moment the last Firebase file arrived, and each file a minute of its own on the way: a
+// slow www.gstatic.com is told apart from a page that does not draw.
 // page.reads: the documents the page asked the database for.
 // The Firebase code itself still comes from www.gstatic.com, so these steps need an internet connection.
 const firestoreValue = (value) => (typeof value === 'string' ? { stringValue: value }
@@ -82,6 +84,8 @@ async function openLate(path, locale, device = {}, { stored = {}, kept = {}, con
   const held = new Promise((resolve) => { release = resolve; });
   let noSdk;
   const sdkMissing = new Promise((resolve) => { noSdk = resolve; });
+  let onTheWay = 0; // Firebase files asked for and not answered yet
+  let arrived = () => {};
   const reads = [];
   const analytics = [];
   const page = await open(path, locale, device, async (context) => {
@@ -89,8 +93,11 @@ async function openLate(path, locale, device = {}, { stored = {}, kept = {}, con
     await context.route('**/__/firebase/init.json', (route) => route.fulfill({ json: { apiKey: 'made-up', projectId: 'demo-late', appId: '1:1:web:1', ...config } }));
     await routeAnalytics(context, analytics, config.measurementId);
     await context.route('https://www.gstatic.com/firebasejs/**', async (route) => {
+      onTheWay += 1;
       await held;
-      const response = await route.fetch().catch((error) => error);
+      const response = await route.fetch({ timeout: 60000 }).catch((error) => error);
+      onTheWay -= 1;
+      arrived();
       if (response instanceof Error || !response.ok()) {
         noSdk(response instanceof Error ? response.message.split('\n')[0] : `HTTP ${response.status()}`);
         return route.abort();
@@ -115,11 +122,27 @@ async function openLate(path, locale, device = {}, { stored = {}, kept = {}, con
       window.headerDrawn = 0;
       new MutationObserver((changes) => { window.headerDrawn += changes.length; }).observe(document.getElementById('appTitle'), { childList: true });
     });
+    let timer;
+    const notDrawn = new Promise((_, fail) => {
+      arrived = () => {
+        clearTimeout(timer);
+        if (onTheWay) return;
+        timer = setTimeout(async () => {
+          const times = await page.evaluate(() => window.headerDrawn).catch(() => '?');
+          fail(new Error(`the page was drawn again ${times} time(s), not 3, within 30 s of the Firebase code arriving`));
+        }, 30000);
+      };
+    });
     release();
+    arrived();
     await Promise.race([
-      page.waitForFunction(() => window.headerDrawn >= 3),
+      page.waitForFunction(() => window.headerDrawn >= 3, null, { timeout: 0 }),
+      notDrawn,
       sdkMissing.then((why) => { throw new Error(`no internet connection? The Firebase code could not be loaded from www.gstatic.com (${why}); this step needs it`); }),
-    ]);
+    ]).finally(() => {
+      clearTimeout(timer);
+      arrived = () => {};
+    });
   };
   return page;
 }
