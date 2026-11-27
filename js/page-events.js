@@ -1,4 +1,4 @@
-import { saveDiagram, saveMinBelt } from './firebase.js';
+import { saveDiagram, saveMinBelt } from './firebase-media.js';
 import { state } from './state.js';
 import { t } from './strings.js';
 import { closeMenus, openedMenu, moveInMenu } from './nav.js';

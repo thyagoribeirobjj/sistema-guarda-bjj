@@ -1,5 +1,6 @@
 import { findTechnique, belts, kidsBelts } from './content.js';
-import { signIn, signOut, loadPastWeeks, saveVideo, removeDiagram } from './firebase.js';
+import { signIn, signOut, loadPastWeeks } from './firebase.js';
+import { saveVideo, removeDiagram } from './firebase-media.js';
 import { settings, changeSettings, toggleFavorite, markProgress } from './settings.js';
 import { state } from './state.js';
 import { t, text } from './strings.js';

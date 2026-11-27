@@ -1,4 +1,5 @@
-import { archiveWeek, saveWeek, translate } from './firebase.js';
+import { archiveWeek, saveWeek } from './firebase.js';
+import { translate } from './firebase-media.js';
 import { t } from './strings.js';
 import { translatedFields } from './translation.js';
 import { localDate, switchOver, worthArchiving } from './week.js';

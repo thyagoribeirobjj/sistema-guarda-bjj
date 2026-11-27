@@ -1,7 +1,7 @@
 import { html } from './html.js';
 import { settings } from './settings.js';
 import { t } from './strings.js';
-import { translate } from './firebase.js';
+import { translate } from './firebase-media.js';
 import { saveCoachGame, gamesSavedAt } from './firebase-tv.js';
 import { coachGames, keepCoachGame, newGameId, tellCoachGameSaved } from './coach-games.js';
 import { updateTvsShowing } from './tv-follow.js';

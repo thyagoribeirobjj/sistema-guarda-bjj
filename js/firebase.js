@@ -1,4 +1,5 @@
-// Sign-in and every database call. Nothing else in the site talks to Firebase directly.
+// Sign-in and every database call, with js/firebase-media.js (videos, diagrams, the translator) and js/firebase-tv.js
+// (the games on the TV). Nothing else in the site talks to Firebase directly.
 // Who may read or change what is decided by firestore.rules, not by this file.
 import { pastEntry } from './week.js';
 
@@ -83,12 +84,12 @@ export function signOut() {
   return fb.signOut(auth);
 }
 
-async function read(path) {
+export async function read(path) {
   const snapshot = await fb.getDoc(fb.doc(db, path));
   return snapshot.exists() ? snapshot.data() : null;
 }
 
-function write(path, data) {
+export function write(path, data) {
   return fb.setDoc(fb.doc(db, path), { ...data, updatedAt: fb.serverTimestamp() });
 }
 
@@ -261,60 +262,4 @@ export function saveNote(uid, id, note, { create = true } = {}) {
   const value = note ? note : fb.deleteField();
   if (create) return fb.setDoc(notes, { notes: { [id]: value }, changed: id, updatedAt: fb.serverTimestamp() }, { merge: true });
   return fb.updateDoc(notes, new fb.FieldPath('notes', id), value, 'changed', id, 'updatedAt', fb.serverTimestamp());
-}
-
-// ---- each move's video, diagram and minimum belt ----
-// site/media holds { techniques: { <id>: { video: <YouTube id>, diagram: true, minBelt: 'blue' } } }.
-// minBelt is set only where an admin gave the move a minimum belt; without it the move is for everyone.
-// The diagram image itself sits in diagrams/<id> and is read only when someone opens that move.
-
-export async function loadMedia({ fresh = false } = {}) {
-  return (await site('media', fresh).catch(() => null))?.techniques || {};
-}
-
-async function saveMediaField(id, field, value) {
-  const change = { [field]: value === null ? fb.deleteField() : value };
-  await fb.setDoc(fb.doc(db, 'site/media'),
-    { techniques: { [id]: change }, updatedBy: auth.currentUser.email, updatedAt: fb.serverTimestamp() },
-    { merge: true });
-  forget('media');
-}
-
-export function saveVideo(id, videoId) {
-  return saveMediaField(id, 'video', videoId);
-}
-
-// '' clears the minimum belt: the technique is for everyone.
-export function saveMinBelt(id, belt) {
-  return saveMediaField(id, 'minBelt', belt || null);
-}
-
-export async function loadDiagram(id) {
-  return (await read(`diagrams/${id}`))?.image || null;
-}
-
-export async function saveDiagram(id, image) {
-  await write(`diagrams/${id}`, { image, updatedBy: auth.currentUser.email });
-  await saveMediaField(id, 'diagram', true);
-}
-
-export async function removeDiagram(id) {
-  await fb.deleteDoc(fb.doc(db, `diagrams/${id}`));
-  await saveMediaField(id, 'diagram', null);
-}
-
-// ---- translation ----
-// A small Google Apps Script (docs/translator.gs) translates for admins only. Its address is in site/config.
-
-export async function translate(texts, from, to) {
-  const config = await read('site/config');
-  if (!config?.translatorUrl) throw new Error('No translator configured (site/config.translatorUrl).');
-  const user = auth.currentUser;
-  const response = await fetch(config.translatorUrl, {
-    method: 'POST',
-    body: JSON.stringify({ idToken: await user.getIdToken(), email: user.email, texts, from, to }),
-  });
-  const result = await response.json();
-  if (!result.texts) throw new Error(result.error || 'Translation failed.');
-  return result.texts;
 }

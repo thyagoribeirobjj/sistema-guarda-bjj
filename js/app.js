@@ -1,5 +1,6 @@
 import { loadContent } from './content.js';
-import { startFirebase, onAccountChange, isAdmin, loadWeek, loadMedia, lastSeen } from './firebase.js';
+import { startFirebase, onAccountChange, isAdmin, loadWeek, lastSeen } from './firebase.js';
+import { loadMedia } from './firebase-media.js';
 import { applyTheme, useAccount } from './settings.js';
 import { state } from './state.js';
 import { t } from './strings.js';

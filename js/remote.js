@@ -10,13 +10,13 @@ import { lessonItems, showSteps, startClock, advance, toggle, nextPart, backPart
 import { buildShow, needsCoachGames, newStamp } from './tv-show.js';
 import { remotePage, clockPart, phaseLine, pagingLine, toggleLabel } from './remote-view.js';
 import { elapsedSince, pressAnswered, pressSaved, forgetPresses } from './remote-time.js';
+import { rememberedTvs, keepTvs, keepAwake, awakeAsked, awakeAgainOnReturn, sayWhileWaiting } from './remote-phone.js';
 
 // The coach's phone as the TV's remote (admin page, "Run on the TV", admin.html#tv; the TV's square opens
 // admin.html#tv=<code>). The phone remembers its TVs (sg-tvs, this browser only). Each TV has its own session,
 // tv/{code}, so each keeps its own clock, and any admin can control any TV whose code they have.
 // Every button reads the session first, since another coach may have changed it; the phone then runs the clock
 // itself from its own change, as the TV does from its arrival.
-const tvsKey = 'sg-tvs';
 let slot = null;
 let tvs = [];
 let current = '';
@@ -30,24 +30,9 @@ let typed = '';
 let status = '';
 let ticker = null;
 let unfollow = null;
-let wake = null;
-let awake = false; // whether the phone was last asked to stay awake
 let built = { named: undefined, games: null, steps: [] };
 
 export const remoteAsked = () => /^#tv(=|$)/.test(location.hash);
-
-function rememberedTvs() {
-  try {
-    const kept = JSON.parse(localStorage.getItem(tvsKey));
-    return Array.isArray(kept) ? kept.filter((tv) => isCode(tv?.code) && typeof tv.name === 'string') : [];
-  } catch {
-    return [];
-  }
-}
-
-function keepTvs() {
-  try { localStorage.setItem(tvsKey, JSON.stringify(tvs)); } catch {}
-}
 
 // The session's steps, built again only when what it shows, or the coaches' games, change.
 function steps() {
@@ -91,7 +76,7 @@ function tick() {
   document.getElementById('remotePhase').textContent = phaseLine(steps(), now);
   document.getElementById('remotePaging').textContent = pagingLine(steps(), now);
   document.getElementById('remoteToggle').textContent = toggleLabel(steps(), now, freshClock());
-  if (now.running !== awake) keepAwake(now.running);
+  if (now.running !== awakeAsked()) keepAwake(now.running);
 }
 
 // Someone else's change: its clock was set when it was saved, by the database's time (js/remote-time.js). A coach's
@@ -213,7 +198,7 @@ async function pair(form) {
     return;
   }
   tvs = [...tvs.filter((tv) => tv.code !== code), { code, name }];
-  keepTvs();
+  keepTvs(tvs);
   current = code;
   adding = false;
   typed = '';
@@ -241,27 +226,12 @@ async function chooseTv(code) {
 
 function forgetTv() {
   tvs = tvs.filter((tv) => tv.code !== current);
-  keepTvs();
+  keepTvs(tvs);
   current = tvs[0]?.code || '';
   session = null;
   draw();
   if (current) chooseTv(current);
   else follow();
-}
-
-// While the clock runs, the phone's screen stays on where the browser allows it.
-async function keepAwake(running) {
-  awake = running;
-  try {
-    if (!running) {
-      const lock = wake;
-      wake = null;
-      await lock?.release();
-    } else if (!wake && navigator.wakeLock && document.visibilityState === 'visible') {
-      wake = await navigator.wakeLock.request('screen');
-      wake.addEventListener('release', () => { wake = null; });
-    }
-  } catch {}
 }
 
 function listen() {
@@ -284,16 +254,7 @@ function listen() {
   });
   // A game saved in the designer in another tab of this browser: the chooser's list too.
   onCoachGameSaved(() => reloadCoachGames().then(drawClock));
-  // Coming back to the page: the screen kept on again (the browser let it go).
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') awake = false; });
-}
-
-// Waiting for the database more than a few seconds: the page says there is no connection. The live session keeps
-// trying by itself, and the remote carries on once it answers.
-const patience = 4000;
-function sayWhileWaiting(waiting, line) {
-  const slow = setTimeout(() => { if (line()) line().textContent = t('noConnection'); }, patience);
-  return waiting.finally(() => clearTimeout(slow));
+  awakeAgainOnReturn();
 }
 
 export async function openRemote(into) {
