@@ -213,13 +213,14 @@ export function saveApproval(uid, id, answer) {
 // signs them out (and so clears this browser). Deleting what is already gone is fine, so pressing again after an
 // interruption finishes the job; error.settingsDeleted says the settings were gone by the time it stopped.
 // confirm: false never opens Google's window to confirm it's them (js/delete-data.js finishing a cut-off delete).
-export async function deleteMyData(uid, { confirm = true } = {}) {
+export async function deleteMyData(uid, { confirm = true, beforeSignIn = () => {} } = {}) {
   let settingsDeleted = false;
   try {
     await fb.deleteDoc(fb.doc(db, `users/${uid}/private/notes`));
     await fb.deleteDoc(fb.doc(db, `users/${uid}`));
     settingsDeleted = true;
     await fb.deleteDoc(fb.doc(db, `approvals/${uid}`));
+    beforeSignIn();
     await deleteSignIn(confirm);
   } catch (error) {
     error.settingsDeleted = settingsDeleted;

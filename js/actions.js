@@ -10,6 +10,7 @@ import { youtubeId, videoPlayer } from './media.js';
 import { planText, remember as rememberLesson } from './lesson.js';
 import { designerActions } from './designer.js';
 import { privacyActions } from './privacy.js';
+import { closeDeletionNote } from './delete-data.js';
 import { chooseCookies, reopenCookieChoice, followAudience } from './analytics.js';
 import { kidsActions, followKids } from './kids.js';
 import { openTvSheet, castToTv, copyTvAddress, sendTvLink, toggleBigScreen } from './tv.js';
@@ -165,6 +166,7 @@ export const clickActions = [
   // A note typed just now is saved to the account before signing out clears it from this device.
   ['#signOut', async () => { closeMenus(true); await sendWaiting(); signOut(); }],
   ...privacyActions(() => render()),
+  ['#closeDeletionNote', () => { closeDeletionNote(); renderCookieBar(); }],
   ['[data-cookies]', (el) => { chooseCookies(el.dataset.cookies); renderCookieBar(); }],
   ['#cookieChoice', () => {
     closeMenus();
