@@ -166,7 +166,12 @@ week just appears in the navigation (`firstPage()` in `js/page.js`).
   The press is remembered in that browser (`sg-deleting`: the account and when its settings were last saved, by the
   database's clock, read just before deleting) until it is done, so a reload, the next visit or the next sign-in of
   that account there finishes it by itself (`js/delete-data.js`, without opening Google's window: if Google wants the
-  person to confirm, it signs out and the next sign-in finishes). Only that account, and only while its settings are
+  person to confirm, it signs out and the next sign-in finishes). If it still can't finish (refused again after that
+  sign-in, or failing for another reason), it is never tried in a loop: the request is dropped, a note in the cookie
+  bar's place tells the person to press "Delete my data" again, and they stay signed in (with the settings already
+  gone, nothing is saved that visit and the browser forgets the account, so the next visit starts fresh instead of
+  signing out). A request left by an account whose sign-in record is already gone (the answer to that last step was
+  lost) is cleared by the next signed-out visit. Only that account, and only while its settings are
   the ones it asked to delete or gone: an account used again since (settings saved anew) keeps everything, and the
   request is dropped. A press that failed before the settings were deleted goes back to the account and is dropped too.
   Once a device knows the account's documents exist it only updates them, never
@@ -193,9 +198,10 @@ week just appears in the navigation (`firstPage()` in `js/page.js`).
   it is counted and it shows no cookie bar. Sound needs one press on the TV (its remote's OK); without it the clock runs
   silently; the sound button (or the note that sound is blocked) has a line of its own at the foot, so it never covers a
   word. Its sizes are shares of the screen (`--u` in `css/tv.css`), so it fills a 16:9 TV without scrolling, and it
-  fits itself again when the window changes size or goes full screen. A lesson plan's techniques block lists every
-  technique in the largest type that fits (with tips, then names, up to four columns), never below 1.7 u (3% of the
-  screen's height: about 22 px on a 720p TV, 33 px on a 1080p one). What doesn't fit at that size shows in pages
+  fits itself again when the window changes size, goes full screen or its fonts arrive. A lesson plan's techniques
+  block lists every technique in the largest type that fits (with tips, then names, up to four columns), never below
+  3% of the screen's shorter side, whatever its shape (1.7 u on 16:9: about 22 px on a 720p TV, 33 px on a 1080p one;
+  checked on 4:3, 16:10 and a window standing up too). What doesn't fit at that size shows in pages
   (3 columns, 2 u) with a "1 / 3" mark, turning every 8 seconds (`pageAt()` in `js/game-clock.js`): the page comes from
   the block's own clock, so a paused clock keeps its page and a reloaded TV lands on the right one. Nothing is cut;
   "+N more" only past 100 techniques, more than a lesson can name.
@@ -204,7 +210,11 @@ week just appears in the navigation (`firstPage()` in `js/page.js`).
   Back a part, Next part, +30 s, Restart, Beeps, End. Each button reads and writes the session in one change
   (`changeTv()`, a transaction in `js/firebase-tv.js`): if another coach's press or a saved game lands in between, the
   press is worked out again on top of it, so neither is lost. The phone also follows its TV's session live (the full database code, loaded only for the remote: one
-  read when a TV is chosen and one per change), so another coach's press shows within a second or two. A typed code with one wrong character, or two neighbours swapped, is always refused, but the TV can't say
+  read when a TV is chosen and one per change), so another coach's press shows within a second or two. Like the TV and
+  the designer, the phone counts time by the database's clock: it learns the gap from its own presses and from changes
+  as they arrive (`js/remote-time.js`), so a phone whose clock is wrong still shows the TV's time. Only the TV knows
+  whether a techniques block fits its screen (it never writes), so the phone shows how many techniques there are and
+  when the TV turns its page if it pages them, never a page number. A typed code with one wrong character, or two neighbours swapped, is always refused, but the TV can't say
   which codes exist, so a code typed at random still passes about 1 time in 961 and pairs with no TV. Opening the remote
   lists every session (admins only) and deletes those untouched for a day. Opened without a connection, it says so
   after a few seconds ("No internet connection. Trying again…", also on the admin page while it can't tell an admin)
@@ -300,7 +310,7 @@ whether it was translated automatically or corrected by hand (nothing when that 
   tags; on the published site also the `X-Robots-Tag` headers). It then runs the same check again at the real address
   (`npm run smoke:real`): Chrome opens https://sistemaguarda.com, but every file of the site comes from the pull request's
   checkout (`tests/checkout.mjs`: what `firebase.json` would publish, with its headers, 404 for the rest), while sign-in,
-  the week and the videos come from the real Firebase, signed out and only reading (about 25 database reads). That
+  the week and the videos come from the real Firebase, signed out and only reading (about 30 database reads). That
   catches what only shows once the real data arrives late, before the merge, with no preview and no Google identity.
   It then does the same signed in (`tests/signed-in.mjs`). Once a pull request is merged, `main`
   publishes the site **and** `firestore.rules` about a minute later, then runs the same browser check on the
