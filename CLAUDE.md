@@ -15,7 +15,8 @@ branch that's up to date with `main`. Nobody can push to `main` directly or forc
 2. **Open a pull request:** run `npm test`, push the branch, `gh pr create --fill`. The tests run on it.
 3. **If GitHub says the branch is out of date** (someone merged first): `gh pr update-branch --rebase`, or
    `git pull --rebase origin main` and push. Then the tests run again on top of their work.
-4. **Merge** once the tests pass: `gh pr merge --squash --delete-branch`. The site publishes about a minute later.
+4. **Merge** once the tests pass: `gh pr merge --squash --delete-branch`. The site publishes about 5 minutes later: the tests run once more
+   first (the last ten deploys took 2½ to 6 minutes from the merge).
 
 If an update brings changes to files you edited, keep both: merge the other work in, never overwrite it, and
 never "fix" a conflict by replacing a whole file with your copy.
@@ -25,8 +26,8 @@ never "fix" a conflict by replacing a whole file with your copy.
 - **Plain words.** Name things for what they are: `techniquePage`, `saveWeek`, `favorites`. No abbreviations
   (`it`, `M`, `pd`), no clever one-liners. Someone new should follow any function on first read.
 - **Few comments.** Only where the reason isn't obvious from the code. Never narrate what a line does.
-- **Reuse before you write.** Look for an existing piece first: `techniqueChip`, `stageBlock`, `intro`, `gameCard`
-  in `js/views.js`; `field` in `js/admin-page.js`; `.tech`, `.stage`, `.card`, `.field`, `.pill`, `.chipbtn` in `css/app.css`.
+- **Reuse before you write.** Look for an existing piece first: `techniqueChip`, `intro` (and, inside the file,
+  `stageBlock`, `gameCard`) in `js/views.js`; `field` in `js/admin-page.js`; `.tech`, `.stage`, `.card`, `.field`, `.pill`, `.chipbtn` in `css/app.css`.
   If you write the same markup twice, make it a small function.
 - **Templates, not string-building.** All markup goes through the `html` tag from `js/html.js`:
   `` html`<b>${text(technique.n)}</b>` ``. It escapes every value, which is what keeps the site safe.
@@ -44,7 +45,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `index.html`, `admin.html` | Markup only, plus the icon and share-preview tags (`index.html` also preloads `data/content.json` and `data/curriculum.json`, which `loadJson()` in `js/content.js` takes over, so they are fetched once and early). The header is the logo, title, search, PT/EN and the account button. `index.html` has empty slots the navigation fills (`#sidebar`, `#bottomBar`, `#switcher`); `admin.html` keeps its own two-link tab strip ("← Site", "Admin"). |
 | `robots.txt` | Tells crawlers what they may visit. Search engines (Google, Bing, DuckDuckGo) may list the pages, but not `/data/` or `admin.html`; AI training, AI search and AI assistant crawlers are refused by name; `Content-Signal` (contentsignals.org) says search yes, AI training and AI answers no. **To refuse another AI crawler,** add one `User-agent: <its name>` line to the first group (the list at github.com/ai-robots-txt/ai.robots.txt is a good source); never add a search engine's own crawler (`Googlebot`, `Bingbot`, `DuckDuckBot`, `Applebot`) or `facebookexternalhit` (link previews). The same wish is in the `robots` meta tag of `index.html` and `admin.html` (`noai, noimageai`; the admin page also `noindex`) and in the `X-Robots-Tag` headers in `firebase.json` (`noindex` too for `/data/**` and `admin.html`; never on the main page). |
 | `img/` | `logo.svg` (the logo and browser icon), `icon-180.png` (phone home screen), `share.png` (the 1200×630 picture shown when a link is shared). |
-| `css/theme.css` | Every color and font: dark (the default), light, and four more themes people pick in the account menu. A new theme is one block here plus its name in `themes` (`js/settings.js`), its label in `js/strings.js` and its name in `firestore.rules`. **The only file with color values**, apart from the logo and the `theme-color` tag's first-paint default (`applyTheme()` sets it from `--surface`). |
+| `css/theme.css` | Every color and font: dark (the default), light, and four more themes people pick in the account menu. A new theme is one block here plus its name in `themes` (`js/content.js`, beside the belts), its label in `js/strings.js` and its name in `firestore.rules` (`tests/rules-lists.mjs` fails until it is there). **The only file with color values**, apart from the logo and the `theme-color` tag's first-paint default (`applyTheme()` sets it from `--surface`). |
 | `css/app.css` | Components (and the admin page's tab strip). Uses the theme's variables (`var(--ink)`) only. On touch screens (`pointer: coarse`) everything people tap is at least 44px tall, and inputs are 16px so phones don't zoom in. |
 | `css/admin.css` | The admin page only (`admin.html`): this week or next week, the "Chosen" row of the week's techniques, the Students list (a student opens like a fold, with an arrow). |
 | `css/kids.css` | The kids' class: "I train in", the kids' belts, the Kids page and the coach's answers (both pages). |
@@ -52,7 +53,7 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `css/nav.css` | The site's navigation and page layout (`index.html` only): the bottom bar and part switcher under 900px, the sidebar from 900px. |
 | `js/app.js`, `js/page.js`, `js/actions.js`, `js/page-events.js` | Starts the site (`app.js`: the content, the database, the account); `page.js` draws it (header, search box, navigation, the page) and follows links (`#curriculum`, `#top`, `#t-top-base`); `actions.js` is what each button does; `page-events.js` listens for clicks, typing, keys and the address. |
 | `js/nav.js` | The navigation, described once (see Navigation below), and the menus (the account menu and the part switcher). |
-| `js/account.js` | The header's account button (`#account`, the person's Google photo) and its menu (`#accountMenu`): sign in or out, the Coach section, the theme picker. The button always shows; without Firebase (a local preview) the menu has no sign-in. |
+| `js/account.js` | The header's account button (`#account`, the person's Google photo) and its menu (`#accountMenu`): sign in or out, the Coach section, "I train in", the belt and theme pickers, Cookies, privacy. The button always shows; without Firebase (a local preview) the menu has no sign-in. |
 | `js/views.js` | The pages: Curriculum home, this week (and past weeks), each part of the fight, my tree (favorites), method; and the search results. |
 | `js/panel.js` | The technique panel: details, share, video, diagram, what it is, steps, drill, then notes; "where to go" links, next stage; admins attach media and set a minimum belt here (saving keeps the sheet where it was, at "Saved"). With Kids class it has no notes box, no "Drilling" / "Got it" and no "Show on the TV". Its top row (back, previous / next, close) stays at the top of the sheet while it scrolls. Previous / next (buttons, arrow keys, swiping) move through the list it was opened from; closing gives the keyboard focus back to the technique on the page. Opening it adds one step to the browser history and moving replaces it, so a phone's back button closes it in one press. |
 | `js/kids.js`, `js/kids-progress.js`, `js/kids-coach.js`, `js/strings-kids.js` | The kids' class (see Kids below): the Kids page and "I did it"; the game's rules without a page (statuses, XP, levels, which worlds are open; tested in `tests/kids.test.js`); the coach's "Approve" / "Try again" in the Students list; their labels. |
@@ -71,15 +72,15 @@ never "fix" a conflict by replacing a whole file with your copy.
 | `js/privacy.js`, `js/delete-data.js` | The privacy page (`#privacy`) and "Delete my data"; `delete-data.js` remembers a press until it is done and finishes one that was cut off. Its words must stay true to the code and `firestore.rules`. |
 | `js/analytics.js` | Visitor statistics (Google Analytics, through Firebase) and the cookie bar. See Statistics and cookies below. |
 | `js/strings.js` | Every button and label, in PT and EN (the kids' in `js/strings-kids.js`, the games on the TV's in `js/strings-tv.js`, newer coach's tools' labels in `js/strings-coach.js`). |
-| `js/settings.js` | Each person's language, theme, belt, favorites, progress ("Drilling" / "Got it" per move) and lesson builder choices. |
-| `js/firebase.js`, `js/firebase-media.js`, `js/firebase-tv.js` | Sign-in and **every** database call (videos, diagrams, minimum belts and the translator in `firebase-media.js`, the games on the TV's in `firebase-tv.js`). Nothing else talks to Firebase (it also hands `js/analytics.js` the Analytics id and loads its code). For `tests/signed-in.mjs` only, a page opened from this computer with `?emulators=<made-up person>` uses the local emulators and signs that person in (`&analytics=<made-up id>` also switches Google Analytics on, answered by the test); the published site never does. |
+| `js/settings.js` | Each person's language, theme, class ("I train in"), belt, favorites, progress ("Drilling" / "Got it" per move), the class last seen on This week, a kid's claims and lesson builder choices. The lists of themes, belts and classes are in `js/content.js`. |
+| `js/firebase.js`, `js/firebase-media.js`, `js/firebase-tv.js` | Sign-in and **every** database call (videos, diagrams, minimum belts and the translator in `firebase-media.js`, the games on the TV's in `firebase-tv.js`). Nothing else talks to Firebase (it also hands `js/analytics.js` the Analytics id and loads its code). For `tests/signed-in.mjs` only, a page opened from this computer with `?emulators=<made-up person>` uses the local emulators and signs that person in (`&firestore=<port>&auth=<port>`: the emulators' ports, 8080 and 9099 when left out; `&analytics=<made-up id>` also switches Google Analytics on, answered by the test); the published site never does (`npm run smoke:real` checks it). |
 | `js/content.js`, `js/state.js` | Loads the curriculum and searches it (names first, then descriptions, key points, drills and steps); tracks which page and technique are showing. |
 | `data/content.json` | The guard modules (top, bottom), drills and the method. Each game also has what the TV clock runs: `start`, `top` and `bottom` (how each side wins), `parts` (`label`, `seconds`, `say`), `rounds`, `rest`, `ready`, `switch`. |
 | `data/curriculum.json` | The other parts of the fight, their order (`moduleOrder`) and the "where to go" links (`nx`). |
 | `data/kids.json` | The kids' worlds (`mark` is the world's emoji; `alwaysOpen`), challenges (task, XP and the site's technique ids in `techniques`) and XP levels. Read only for the kids class or both. |
 | `firestore.rules` | Who can read and change what in the database. |
 | `js/translation.js` | Decides, on the admin page, which fields to translate, keep or ask about (see Translation). |
-| `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `week.test.js` and `roster.test.js` check next week and the students list; `rules.test.js` checks the database rules; `game-clock.test.js` and `qr.test.js` check the game clock, the TV's code and the QR square; `kids.test.js` the kids' game; `wording.test.js` that no text assumes a person's gender; `smoke.mjs` uses the site in a real browser (with `smoke-kids.mjs`, `smoke-usability.mjs`: a part's chips, search order and the technique sheet, and `smoke-tv.mjs`: the TV screen's layout for every game and the techniques block); `signed-in.mjs` uses it signed in (with `signed-in-coach.mjs`: the sheet's admin controls and the week form, and `signed-in-tv.mjs`: TVs and coaches' phones), as made-up students and a coach, against local copies of sign-in and the database; both answer Google Analytics themselves (`analytics-fake.mjs`); `nightly.mjs` checks the published site every night. |
+| `tests/` | `content.test.js` checks the curriculum; `translation.test.js` checks those translation decisions; `week.test.js` and `roster.test.js` check next week and the students list; `rules.test.js` checks the database rules (with `rules-tv.mjs`: the games on the TV, and `rules-lists.mjs`: the themes, belts, classes, game limits and a TV session's fields, taken from the site's code); `html.test.js` checks the `html` tag's escaping; `game-clock.test.js` and `qr.test.js` check the game clock, the TV's code and the QR square; `kids.test.js` the kids' game; `wording.test.js` that no text assumes a person's gender; `smoke.mjs` uses the site in a real browser (with `smoke-kids.mjs`, `smoke-usability.mjs`: a part's chips, search order and the technique sheet, and `smoke-tv.mjs`: the TV screen's layout for every game and the techniques block); `signed-in.mjs` uses it signed in (with `signed-in-coach.mjs`: the sheet's admin controls and the week form, and `signed-in-tv.mjs`: TVs and coaches' phones), as made-up students and a coach, against local copies of sign-in and the database; both answer Google Analytics themselves (`analytics-fake.mjs`) and share `step()` and `until()` (`browser.mjs`: a failed step says where in `tests/` it failed, what it was waiting for, and an assert's actual and expected values); `nightly.mjs` checks the published site every night. |
 | `docs/translator.gs` | A copy of the translator that runs in the site's Google account (see Translation). |
 
 ## Navigation
@@ -185,8 +186,8 @@ week just appears in the navigation (`firstPage()` in `js/page.js`).
   simply tried again, keeping everything marked in that browser.
 - **Students.** The admin page lists every `users/{uid}` only when the coach taps "Show students": one read per
   student, so it is never loaded by itself.
-- **Keep database reads low.** The free plan allows 50,000 reads a day. `site/week`, `site/media` and `site/weeks` are kept
-  in each browser for 15 minutes (`site()` in `js/firebase.js`), so a change can take that long to reach a student
+- **Keep database reads low.** The free plan allows 50,000 reads a day. `site/week`, `site/media`, `site/weeks` and `site/games` are
+  kept in each browser for 15 minutes (`site()` in `js/firebase.js`), so a change can take that long to reach a student
   who just visited; admin pages always read fresh. Don't add a database read that runs on every visit.
 
 ## Games on the TV
@@ -239,8 +240,10 @@ week just appears in the navigation (`firstPage()` in `js/page.js`).
   counted by the database's clock (learned from the game's own save), never the laptop's. The TV and every phone following that TV hear the change and read the games again, so both run the
   saved game within a second or two (a phone in the same browser also hears it through a `BroadcastChannel`). TVs
   showing other games read nothing more.
-- A new field in a game, a session or the clock needs the same change in `js/game-clock.js` (`gameProblems`),
-  `firestore.rules` and its tests. The rules may evaluate only 1,000 expressions per save, which is why a game has at
+- A new field in a game, a session or the clock needs the same change in `js/game-clock.js` (`gameProblems`; for a
+  game also `clockGame()`, which keeps only the fields it names; for a session `sessionFields`, which `stored()` in
+  `js/firebase-tv.js` keeps), the session `sendNow()` starts from in `js/remote.js`, `firestore.rules` and its tests
+  (`tests/rules-lists.mjs` checks `sessionFields` against the rules). The rules may evaluate only 1,000 expressions per save, which is why a game has at
   most 6 parts and a session names its game instead of carrying it.
 
 ## Kids
@@ -313,18 +316,15 @@ whether it was translated automatically or corrected by hand (nothing when that 
   being refused, and the coach saving a week, next week taking over, starting from a past week and the Students list.
   The people are made up and the translator is answered by the test, never called. When you change something people
   do signed in, add a step there.
-- Every pull request runs the tests, then opens the site in Chrome and uses it (`tests/smoke.mjs`: the sidebar,
-  Curriculum home, a technique, search, progress, the tree, sharing, the coach's tools from the account menu, the
-  phone's bottom bar and part switcher, previous / next in a technique, notes, the "new" dot on This week, the belt filter, the cookie bar and Google Analytics (answered by the test), the privacy page and "Clear this
-  browser", a prepared next week taking over on its date, both languages, the admin page, `robots.txt` and the `noai`
-  tags; on the published site also the `X-Robots-Tag` headers). It then runs the same check again at the real address
+- Every pull request runs the tests, then opens the site in Chrome and uses it (`tests/smoke.mjs`; the comment at its top is the list of what
+  it covers). It then runs the same check again at the real address
   (`npm run smoke:real`): Chrome opens https://sistemaguarda.com, but every file of the site comes from the pull request's
   checkout (`tests/checkout.mjs`: what `firebase.json` would publish, with its headers, 404 for the rest), while sign-in,
   the week and the videos come from the real Firebase, signed out and only reading (about 30 database reads). That
   catches what only shows once the real data arrives late, before the merge, with no preview and no Google identity.
   It then does the same signed in (`tests/signed-in.mjs`). Once a pull request is merged, `main`
-  publishes the site **and** `firestore.rules` about a minute later, then runs the same browser check on the
-  published site. When you add a feature people click, add a step for it to `tests/smoke.mjs`.
+  publishes the site **and** `firestore.rules` about 5 minutes later (the tests run once more first), then runs the same browser check on the
+  published site. When you add a feature people click, add a step for it to `tests/smoke.mjs` and say so in that list.
 - Every night `.github/workflows/nightly.yml` checks the published site (`tests/nightly.mjs`): up, safe, still
   free, and the same as `main`. A failure opens one issue named "Nightly check failed", which closes itself on
   the next night that passes. If you see that issue open, fix what it names before other work. GitHub switches
@@ -341,7 +341,7 @@ whether it was translated automatically or corrected by hand (nothing when that 
   purpose, so it can never cost money. That rules out Cloud Functions, Cloud Run, Cloud SQL, Cloud Storage
   uploads and the "Blaze" plan. If a feature seems to need one, stop and ask John.
 - Never remove entries from the `ignore` list in `firebase.json`. They keep the git folder and the deploy's
-  temporary Google credentials (`gha-creds-*.json`) off the public site.
+  temporary Google credentials (`gha-creds-*.json`) and the emulators' logs (`*.log`) off the public site.
 - Never commit keys, passwords or service-account files. The Firebase web settings are public and come from
   the hosting itself; deploys sign in to Google without keys.
 - Google Cloud setup (sign-in providers, the database, permissions, the domain) is John's. Ask him rather
