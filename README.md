@@ -78,6 +78,10 @@ npm run smoke:real # the same at https://sistemaguarda.com, with this folder's f
 npm run signed-in  # uses it signed in, against local copies of sign-in and the database
 ```
 
+No Google Chrome? Run `npx playwright-core install chromium` once, then put `SMOKE_BROWSER=chromium` before the
+browser checks (`SMOKE_BROWSER=chromium npm run smoke -- http://localhost:8000`, and the same for `smoke:real` and
+`signed-in`).
+
 Locally there is no sign-in or database, so "Esta semana" and the admin page only work on the live site.
 Everything else works the same.
 
@@ -86,7 +90,7 @@ Everything else works the same.
 Changes reach `main` through pull requests. Each pull request runs the tests (`.github/workflows/deploy.yml`), and
 GitHub only allows the merge once they pass on a branch that's up to date with `main`. That way, everything that goes
 live was tested together with everyone else's latest work. After a merge, the site and the database rules are
-published and live at <https://sistemaguarda.com> about a minute later.
+published and live at <https://sistemaguarda.com> about 5 minutes later: the tests run once more first.
 
 - **The rule on `main`** lives in `docs/main-ruleset.json`. The repo owner applies it once (Settings → Rules, or
   `gh api -X POST repos/thyagoribeirobjj/sistema-guarda-bjj/rulesets --input docs/main-ruleset.json`). To change it,

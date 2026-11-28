@@ -5,7 +5,6 @@
 // (31 × 31). Tested in tests/game-clock.test.js.
 export const codeLetters = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 const base = codeLetters.length; // 31, a prime: every single mistake changes the checks
-export const codeLength = 5;
 
 const modulo = (value) => ((value % base) + base) % base;
 

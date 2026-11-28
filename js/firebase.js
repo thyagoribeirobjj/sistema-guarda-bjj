@@ -7,9 +7,12 @@ const sdk = 'https://www.gstatic.com/firebasejs/13.2.0/';
 
 // Only for tests/signed-in.mjs: a page on this computer opened with ?emulators=<made-up person> uses the local
 // emulators (firebase.json) and signs that person in (&analytics=<made-up id>: with Google Analytics switched on,
-// which the test answers itself). The published site never matches, so nothing changes there.
+// which the test answers itself; &firestore=<port>&auth=<port>: emulators on other ports of this computer). The
+// published site never matches, so nothing changes there.
 const testAddress = new URLSearchParams(['localhost', '127.0.0.1'].includes(location.hostname) ? location.search : '');
 const testPerson = testAddress.get('emulators');
+const testPort = (name, port) => (/^\d{2,5}$/.test(testAddress.get(name) || '') ? Number(testAddress.get(name)) : port);
+const emulators = testPerson ? { firestore: testPort('firestore', 8080), auth: testPort('auth', 9099) } : null;
 const testConfig = { apiKey: 'test', projectId: 'demo-sistema-guarda', appId: '1:1:web:1', measurementId: testAddress.get('analytics') || '' };
 
 let auth = null;
@@ -37,9 +40,9 @@ export async function startFirebase({ realtime = false } = {}) {
     measurementId = config.measurementId || '';
     auth = authSdk ? authSdk.getAuth(firebaseApp) : null;
     db = store.getFirestore(firebaseApp);
-    if (testPerson) {
-      if (auth) authSdk.connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-      store.connectFirestoreEmulator(db, '127.0.0.1', 8080);
+    if (emulators) {
+      if (auth) authSdk.connectAuthEmulator(auth, `http://127.0.0.1:${emulators.auth}`, { disableWarnings: true });
+      store.connectFirestoreEmulator(db, '127.0.0.1', emulators.firestore);
     }
     return true;
   } catch (error) {
@@ -61,7 +64,7 @@ export async function loadAnalytics() {
 
 // For js/firebase-tv.js, the database calls of the games on the TV, kept in a file of their own.
 export function database() {
-  return { db, fb, auth, app: firebaseApp, sdk, emulators: Boolean(testPerson) };
+  return { db, fb, auth, app: firebaseApp, sdk, emulators };
 }
 
 export function onAccountChange(callback) {
@@ -152,7 +155,8 @@ export async function saveWeek(week) {
   forget('week');
 }
 
-// site/weeks holds { weeks: [{ weekOf, title, note, techniques }] }, newest first. Read only when someone asks.
+// site/weeks holds { weeks: [{ weekOf, title, note, techniques, from, written, handFixed }] } (older entries only the
+// first four), newest first. Read only when someone asks.
 const pastWeeksKept = 52;
 
 export async function loadPastWeeks({ fresh = false } = {}) {
@@ -180,7 +184,7 @@ export function saveUserSettings(uid, data, { create = true } = {}) {
   return fb.updateDoc(fb.doc(db, `users/${uid}`), { lesson: fb.deleteField(), ...settings, updatedAt: fb.serverTimestamp() });
 }
 
-// Every student's users/{uid}, for coaches (firestore.rules lets admins read them). Read only when a coach asks:
+// Every student's users/{uid} (a kid's claims too), for coaches (firestore.rules lets admins read them). Read only when a coach asks:
 // each student is one read. Notes live elsewhere and are never part of this.
 export async function loadStudents() {
   const snapshot = await fb.getDocs(fb.collection(db, 'users'));

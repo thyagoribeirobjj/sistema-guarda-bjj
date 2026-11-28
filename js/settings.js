@@ -1,15 +1,11 @@
 import { loadUserSettings, saveUserSettings, signOut } from './firebase.js';
-import { belts, kidsBelts } from './content.js';
+import { belts, kidsBelts, themes, audiences } from './content.js';
 import { useNotesAccount, leaveNotesAccount, forgetNotes } from './notes.js';
 import { deletionAsked, finishDeletion, signedOutHere } from './delete-data.js';
 
 // Each visitor's language, theme, class (audience), belt, favorites, progress, kids' challenges and lesson plan. Kept in this browser, and in the
 // database (users/{uid}) once they sign in, so they follow them to other devices.
 const storageKey = 'sg-settings';
-// Each one is a block of colors in css/theme.css.
-export const themes = ['dark', 'light', 'orange', 'gold', 'royal', 'emerald'];
-// The class someone trains in ("I train in"): 'adult' is the site as it always was.
-export const audiences = ['kids', 'adult', 'both'];
 const accountKey = 'sg-account';
 // Set while this browser belongs to an account whose settings it has not yet seen in the database (read or saved):
 // until then a missing document means "not saved yet", never "deleted".

@@ -7,6 +7,15 @@ import { clockGame, hasClock, lessonItems } from './game-clock.js';
 // the clock runs (js/game-clock.js). The TV and the coach's phone each build it from the site's own files and the
 // coaches' games, so both run the very same steps.
 
+// What a step is called, the same on the TV and the coach's phone: "Get ready", "Rest", "Rest · switch roles", or the
+// part's own label.
+export function stepName(step) {
+  if (!step) return t('tvTime');
+  if (step.kind === 'ready') return t('tvGetReady');
+  if (step.kind === 'rest') return t(step.game.switch ? 'tvRestSwitch' : 'tvRest');
+  return text(step.label);
+}
+
 export function needsCoachGames(named) {
   return (named?.game || named?.lesson?.game || '').startsWith('coach-');
 }

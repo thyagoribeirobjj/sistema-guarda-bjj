@@ -71,7 +71,7 @@ jobs:
           npm ci
           set -o pipefail
           node tests/smoke.mjs https://sistemaguarda.com 2>&1 | tee browser.txt || status=$?
-          { echo 'failed<<END_OF_CHECKS'; grep -E '^(FAIL|- )' browser.txt || true; echo 'END_OF_CHECKS'; } >> "$GITHUB_OUTPUT"
+          { echo 'failed<<END_OF_CHECKS'; grep -E '^(FAIL|- |[[:space:]]+(at tests/|waiting for|waited for|actual:|expected:))' browser.txt || true; echo 'END_OF_CHECKS'; } >> "$GITHUB_OUTPUT"
           exit "${status:-0}"
 
   report:

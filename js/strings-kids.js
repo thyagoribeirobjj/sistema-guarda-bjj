@@ -8,7 +8,6 @@ export const kidsStrings = {
   kids: { pt: 'Kids', en: 'Kids' },
   kidsLead: { pt: 'Mundos de desafios. Toque numa técnica para ver como se faz. Quando conseguir, toque em “Eu consegui” e o professor confere.', en: 'Worlds of challenges. Tap a technique to see how it’s done. When you can do it, tap “I did it” and your coach checks.' },
   kidsSignIn: { pt: 'Para contar ao professor que você conseguiu, entre com Google (peça para um adulto) no menu, no alto à direita.', en: 'To tell your coach you did it, sign in with Google (ask a grown-up) in the menu at the top right.' },
-  kidsLoadFailed: { pt: 'Não foi possível carregar os desafios. Tente de novo.', en: "Couldn't load the challenges. Try again." },
   world: { pt: 'Mundo', en: 'World' },
   worldLocked: { pt: 'Faça 2 desafios do mundo anterior para abrir.', en: 'Do 2 challenges in the world before to open it.' },
   worldDone: { pt: 'feitos', en: 'done' },

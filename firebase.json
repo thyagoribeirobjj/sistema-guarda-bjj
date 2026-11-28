@@ -14,7 +14,8 @@
       "gha-creds-*.json",
       "**/node_modules/**",
       "docs/**",
-      "tests/**"
+      "tests/**",
+      "*.log"
     ],
     "headers": [
       {

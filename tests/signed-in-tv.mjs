@@ -1,7 +1,7 @@
 // The games on the TV in tests/signed-in.mjs, against the emulators: TV screens (signed out) and coaches' phones
-// (admin page, "Run on the TV"). Pairing (and a wrong code refused), the phone's buttons reaching the TV, two TVs with
-// their own clocks, two coaches on one TV, a student refused, a game made in the designer running on the TV, and
-// the whole lesson plan running there. tools: what signed-in.mjs uses itself.
+// (admin page, "Run on the TV"). Pairing (and a wrong code refused), the phone's buttons reaching the TV, a rest named
+// alike on both, two TVs with their own clocks, two coaches on one TV, a student refused, a game made in the designer
+// running on the TV, and the whole lesson plan running there. tools: what signed-in.mjs uses itself.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { blockSteps } from '../js/game-clock.js';
@@ -16,12 +16,12 @@ const phone = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile:
 // Shown on the TV within a second or two of a press on the phone.
 const soon = 2500;
 
-export async function tvSteps({ visitor, step, until, stored, seed, touch, address, people }) {
+export async function tvSteps({ visitor, step, until, stored, seed, touch, address, people, testQuery, firestoreHost }) {
   const openTv = async () => {
     const tv = await visitor({ email: 'a TV' }, { device: television });
     tv.writes = [];
     tv.on('request', (request) => { if (/\/Write\/|:commit|:batchWrite/.test(request.url())) tv.writes.push(request.url()); });
-    await tv.goto(`${address}/?tv&emulators=${encodeURIComponent(JSON.stringify({ sub: 'tv' }))}#screen`);
+    await tv.goto(`${address}/?tv&${testQuery({ sub: 'tv' })}#screen`);
     await tv.locator('.tvs-code').waitFor();
     tv.code = await tv.locator('.tvs-code').textContent();
     return tv;
@@ -144,6 +144,18 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     assert.equal(await tv.locator('.tvs-name').textContent(), 'Front mat');
   });
 
+  await step('the rest where the players switch roles has the same name on the phone as on the TV', async () => {
+    await coach.selectOption('#remoteShow', 'top-game-hold-the-mount');
+    await pressSure(coach, 'show');
+    await tvShows(tv, '.tvs-phase', 'Get ready', 'the game is on the TV');
+    await press(coach, 'next');
+    await press(coach, 'next');
+    await tvShows(tv, '.tvs-phase', 'Rest · switch roles', 'the TV shows the rest');
+    await coach.locator('#remotePhase', { hasText: 'Rest · switch roles' }).waitFor({ timeout: soon });
+    await pressSure(coach, 'end');
+    await tvShows(tv, '.tvs-how', 'Choose a game', 'the TV waits for the next game');
+  });
+
   await step('Restart, End and Show ask first while a game is under way, and act at once when nothing runs yet', async () => {
     const mount = curriculumGame('top-game-hold-the-mount');
     await coach.selectOption('#remoteShow', mount.id);
@@ -232,7 +244,8 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
       const coachCheck = /documents\/admins\//.test(decodeURIComponent(route.request().postData() || ''));
       return blocked === 'everything' || (blocked === 'all but the coach check' && !coachCheck) ? route.abort('internetdisconnected') : route.continue();
     };
-    await coach.context().route(/127\.0\.0\.1:8080/, handler);
+    const toDatabase = (url) => url.host === firestoreHost;
+    await coach.context().route(toDatabase, handler);
     coach.failuresExpected = true;
     try {
       await coach.reload();
@@ -248,7 +261,7 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
       assert.equal(await coach.locator('#remote', { hasText: 'No internet connection' }).count(), 0, 'and no longer once it answers');
     } finally {
       blocked = '';
-      await coach.context().unroute(/127\.0\.0\.1:8080/, handler);
+      await coach.context().unroute(toDatabase, handler);
       coach.failuresExpected = false;
     }
     await coach.selectOption('#remoteShow', 'top-game-hold-the-mount');
@@ -341,7 +354,7 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
   let made = '';
   await step('a game made in the game designer is saved, appears in the lesson builder and runs on the TV', async () => {
     const builder = await coach.context().newPage();
-    await builder.goto(`${address}/?emulators=${encodeURIComponent(JSON.stringify(people.coach))}#lesson`);
+    await builder.goto(`${address}/?${testQuery(people.coach)}#lesson`);
     await builder.locator('[data-designer="open"]').click();
     await builder.selectOption('#designFrom', 'top-game-hold-the-mount');
     assert.equal(await builder.locator('#designName').inputValue(), 'Hold the mount');
@@ -375,7 +388,7 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
 
   await step('the designer asks before "Start from" replaces what was typed, and a number outside its limits shows as the game keeps it', async () => {
     const builder = await coach.context().newPage();
-    await builder.goto(`${address}/?emulators=${encodeURIComponent(JSON.stringify(people.coach))}#lesson`);
+    await builder.goto(`${address}/?${testQuery(people.coach)}#lesson`);
     await builder.locator('[data-designer="open"]').click();
     await builder.selectOption('#designFrom', 'top-game-hold-the-mount');
     assert.equal(await builder.locator('[data-designer-replace]').count(), 0, 'nothing changed yet: no question');
@@ -573,7 +586,7 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     });
     await late.context().route(/fonts\.gstatic\.com/, async (route) => { await fontsHeld; await route.continue(); });
     await late.context().addInitScript((code) => localStorage.setItem('sg-tv-code', code), tv.code);
-    await late.goto(`${address}/?tv&emulators=${encodeURIComponent(JSON.stringify({ sub: 'tv' }))}#screen`, { waitUntil: 'domcontentloaded' });
+    await late.goto(`${address}/?tv&${testQuery({ sub: 'tv' })}#screen`, { waitUntil: 'domcontentloaded' });
     await late.locator('#tvsList li').first().waitFor();
     const fitNow = () => late.evaluate(() => {
       const list = document.getElementById('tvsList');

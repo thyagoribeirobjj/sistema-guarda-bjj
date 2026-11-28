@@ -1,6 +1,6 @@
 import { html } from './html.js';
-import { currentTheme, themes, audiences, settings } from './settings.js';
-import { belts, kidsBelts } from './content.js';
+import { currentTheme, settings } from './settings.js';
+import { belts, kidsBelts, themes, audiences } from './content.js';
 import { state } from './state.js';
 import { t } from './strings.js';
 import { coachMenu } from './nav.js';

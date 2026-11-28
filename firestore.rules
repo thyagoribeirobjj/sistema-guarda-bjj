@@ -1,6 +1,7 @@
 rules_version = '2';
 
-// Who can read and change what. tests/rules.test.js checks every line of this file.
+// Who can read and change what. tests/rules.test.js checks every line of this file (with tests/rules-tv.mjs and
+// tests/rules-lists.mjs).
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {

@@ -2,6 +2,7 @@
 // a challenge opening its technique (with no notes, marks or TV for the kids class), a shared #kids link, Google Analytics staying off, and an adult's visit costing nothing more.
 // tools: what smoke.mjs uses itself (open, openLate, step, hits, analyticsCookies, online, withAnalytics).
 import assert from 'node:assert/strict';
+import { until } from './browser.mjs';
 
 const kidsSettings = JSON.stringify({ language: 'en', audience: 'kids' });
 const phone = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true };
@@ -106,8 +107,7 @@ export async function kidsSteps({ open, openLate, step, hits, analyticsCookies, 
     const visit = await openLate('/#top', 'en-US', {}, { ...withAnalytics, kept: { 'sg-cookies': 'accepted' } });
     await visit.release();
     await online(visit);
-    const until = async (check) => { for (let tries = 0; tries < 100 && !check(); tries++) await visit.waitForTimeout(100); assert.ok(check()); };
-    await until(() => hits(visit).length > 0);
+    await until(() => hits(visit).length > 0, 'a page view as an adult');
     assert.ok((await analyticsCookies(visit)).length, 'counted as an adult');
     assert.ok(!visit.reads.some((path) => path.startsWith('approvals/')), 'an adult\'s visit reads no answers');
     await visit.locator('#account').click();
@@ -125,8 +125,8 @@ export async function kidsSteps({ open, openLate, step, hits, analyticsCookies, 
     await visit.locator('#account').click();
     await visit.locator('[data-audience-choice="adult"]').click();
     await visit.locator('main .part-card').first().waitFor();
-    await until(() => visit.analytics.length > sent);
-    await until(() => hits(visit).length > hitsBefore);
+    await until(() => visit.analytics.length > sent, 'counting again as an adult');
+    await until(() => hits(visit).length > hitsBefore, 'a page view as an adult again');
     await visit.waitForTimeout(800);
     const counted = hits(visit).slice(hitsBefore).map((hit) => hit.page_location);
     assert.deepEqual(counted, [`${new URL(visit.url()).origin}/${new URL(visit.url()).hash}`], 'only the adult page it opens, not the kids\' page it left');

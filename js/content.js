@@ -63,6 +63,11 @@ export const belts = ['white', 'blue', 'purple', 'brown', 'black'];
 // The kids' belts, in order, offered instead when someone trains in the kids class. White is in both.
 export const kidsBelts = ['white', 'gray-white', 'gray', 'gray-black', 'yellow-white', 'yellow', 'yellow-black',
   'orange-white', 'orange', 'orange-black', 'green-white', 'green', 'green-black'];
+// The site's themes: each one is a block of colors in css/theme.css.
+export const themes = ['dark', 'light', 'orange', 'gold', 'royal', 'emerald'];
+// The class someone trains in ("I train in"): 'adult' is the site as it always was.
+export const audiences = ['kids', 'adult', 'both'];
+// firestore.rules lists these four again (a person's settings); tests/rules-lists.mjs checks that they agree.
 
 // The kids' worlds, challenges and levels (data/kids.json), read only by someone who trains in the kids class (or both).
 export const kids = { worlds: [], challenges: [], levels: [], loaded: false };
@@ -88,7 +93,7 @@ export function isModule(key) {
 }
 
 // "Triângulo" and "triangulo" both match.
-function plain(value) {
+export function plain(value) {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
