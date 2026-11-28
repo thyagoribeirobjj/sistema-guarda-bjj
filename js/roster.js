@@ -1,8 +1,7 @@
 // The coach's list of students: counting, sorting, finding by name and grouping marks by part of the fight.
 // No page, no database: tests/roster.test.js. Each user is a users/{uid} document plus its uid, with updatedAt in
 // milliseconds (null when unknown). Notes are never part of it: they are not in that document.
-
-const plain = (value) => String(value || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+import { plain } from './content.js';
 
 // known(id): whether the technique still exists, so removed ones aren't counted.
 export function studentSummary(user, known = () => true) {

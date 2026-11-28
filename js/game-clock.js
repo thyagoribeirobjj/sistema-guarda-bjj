@@ -11,6 +11,9 @@
 // The clock: { running, step, left, added }: the step showing, its seconds left at that moment, and the seconds
 // "+30 s" added to it. A step past the last one means the show is over.
 
+// A TV session's fields (tv/{code}), besides updatedAt: what js/firebase-tv.js stores, and firestore.rules allows.
+export const sessionFields = ['name', 'language', 'show', 'clock', 'beeps', 'stamp'];
+
 export const limits = { parts: 6, name: 80, line: 200, label: 60, say: 300, seconds: [5, 1800], rounds: [1, 20], rest: [0, 600], ready: [0, 60] };
 
 // The most techniques a lesson plan on the TV names (firestore.rules checks the same in a session): every technique

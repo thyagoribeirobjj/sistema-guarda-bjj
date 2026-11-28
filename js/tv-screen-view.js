@@ -3,6 +3,7 @@ import { t, text } from './strings.js';
 import { qrModules } from './qr.js';
 import { clockText, isOver, stepLength, timeLeft, rolesSwitched } from './game-clock.js';
 import { techniqueList, turnPage } from './tv-list.js';
+import { stepName } from './tv-show.js';
 
 export { fitList } from './tv-list.js';
 
@@ -39,13 +40,6 @@ export function waitingScreen({ code, name, waiting, sound }) {
 
 const kindOf = (steps, position) => (isOver(steps, position) ? 'done' : steps[position.step].kind);
 
-function label(step) {
-  if (!step) return t('tvTime');
-  if (step.kind === 'ready') return t('tvGetReady');
-  if (step.kind === 'rest') return t(step.game.switch ? 'tvRestSwitch' : 'tvRest');
-  return text(step.label);
-}
-
 function says(step) {
   if (!step) return t('tvTimeSay');
   if (step.kind === 'ready') return `${t('tvStartsIn')}: ${text(step.game.start)}`;
@@ -70,7 +64,7 @@ function sides(step) {
 function nextLine(steps, position) {
   const next = steps[position.step + 1];
   if (isOver(steps, position)) return '';
-  return html`<span>${t('tvNext')}: <b>${next ? `${label(next)} · ${clockText(next.seconds)}` : t('tvTheEnd')}</b></span>`;
+  return html`<span>${t('tvNext')}: <b>${next ? `${stepName(next)} · ${clockText(next.seconds)}` : t('tvTheEnd')}</b></span>`;
 }
 
 // How far into this step, for its part of the progress bar.
@@ -89,7 +83,7 @@ export function gameScreen({ show, steps, position, sound }) {
   return html`<div class="tvs tvs-game${step?.list ? ' with-list' : ''}" data-kind="${kindOf(steps, position)}" id="tvsGame">
     <div class="tvs-top"><span class="tvs-title">${text(title)}</span><span class="tvs-round">${whereLine(show, step, steps[steps.length - 1])}</span></div>
     <div class="tvs-mid"><div class="tvs-clock" id="tvsClock">${clockText(position.left)}</div>
-      <div class="tvs-now"><div class="tvs-phase">${label(step)}</div>${step?.list ? html`<div class="tvs-pages" id="tvsPages" hidden></div>` : html`<div class="tvs-say">${says(step)}</div>`}</div>${techniqueList(step)}</div>
+      <div class="tvs-now"><div class="tvs-phase">${stepName(step)}</div>${step?.list ? html`<div class="tvs-pages" id="tvsPages" hidden></div>` : html`<div class="tvs-say">${says(step)}</div>`}</div>${techniqueList(step)}</div>
     ${sides(step)}
     <div class="tvs-foot"><div class="tvs-bar">${bar}</div><div class="tvs-next">${nextLine(steps, position)}<span id="tvsLeft">${leftLine(steps, position)}</span></div></div>
     ${soundButton(sound)}

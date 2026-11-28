@@ -1,7 +1,8 @@
 import { html } from './html.js';
-import { t, text } from './strings.js';
+import { t } from './strings.js';
 import { allGames, gameChoice } from './plan.js';
 import { clockText, isOver, stepLength, pageSeconds } from './game-clock.js';
+import { stepName } from './tv-show.js';
 
 // The markup of the coach's phone remote (admin page, "Run on the TV"; js/remote.js runs it).
 
@@ -29,8 +30,8 @@ function showChooser({ choice, coachGames }) {
 // The clock's words on the phone: the time, and what is happening ("Minute 1 · round 1 of 2").
 export function phaseLine(steps, position) {
   const step = steps[position.step];
-  if (!step) return t('tvTime');
-  const name = step.kind === 'ready' ? t('tvGetReady') : step.kind === 'rest' ? t('tvRest') : text(step.label);
+  const name = stepName(step);
+  if (!step) return name;
   return step.game ? `${name} · ${t('tvRound')} ${step.round} ${t('tvOf')} ${step.game.rounds}` : name;
 }
 

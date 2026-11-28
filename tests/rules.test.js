@@ -2,6 +2,7 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { tvRuleTests } from './rules-tv.mjs';
+import { listRuleTests } from './rules-lists.mjs';
 
 const project = 'demo-sistema-guarda';
 const emulator = `http://${process.env.FIRESTORE_EMULATOR_HOST}`;
@@ -353,3 +354,4 @@ test('a diagram must be a small image', async () => {
 });
 
 tvRuleTests({ test, assert, read, write, remove });
+listRuleTests({ test, assert, write });
