@@ -56,7 +56,6 @@ export const tvStrings = {
   clockEnd: { pt: 'Encerrar', en: 'End' },
   clockBeeps: { pt: 'Bipes', en: 'Beeps' },
   tvSendFailed: { pt: 'Não foi possível falar com a TV. Tente de novo.', en: 'Couldn’t reach the TV. Try again.' },
-  tvConnected: { pt: 'TV conectada', en: 'TV connected' },
   backToAdmin: { pt: '← Admin', en: '← Admin' },
 
   // the game designer
