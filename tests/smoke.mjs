@@ -3,7 +3,8 @@
 // previous / next and swiping in a technique (tests/smoke-usability.mjs: what a technique's sheet and search show), notes, the "new" dot on This week, the belt filter, the cookie bar and
 // Google Analytics (answered here, never the real one), the kids' class (tests/smoke-kids.mjs), the TV screen of the games on the TV (tests/smoke-tv.mjs), the privacy page and "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu, has the focus somewhere or has started on the first page,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page, robots.txt and the "noai"
-// tags. A page that fails to load fails here.
+// tags; on the published site also the X-Robots-Tag headers, and that the tests' ?emulators= address does nothing
+// there. A page that fails to load fails here.
 //   npm run smoke -- http://localhost:8000      (needs: npm ci)
 //   npm run smoke:real                           this checkout's code at https://sistemaguarda.com, before it is published
 // With --code-from <folder>, the browser opens the address given, but every file of the site (pages, code, styles, data,
@@ -17,6 +18,7 @@ import { kidsSteps } from './smoke-kids.mjs';
 import { tvSteps } from './smoke-tv.mjs';
 import { usabilitySteps } from './smoke-usability.mjs';
 import { routeAnalytics, hits as analyticsHits } from './analytics-fake.mjs';
+import { problems, step, until } from './browser.mjs';
 
 const options = process.argv.slice(2);
 const codeFromAt = options.indexOf('--code-from');
@@ -26,7 +28,6 @@ const published = !/localhost|127\.0\.0\.1/.test(address);
 const fromCheckout = codeFrom ? await checkout(codeFrom) : null;
 const origin = new URL(address).origin;
 const browser = await chromium.launch({ channel: process.env.SMOKE_BROWSER || 'chrome' });
-const problems = [];
 // Not the site's fault: no icon file, no Firebase settings in a local preview, a video removed from YouTube.
 const expectedMisses = /favicon\.ico|\/__\/firebase\/|ytimg\.com/;
 
@@ -123,16 +124,6 @@ async function openLate(path, locale, device = {}, { stored = {}, kept = {}, con
     ]);
   };
   return page;
-}
-
-async function step(name, run) {
-  try {
-    await run();
-    console.log(`PASS  ${name}`);
-  } catch (error) {
-    problems.push(`${name}: ${error.message.split('\n')[0]}`);
-    console.log(`FAIL  ${name}: ${error.message.split('\n')[0]}`);
-  }
 }
 
 let page;
@@ -291,6 +282,19 @@ if (published) {
     await page.locator('[data-past-weeks]').click();
     await page.locator('.past-weeks :is(h3, .note)').first().waitFor();
     assert.equal(await page.locator('.past-weeks .status').count(), 0);
+  });
+
+  await step('the published site ignores the tests\' ?emulators= address: the real sign-in and database, nobody signed in', async () => {
+    const hosts = [];
+    const person = encodeURIComponent(JSON.stringify({ sub: 'made-up', email: 'made-up@example.com', name: 'Made Up' }));
+    const visit = await open(`/?emulators=${person}&firestore=8080&auth=9099#curriculum`, 'en-US', {}, async (context) => {
+      context.on('request', (request) => hosts.push(new URL(request.url()).host));
+    });
+    await visit.locator('#accountMenu #signIn').waitFor({ state: 'attached', timeout: 20000 });
+    await until(() => hosts.includes('firestore.googleapis.com'), 'a read from the real database');
+    assert.deepEqual(hosts.filter((host) => /^(127\.0\.0\.1|localhost)(:|$)/.test(host)), [], 'nothing asks this computer');
+    assert.doesNotMatch(await visit.locator('#account').getAttribute('aria-label'), /Made Up/, 'nobody is signed in');
+    await visit.context().close();
   });
 }
 
@@ -726,13 +730,6 @@ const hits = (visit) => analyticsHits(visit.analytics);
 const analyticsCookies = async (visit) => (await visit.context().cookies()).filter((cookie) => cookie.name.startsWith('_ga'));
 const online = (visit) => visit.locator('#accountMenu #signIn').waitFor({ state: 'attached' });
 const consentCommands = (visit) => visit.evaluate(() => (window.dataLayer || []).map((command) => Array.from(command)).filter(([kind]) => kind === 'consent').map(([, , settings]) => settings));
-async function until(visit, check, what) {
-  for (let tries = 0; tries < 100; tries++) {
-    if (check()) return;
-    await visit.waitForTimeout(100);
-  }
-  throw new Error(`waited for ${what}`);
-}
 
 await step('without Google Analytics switched on: no cookie bar, no "Cookies" in the menu, nothing sent', async () => {
   const visit = await openLate('/#top', 'en-US');
@@ -806,10 +803,10 @@ await step('after "Accept": a page view for the part and for each technique open
   await visit.fill('#search', '');
   await visit.locator('#cookieBar [data-cookies="accepted"]').click();
   assert.ok(await visit.locator('#cookieBar').isHidden());
-  await until(visit, () => hits(visit).some((hit) => hit.en === 'page_view' && hit.page_location.endsWith('/#top')), 'a page view for #top');
+  await until(() => hits(visit).some((hit) => hit.en === 'page_view' && hit.page_location.endsWith('/#top')), 'a page view for #top');
   const technique = 'top-base';
   await visit.locator(`main [data-technique="${technique}"]`).first().click();
-  await until(visit, () => hits(visit).some((hit) => hit.page_location.endsWith(`/#t-${technique}`)), 'a page view for the technique');
+  await until(() => hits(visit).some((hit) => hit.page_location.endsWith(`/#t-${technique}`)), 'a page view for the technique');
   const opened = hits(visit).find((hit) => hit.page_location.endsWith(`/#t-${technique}`));
   assert.equal(opened.en, 'page_view');
   assert.equal(opened.page_title, (await visit.locator('#panelTitle').textContent()).trim());
@@ -827,7 +824,7 @@ await step('after "Accept": a page view for the part and for each technique open
   await visit.locator('#panelClose').click();
   const beforeReload = hits(visit).length;
   await visit.reload();
-  await until(visit, () => hits(visit).length > beforeReload, 'a page view after a reload: "Accept" is remembered');
+  await until(() => hits(visit).length > beforeReload, 'a page view after a reload: "Accept" is remembered');
   assert.ok(await visit.locator('#cookieBar').isHidden());
   await visit.locator('#account').click();
   await visit.locator('#accountMenu #cookieChoice').click();
@@ -859,7 +856,7 @@ await step('"Reject" in one tab stops the counting in another tab of the same br
   await first.locator('#cookieBar [data-cookies="accepted"]').click();
   const second = await first.context().newPage();
   await second.goto(`${address}/#curriculum`);
-  await until(second, () => hits(first).some((hit) => hit.page_location.endsWith('/#curriculum')), 'a page view from the second tab');
+  await until(() => hits(first).some((hit) => hit.page_location.endsWith('/#curriculum')), 'a page view from the second tab');
   await first.locator('#account').click();
   await first.locator('#accountMenu #cookieChoice').click();
   await first.locator('#cookieBar [data-cookies="rejected"]').click();
@@ -880,7 +877,7 @@ await step('"Reject" in one tab stops the counting in another tab of the same br
   await first.locator('#cookieBar [data-cookies="accepted"]').click();
   await second.locator('#panelClose').click();
   await second.locator('main .tech').nth(2).click();
-  await until(second, () => first.analytics.length > sent, 'the other tab counting again after "Accept"');
+  await until(() => first.analytics.length > sent, 'the other tab counting again after "Accept"');
 });
 
 await step('"Reject" pressed while the Google Analytics code is still loading: it is never started, nothing goes to Google', async () => {

@@ -1,8 +1,9 @@
 // Uses the site signed in, as made-up students and a made-up coach, against the local Firebase emulators only
 // (sign-in and the database). No real Google account, password or key: the emulators accept anyone.
 //   npm run signed-in      (starts the emulators, then this file serves the site itself on this computer)
-// The site talks to the emulators only when opened from this computer with ?emulators=<made-up person>
-// (js/firebase.js); that person is who "Sign in with Google" signs in. The translator is answered here, never called.
+// The site talks to the emulators only when opened from this computer with ?emulators=<made-up person> and the
+// emulators' ports (js/firebase.js), taken here from the addresses `firebase emulators:exec` gives; that person is
+// who "Sign in with Google" signs in. The translator is answered here, never called.
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -13,10 +14,13 @@ import { localDate, nextMonday } from '../js/week.js';
 import { tvSteps } from './signed-in-tv.mjs';
 import { coachSteps } from './signed-in-coach.mjs';
 import { routeAnalytics, hits } from './analytics-fake.mjs';
+import { problems, step, until } from './browser.mjs';
 
 const project = 'demo-sistema-guarda';
 const firestore = `http://${process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080'}`;
 const authEmulator = `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST || '127.0.0.1:9099'}`;
+// The made-up person the site signs in, and the emulators' ports, as js/firebase.js reads them from the address.
+const testQuery = (person) => `emulators=${encodeURIComponent(JSON.stringify(person))}&firestore=${new URL(firestore).port}&auth=${new URL(authEmulator).port}`;
 const documents = `${firestore}/v1/projects/${project}/databases/(default)/documents`;
 const translatorUrl = 'https://translator.example.test/exec';
 
@@ -100,22 +104,6 @@ async function touch(path) {
   assert.ok(response.ok, `saving ${path} again: ${response.status}`);
 }
 
-// Waits until the database (or the page) shows what is expected; the site saves in the background.
-async function until(check, what, timeout = 10000) {
-  const end = Date.now() + timeout;
-  let last;
-  while (Date.now() < end) {
-    try {
-      last = await check();
-      if (last) return last;
-    } catch (error) {
-      last = error.message;
-    }
-    await new Promise((done) => setTimeout(done, 200));
-  }
-  throw new Error(`${what} (last seen: ${JSON.stringify(last)})`);
-}
-
 // A promise that must settle within a few seconds, or the step fails saying what it waited for.
 function within(promise, what, timeout = 10000) {
   return Promise.race([promise, new Promise((_, fail) => setTimeout(() => fail(new Error(`waited for ${what}`)), timeout))]);
@@ -141,7 +129,6 @@ async function emptyEmulators() {
 
 // ---- the browser ----
 const browser = await chromium.launch({ channel: process.env.SMOKE_BROWSER || 'chrome' });
-const problems = [];
 const translations = [];
 // Not the site's fault: no icon file, a video thumbnail.
 const expectedMisses = /favicon\.ico|ytimg\.com/;
@@ -188,19 +175,9 @@ function watched(page, person) {
     if (request.url().includes(':batchGet') && (request.postData() || '').includes('/approvals/')) page.approvalReads += 1;
   });
   page.open = async (path = '', hash = '') => {
-    await page.goto(`${address}/${path}?emulators=${encodeURIComponent(JSON.stringify(person))}${hash}`);
+    await page.goto(`${address}/${path}?${testQuery(person)}${hash}`);
   };
   return page;
-}
-
-async function step(name, run) {
-  try {
-    await run();
-    console.log(`PASS  ${name}`);
-  } catch (error) {
-    problems.push(`${name}: ${error.message.split('\n')[0]}`);
-    console.log(`FAIL  ${name}: ${error.message.split('\n')[0]}`);
-  }
 }
 
 async function signInOnSite(page) {
@@ -859,7 +836,7 @@ await step('a kids account signing in where an adult accepted cookies: nothing i
     await device.locator('#sidebar a[href="#fund"]').click();
     await device.waitForTimeout(1500);
   };
-  await device.goto(`${address}/?emulators=${encodeURIComponent(JSON.stringify(people.kidElsewhere))}&analytics=${measurementId}#curriculum`);
+  await device.goto(`${address}/?${testQuery(people.kidElsewhere)}&analytics=${measurementId}#curriculum`);
   await until(() => hits(requests).some((hit) => hit.page_location.endsWith('/#curriculum')), 'signed out, as an adult who accepted: counted');
   const before = hits(requests).length;
   holding = holdSettings();
@@ -908,7 +885,7 @@ await step('an adult who accepted cookies signs in: Google Analytics is switched
     return route.continue();
   });
   const switchedOff = () => device.evaluate((id) => window[`ga-disable-${id}`] === true, measurementId);
-  await device.goto(`${address}/?emulators=${encodeURIComponent(JSON.stringify(people.adult))}&analytics=${measurementId}#curriculum`);
+  await device.goto(`${address}/?${testQuery(people.adult)}&analytics=${measurementId}#curriculum`);
   await until(() => hits(requests).some((hit) => hit.page_location.endsWith('/#curriculum')), 'signed out, as an adult who accepted: counted');
   assert.equal(await switchedOff(), false, 'counting');
   holding = true;
@@ -1245,7 +1222,7 @@ await step('"Delete my data" deletes the account\'s settings, notes and sign-in 
   assert.equal(await stored(`users/${uid.student}/private/notes`), null);
 });
 
-await tvSteps({ visitor, step, until, stored, seed, touch, address, people });
+await tvSteps({ visitor, step, until, stored, seed, touch, address, people, testQuery, firestoreHost: new URL(firestore).host });
 
 await browser.close();
 server.close();
