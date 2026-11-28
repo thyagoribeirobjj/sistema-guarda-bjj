@@ -5,8 +5,9 @@
 // (one round), rounds, rest (seconds between rounds), ready (seconds to get ready, once at the start) and switch
 // (the players change roles after each round). Every text is { pt, en }.
 // What the TV shows, once built from what the TV session names (js/tv-show.js): { title, blocks: [{ title, say, list, seconds }],
-// game, gameAt }. The game, when there is one, runs its own parts in place of blocks[gameAt] (after the last block
-// when gameAt is past them): a single game has no blocks, a lesson plan has one block per part of the class.
+// game, gameAt, gameSeconds }. The game, when there is one, runs its own parts in place of blocks[gameAt] (after the
+// last block when gameAt is past them): a single game has no blocks, a lesson plan has one block per part of the class.
+// In a lesson plan (gameSeconds: its game block's length) the game fills its block (blockSteps()).
 // The clock: { running, step, left, added }: the step showing, its seconds left at that moment, and the seconds
 // "+30 s" added to it. A step past the last one means the show is over.
 
@@ -33,12 +34,34 @@ export function gameSteps(game) {
   return steps;
 }
 
+// A lesson plan's game block of `seconds`: the game's rounds again and again (its rests between them, its roles
+// switching as it says), as many whole rounds as fit, so the plan's minutes and the TV agree. The time left after the
+// last whole round is the block's own step (`after`: { label, say }), never more rounds. When not even one round fits,
+// the round is cut where the block ends.
+export function blockSteps(game, seconds, after) {
+  const round = totalSeconds(game.parts);
+  const rounds = Math.max(1, Math.floor((seconds - game.ready + game.rest) / (round + game.rest)));
+  const steps = [];
+  let used = 0;
+  for (const step of gameSteps({ ...game, rounds })) {
+    const length = Math.min(step.seconds, seconds - used);
+    if (length <= 0) break;
+    steps.push({ ...step, seconds: length });
+    used += length;
+  }
+  if (seconds > used) steps.push({ kind: 'block', label: after.label, say: after.say, list: null, seconds: seconds - used, block: after.block });
+  return steps;
+}
+
 export function showSteps(show) {
   if (!show) return [];
   const blocks = show.blocks.map((block, index) => ({ kind: 'block', label: block.title, say: block.say, list: block.list || null, seconds: block.seconds, block: index }));
   if (!show.game) return blocks;
   const at = Math.min(show.gameAt, blocks.length);
-  return [...blocks.slice(0, at), ...gameSteps(show.game), ...blocks.slice(at + 1)];
+  const game = show.gameSeconds && blocks[at]
+    ? blockSteps(show.game, show.gameSeconds, { label: blocks[at].label, say: show.blocks[at].after || blocks[at].say, block: at })
+    : gameSteps(show.game);
+  return [...blocks.slice(0, at), ...game, ...blocks.slice(at + 1)];
 }
 
 export function totalSeconds(steps) {

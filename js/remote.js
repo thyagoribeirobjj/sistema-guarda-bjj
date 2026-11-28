@@ -4,12 +4,13 @@ import { t } from './strings.js';
 import { changeTv, followTv } from './firebase-tv.js';
 import { deleteOldSessions } from './tv-follow.js';
 import { coachGames, followCoachGames, reloadCoachGames, onCoachGameSaved } from './coach-games.js';
-import { gameId, chosenGame, lessonModule } from './plan.js';
+import { gameId, chosenGame } from './plan.js';
 import { isCode, typedCode } from './tv-code.js';
-import { lessonItems, showSteps, startClock, advance, toggle, nextPart, backPart, addTime, restart, clockText } from './game-clock.js';
-import { buildShow, needsCoachGames, newStamp } from './tv-show.js';
+import { showSteps, startClock, advance, toggle, nextPart, backPart, addTime, restart, clockText, isOver } from './game-clock.js';
+import { buildShow, lessonShow, needsCoachGames, newStamp } from './tv-show.js';
 import { remotePage, clockPart, phaseLine, pagingLine, toggleLabel } from './remote-view.js';
 import { elapsedSince, pressAnswered, pressSaved, forgetPresses } from './remote-time.js';
+import { askOrAct, answerAsked, asked, forgetAsking } from './remote-ask.js';
 import { rememberedTvs, keepTvs, keepAwake, awakeAsked, awakeAgainOnReturn, sayWhileWaiting } from './remote-phone.js';
 
 // The coach's phone as the TV's remote (admin page, "Run on the TV", admin.html#tv; the TV's square opens
@@ -45,11 +46,13 @@ function steps() {
 
 const position = () => advance(steps(), session.clock, (performance.now() - knownAt) / 1000);
 const freshClock = () => JSON.stringify(session.clock) === JSON.stringify(startClock(steps()));
+// A game under way: started (or moved on) and not over yet.
+const midGame = () => Boolean(session?.show) && !freshClock() && !isOver(steps(), position());
 
 function view() {
   const defaultName = `${t('tvNameDefault')}${tvs.length ? ` ${tvs.length + 1}` : ''}`;
   const clock = session?.show ? { steps: steps(), position: position(), fresh: freshClock() } : {};
-  return { tvs, current, adding, typedCode: typed, defaultName, choice, coachGames: coachGames.games, session, status, ...clock };
+  return { tvs, current, adding, typedCode: typed, defaultName, choice, coachGames: coachGames.games, session, status, asking: asked(), ...clock };
 }
 
 function draw() {
@@ -109,6 +112,8 @@ function follow() {
 
 async function heard(code, stored, live) {
   if (code !== current) return;
+  // The session as the database has it now: a press that failed before is no longer the news.
+  if (status === t('tvSendFailed')) say('');
   if (sent.has(stored?.stamp)) pressSaved(stored.stamp, stored.updatedAt);
   const before = JSON.stringify(session);
   const games = coachGames.games;
@@ -116,27 +121,20 @@ async function heard(code, stored, live) {
   if (JSON.stringify(session) !== before || games !== coachGames.games) drawClock();
 }
 
-function lessonToShow() {
-  const lesson = settings.lesson || {};
-  return {
-    mod: lessonModule(lesson), dur: lesson.dur === '90' ? '90' : '60',
-    items: lessonItems(lesson.items),
-    game: gameId(lesson.game) || chosenGame(lesson, coachGames.games)?.id || '',
-  };
-}
-
 // The chooser shows what the TV shows now.
 function choiceFromSession() {
   choice = session?.show?.game || (session?.show?.lesson ? 'lesson' : choice);
 }
 
-const named = () => (choice === 'lesson' ? { lesson: lessonToShow() } : { game: choice });
+const named = () => (choice === 'lesson' ? { lesson: lessonShow(settings.lesson, coachGames.games) } : { game: choice });
 
 // change(session, steps, position) gives the fields to change. The session is read first; the change shows on the
 // phone at once and goes to the TV.
 // One change at a time, in the order pressed: two quick presses of Next move two parts, not one.
 let sending = Promise.resolve();
 function send(change) {
+  // Said at once, so a press without a connection is never silent; the change itself clears it.
+  say(t('remoteSending'));
   sending = sending.then(() => sendNow(change));
   return sending;
 }
@@ -178,15 +176,23 @@ function showChoice() {
   });
 }
 
+// Restart, End and Show replace a game under way: while one is, the phone asks first (js/remote-ask.js).
+const replacing = {
+  restart: () => send((base, all) => ({ clock: restart(all) })),
+  end: () => send(() => ({ show: null, clock: startClock([]) })),
+  show: showChoice,
+};
+const askingFirst = (name) => () => askOrAct(name, midGame(), replacing[name], drawClock);
+
 const commands = {
   toggle: () => send((base, all, now) => ({ clock: toggle(all, now) })),
   back: () => send((base, all, now) => ({ clock: backPart(all, now) })),
   next: () => send((base, all, now) => ({ clock: nextPart(all, now) })),
   more: () => send((base, all, now) => ({ clock: addTime(all, now, 30) })),
-  restart: () => send((base, all) => ({ clock: restart(all) })),
+  restart: askingFirst('restart'),
   beeps: () => send((base, all, now) => ({ clock: now, beeps: !base.beeps })),
-  end: () => send(() => ({ show: null, clock: startClock([]) })),
-  show: showChoice,
+  end: askingFirst('end'),
+  show: askingFirst('show'),
 };
 
 async function pair(form) {
@@ -242,8 +248,10 @@ function listen() {
   slot.addEventListener('change', (event) => { if (event.target.id === 'remoteShow') choice = event.target.value; });
   slot.addEventListener('input', (event) => { if (event.target.id === 'tvCode') typed = event.target.value; });
   slot.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-remote], [data-remote-tv]');
+    const button = event.target.closest('[data-remote], [data-remote-tv], [data-remote-sure]');
     if (!button) return;
+    if (button.dataset.remoteSure) return answerAsked(button.dataset.remoteSure, replacing, drawClock);
+    forgetAsking();
     if (button.dataset.remoteTv) chooseTv(button.dataset.remoteTv);
     else if (button.dataset.remote === 'another') {
       adding = true;

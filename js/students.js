@@ -5,7 +5,7 @@ import { settings } from './settings.js';
 import { t, text } from './strings.js';
 import { studentList, studentOrders, marksByPart } from './roster.js';
 import { beltName, beltMark, progressMarks } from './views.js';
-import { loadKidsAnswers, kidsFacts, kidsBody, answerChallenge } from './kids-coach.js';
+import { loadKidsAnswers, kidsFacts, kidsBody, answerChallenge, waitingOf } from './kids-coach.js';
 
 // The admin page's Students section: each student's belt and marks, to follow their training. Read only when the
 // coach taps "Show students" (one read per student). Notes are never read: they are not in users/{uid}.
@@ -74,6 +74,7 @@ async function load() {
   draw();
   try {
     [view.users] = await Promise.all([loadStudents(), loadKidsAnswers()]);
+    view.users.filter(waitingOf).forEach((user) => view.open.add(user.uid));
     view.status = '';
   } catch (error) {
     console.error(error);

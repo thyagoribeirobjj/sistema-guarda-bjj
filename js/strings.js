@@ -1,11 +1,13 @@
 import { settings } from './settings.js';
 import { kidsStrings } from './strings-kids.js';
 import { tvStrings } from './strings-tv.js';
+import { coachStrings } from './strings-coach.js';
 
 // Button and label text. Curriculum text lives in data/content.json and data/curriculum.json.
 export const strings = {
   ...kidsStrings,
   ...tvStrings,
+  ...coachStrings,
   title: { pt: 'Sistema Guarda', en: 'Guard System' },
   navigation: { pt: 'Navegação', en: 'Navigation' },
   curriculum: { pt: 'Currículo', en: 'Curriculum' },
@@ -60,6 +62,8 @@ export const strings = {
   wins: { pt: 'Vence', en: 'Wins' },
   time: { pt: 'Tempo', en: 'Time' },
   techniques: { pt: 'técnicas', en: 'techniques' },
+  technique: { pt: 'técnica', en: 'technique' },
+  inTheName: { pt: 'No nome', en: 'In the name' },
 
   search: { pt: 'Buscar técnica', en: 'Search techniques' },
   searchResults: { pt: 'Busca', en: 'Search' },

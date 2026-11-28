@@ -14,7 +14,7 @@ import { limits, gameLength, clockText, clockGame, gameProblems } from './game-c
 // other language is translated on save, like the admin page (a failed translation leaves it empty, so the site shows
 // the coach's own words).
 // design: null while closed; otherwise { id ('' until saved), from, base (the game as it started or was saved),
-// game (as edited now), status, deleting }.
+// game (as edited now), status, deleting, replacing (the game "Start from" was changed to while it asks first) }.
 let design = null;
 let saving = false;
 
@@ -29,7 +29,16 @@ const focus = (selector) => document.querySelector(selector)?.focus();
 function startDesign(from) {
   const found = from ? findGame(from, coachGames.games) : null;
   const game = found ? copy(found) : blankGame();
-  design = { id: from.startsWith('coach-') && found ? from : '', from, base: copy(game), game, status: '', deleting: false };
+  design = { id: from.startsWith('coach-') && found ? from : '', from, base: copy(game), game, status: '', deleting: false, replacing: null };
+}
+
+const changedHere = () => JSON.stringify(copy(design.game)) !== JSON.stringify(design.base);
+
+function replaceQuestion() {
+  if (design.replacing === null) return '';
+  return html`<div class="confirm" role="alert"><span>${t('replaceDesignQuestion')}</span>
+    <button type="button" class="primary" data-designer-replace="yes">${t('yesReplaceDesign')}</button>
+    <button type="button" class="chipbtn" data-designer-replace="no">${t('keepMyDesign')}</button></div>`;
 }
 
 const totalLine = () => `${t('wholeGame')}: ${clockText(gameLength(design.game))}`;
@@ -69,7 +78,7 @@ export function designerCard() {
   return html`<section class="card designer" id="designer" aria-labelledby="designerTitle">
     <div class="designer-head"><h3 id="designerTitle">${t('designer')}</h3><button type="button" class="chipbtn" data-designer="close">${t('closeDesigner')}</button></div>
     <p class="note">${t('designerLead')}</p>
-    <div class="field"><label for="designFrom">${t('startFromGame')}</label><select id="designFrom"><option value="">${t('blankGame')}</option>${choices}</select></div>
+    <div class="field"><label for="designFrom">${t('startFromGame')}</label><select id="designFrom"><option value="">${t('blankGame')}</option>${choices}</select></div>${replaceQuestion()}
     ${textField('designName', t('gameName'), words(game.n), limits.name)}
     ${textField('designStart', t('gameStartsIn'), words(game.start), limits.line)}
     <div class="design-two">${textField('designTop', t('topWinsBy'), words(game.top), limits.line, 'textarea')}${textField('designBottom', t('bottomWinsBy'), words(game.bottom), limits.line, 'textarea')}</div>
@@ -107,11 +116,35 @@ export function designerInput(target) {
   return true;
 }
 
-// "Start from": the chosen game fills the designer. Returns true when the control was the designer's.
-export function designerChange(target) {
+// "Start from": the chosen game fills the designer, asking first when something was changed here. A number typed
+// outside its limits shows the number the game keeps once the field is left. Returns true when the control was the
+// designer's; redraw draws the page again.
+const numberFields = /^(partSeconds\d+|designRounds|designRest|designReady)$/;
+
+export function designerChange(target, redraw) {
+  if (design && numberFields.test(target.id) && target.closest('#designer')) {
+    const part = /^partSeconds(\d+)$/.exec(target.id);
+    const kept = part ? design.game.parts[Number(part[1])]?.seconds : design.game[{ designRounds: 'rounds', designRest: 'rest', designReady: 'ready' }[target.id]];
+    if (kept !== undefined) target.value = String(kept);
+    return true;
+  }
   if (target.id !== 'designFrom') return false;
+  if (design && changedHere()) {
+    design.replacing = target.value;
+    redraw();
+    focus('[data-designer-replace="no"]');
+    return true;
+  }
   startDesign(target.value);
+  redraw();
   return true;
+}
+
+function answerReplace(answer, redraw) {
+  if (answer === 'yes') startDesign(design.replacing);
+  else design.replacing = null;
+  redraw();
+  focus('#designFrom');
 }
 
 // Each text of the game with the same text as it started (or was last saved), to know what to translate, and its
@@ -228,5 +261,6 @@ export function designerActions(redraw) {
     }],
     ['[data-designer="save"]', () => saveDesign(redraw)],
     ['[data-designer-delete]', (button) => deleteDesign(button.dataset.designerDelete, redraw)],
+    ['[data-designer-replace]', (button) => answerReplace(button.dataset.designerReplace, redraw)],
   ];
 }

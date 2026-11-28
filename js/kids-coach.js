@@ -28,6 +28,11 @@ export function kidsFacts(user) {
   return html`${label ? html`<span>${t(label)}</span>` : ''}<span>${t('kidsChallenges')}: <b>${summary.done}</b> ${t('worldDone')}, <b>${summary.waiting}</b> ${t('kidsWaiting')}</span>`;
 }
 
+// How many of the kid's challenges wait for a coach's answer: their row opens by itself.
+export function waitingOf(user) {
+  return hasKidsPart(user) && kids.loaded ? kidsSummary(kids, claimsOf(user), approvals[user.uid]).waiting : 0;
+}
+
 function answerButtons(uid, challenge, status, claim) {
   const button = (answer, label, primary = false) => html`<button type="button" class="${primary ? 'primary' : 'chipbtn'}" data-answer="${uid}:${challenge.id}:${answer}:${claimMark(claim)}">${t(label)}</button>`;
   if (status === 'waiting') return html`${button('approved', 'approve', true)}${button('again', 'sendBack')}`;

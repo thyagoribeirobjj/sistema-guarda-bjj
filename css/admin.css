@@ -1,0 +1,28 @@
+/* The admin page (admin.html only): this week or next week, the techniques chosen for it, and the students. */
+.admin-forms{margin:0 0 12px}
+.next-ready{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px;font-size:14px}
+.next-ready .confirm{margin-top:0}
+.students-section{margin-top:28px;padding-bottom:48px}
+.student-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.student-tools .search{flex:1 1 220px;max-width:none}
+.students{display:grid;gap:6px;margin-top:6px}
+.student{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+/* A student opens like a fold: the arrow says so, and turns once it is open. */
+.student summary{display:grid;gap:4px;position:relative;padding:10px 40px 10px 14px;cursor:pointer;list-style:none}
+.student summary::-webkit-details-marker{display:none}
+.student summary::after{content:'';position:absolute;right:16px;top:18px;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg)}
+.student[open] summary::after{top:22px;transform:rotate(225deg)}
+.student-who{display:inline-flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;min-width:0;overflow-wrap:anywhere}
+.student-who span{font-size:13px;color:var(--muted)}
+.student-facts{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:13px;color:var(--muted)}
+.student-facts b{color:var(--ink)}
+.student-facts .belt{vertical-align:-1px}
+.student-body{padding:0 14px 12px;border-top:1px solid var(--line)}
+.student-body h5{margin:12px 0 4px;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.student-marks{margin:0;padding-left:18px;font-size:14px;columns:16em}
+.chosen{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;margin:0 0 8px}
+.chosen .lbl{font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+@media (pointer:coarse){
+  .student summary{min-height:44px}
+  .student-tools .search{min-height:44px;font-size:16px}
+}

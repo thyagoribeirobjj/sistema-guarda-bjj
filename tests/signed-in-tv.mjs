@@ -4,6 +4,7 @@
 // the whole lesson plan running there. tools: what signed-in.mjs uses itself.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { blockSteps } from '../js/game-clock.js';
 
 // The curriculum's games, to know what the TV should say about the one it shows.
 const guard = JSON.parse(readFileSync(new URL('../data/content.json', import.meta.url), 'utf8'));
@@ -43,6 +44,12 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     await remote.locator('#pairForm [type="submit"]').click();
   };
   const press = (remote, button) => remote.locator(`[data-remote="${button}"]`).click();
+  // Restart, End and Show ask first while a game is under way (js/remote-ask.js); the question shows as the key is
+  // pressed, and here the answer is yes.
+  const pressSure = async (remote, button) => {
+    await press(remote, button);
+    if (await remote.locator('[data-remote-sure="yes"]').count()) await remote.locator('[data-remote-sure="yes"]').click();
+  };
   const seconds = (text) => text.split(':').reduce((sum, part) => sum * 60 + Number(part), 0);
 
   await seed(`admins/${people.coach2.email}`, { name: 'Duda Coach' });
@@ -132,15 +139,61 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     await tvShows(tv, '#tvsClock', clock(shown.ready + 90), 'the TV shows 90 s more');
     await coach.waitForTimeout(2000);
     assert.equal(await coach.locator('#remoteTime').textContent(), clock(shown.ready + 90), 'the phone shows the same');
-    await press(coach, 'end');
+    await pressSure(coach, 'end');
     await tvShows(tv, '.tvs-how', 'Choose a game', 'the TV waits for the next game');
     assert.equal(await tv.locator('.tvs-name').textContent(), 'Front mat');
+  });
+
+  await step('Restart, End and Show ask first while a game is under way, and act at once when nothing runs yet', async () => {
+    const mount = curriculumGame('top-game-hold-the-mount');
+    await coach.selectOption('#remoteShow', mount.id);
+    await press(coach, 'show');
+    await tvShows(tv, '.tvs-title', 'Hold the mount', 'nothing was on the TV: shown at once');
+    await press(coach, 'restart');
+    assert.equal(await coach.locator('[data-remote-sure]').count(), 0, 'not started yet: Restart asks nothing');
+    await press(coach, 'toggle');
+    await until(async () => (await tvClock(tv)) !== clock(mount.ready), 'the TV clock runs', soon);
+    for (const [key, question] of [['restart', 'Start the game again'], ['end', 'End what is on the TV'], ['show', 'Show this instead']]) {
+      await press(coach, key);
+      assert.equal(await coach.locator('#remoteClock .confirm', { hasText: question }).count(), 1, `${key} asks first`);
+      assert.ok(await coach.evaluate(() => document.activeElement?.dataset.remoteSure === 'no'), 'the focus on "No, keep going"');
+      await coach.locator('[data-remote-sure="no"]').click();
+      assert.equal(await coach.locator('[data-remote-sure]').count(), 0);
+      assert.ok(await coach.evaluate((name) => document.activeElement?.dataset.remote === name, key), 'back on the key');
+    }
+    const running = await stored(`tv/${tv.code}`);
+    assert.equal(running.clock.running, true, 'the game runs on');
+    assert.equal(running.show.game, mount.id);
+    await press(coach, 'more');
+    assert.equal(await coach.locator('[data-remote-sure]').count(), 0, '+30 s stays one press');
+    await until(async () => (await stored(`tv/${tv.code}`))?.clock.added === 30, '+30 s is saved at once');
+    await press(coach, 'end');
+    await coach.locator('[data-remote-sure="yes"]').click();
+    await tvShows(tv, '.tvs-how', 'Choose a game', 'ended on "yes"');
+  });
+
+  await step('a press with no connection says "Sending" at once, and the line clears once the phone hears from the database again', async () => {
+    await coach.selectOption('#remoteShow', 'top-game-hold-the-mount');
+    await pressSure(coach, 'show');
+    await tvShows(tv, '.tvs-title', 'Hold the mount', 'the TV shows the game');
+    coach.failuresExpected = true;
+    await coach.context().setOffline(true);
+    try {
+      await press(coach, 'more');
+      assert.equal(await coach.locator('#remoteStatus').textContent(), 'Sending to the TV…', 'said as the key is pressed');
+    } finally {
+      await coach.context().setOffline(false);
+    }
+    await until(async () => (await coach.locator('#remoteStatus').textContent()) === '', 'the line is cleared', 30000);
+    coach.failuresExpected = false;
+    await pressSure(coach, 'end');
+    await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
   });
 
   await step('the phone ignores its own earlier change coming back after a later press', async () => {
     const mount = curriculumGame('top-game-hold-the-mount');
     await coach.selectOption('#remoteShow', mount.id);
-    await press(coach, 'show');
+    await pressSure(coach, 'show');
     await tvShows(tv, '.tvs-title', 'Hold the mount', 'the TV shows the game');
     await press(coach, 'more');
     await until(async () => (await stored(`tv/${tv.code}`))?.clock.added === 30, 'the first +30 s is saved');
@@ -167,7 +220,7 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     await tvShows(tv, '#tvsClock', clock(mount.ready + 60), 'the TV shows both');
     assert.equal(await coach.locator('#remoteTime').textContent(), clock(mount.ready + 60));
     coach.refusalsExpected = false;
-    await press(coach, 'end');
+    await pressSure(coach, 'end');
     await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
   });
 
@@ -199,9 +252,9 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
       coach.failuresExpected = false;
     }
     await coach.selectOption('#remoteShow', 'top-game-hold-the-mount');
-    await press(coach, 'show');
+    await pressSure(coach, 'show');
     await tvShows(tv, '.tvs-title', 'Hold the mount', 'the remote works again');
-    await press(coach, 'end');
+    await pressSure(coach, 'end');
     await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
   });
 
@@ -209,7 +262,7 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
   await step('a second TV keeps its own clock', async () => {
     await coach.locator('[data-remote-tv]').first().waitFor();
     await coach.selectOption('#remoteShow', 'top-game-hold-the-mount');
-    await press(coach, 'show');
+    await pressSure(coach, 'show');
     await tvShows(tv, '.tvs-title', 'Hold the mount', 'the first TV shows its game');
     second = await openTv();
     assert.notEqual(second.code, tv.code, 'each TV has its own code');
@@ -313,11 +366,33 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     await coach.reload();
     await coach.locator('#remoteShow').waitFor();
     await coach.selectOption('#remoteShow', made);
-    await press(coach, 'show');
+    await pressSure(coach, 'show');
     await tvShows(tv, '.tvs-title', 'Mount marathon', 'the TV shows the coach\'s game');
     assert.match(await tv.locator('.tvs-round').textContent(), /Round 1 of 2/);
     await press(coach, 'next');
     await tvShows(tv, '#tvsClock', '0:45', 'its first part, 45 s');
+  });
+
+  await step('the designer asks before "Start from" replaces what was typed, and a number outside its limits shows as the game keeps it', async () => {
+    const builder = await coach.context().newPage();
+    await builder.goto(`${address}/?emulators=${encodeURIComponent(JSON.stringify(people.coach))}#lesson`);
+    await builder.locator('[data-designer="open"]').click();
+    await builder.selectOption('#designFrom', 'top-game-hold-the-mount');
+    assert.equal(await builder.locator('[data-designer-replace]').count(), 0, 'nothing changed yet: no question');
+    await builder.locator('#designName').fill('My own mount');
+    await builder.locator('#partSeconds0').fill('5000');
+    await builder.locator('#partSeconds0').press('Tab');
+    assert.equal(await builder.locator('#partSeconds0').inputValue(), '1800', 'the longest a part can be');
+    const other = (await builder.locator('#designFrom option').evaluateAll((options) => options.map((option) => option.value))).find((value) => value && value !== 'top-game-hold-the-mount');
+    await builder.selectOption('#designFrom', other);
+    assert.equal(await builder.locator('#designer .confirm', { hasText: 'Start from this game?' }).count(), 1, 'it asks first');
+    await builder.locator('[data-designer-replace="no"]').click();
+    assert.equal(await builder.locator('#designName').inputValue(), 'My own mount', '"No" keeps what was typed');
+    assert.equal(await builder.locator('#designFrom').inputValue(), 'top-game-hold-the-mount');
+    await builder.selectOption('#designFrom', other);
+    await builder.locator('[data-designer-replace="yes"]').click();
+    assert.notEqual(await builder.locator('#designName').inputValue(), 'My own mount', '"Yes" starts from the other game');
+    await builder.close();
   });
 
   await step('a coach\'s game changed in the designer while a TV shows it: the TV and a phone in another browser pick it up within seconds by themselves, the clock carrying on', async () => {
@@ -427,7 +502,7 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
   // The TV counts on from the coach's last press, not from when it loaded: a reload mid-run keeps the phone's time.
   await step('a TV reloaded while its clock runs shows the same time as the phone', async () => {
     await coach.selectOption('#remoteShow', 'lesson');
-    await press(coach, 'show');
+    await pressSure(coach, 'show');
     await tvShows(tv, '.tvs-phase', 'Warm-up', 'the plan is on the TV');
     await press(coach, 'toggle');
     await until(async () => seconds(await tvClock(tv)) < 600, 'the TV clock runs', soon);
@@ -438,13 +513,13 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     const [onTv, onPhone] = [seconds(await tvClock(tv)), seconds(await coach.locator('#remoteTime').textContent())];
     assert.ok(onPhone < 595, `the clock ran on the phone (${onPhone} s)`);
     assert.ok(Math.abs(onTv - onPhone) <= 1, `the TV shows ${onTv} s, the phone ${onPhone} s`);
-    await press(coach, 'end');
+    await pressSure(coach, 'end');
     await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
   });
 
   await step('a TV that loses its connection while the clock runs shows the right time when it comes back', async () => {
     await coach.selectOption('#remoteShow', 'lesson');
-    await press(coach, 'show');
+    await pressSure(coach, 'show');
     await tvShows(tv, '.tvs-phase', 'Warm-up', 'the plan is on the TV');
     await press(coach, 'toggle');
     await until(async () => seconds(await tvClock(tv)) < 600, 'the TV clock runs', soon);
@@ -458,7 +533,7 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     await tv.waitForTimeout(4000);
     await tv.context().setOffline(false);
     await until(async () => Math.abs(seconds(await tvClock(tv)) - seconds(await coach.locator('#remoteTime').textContent())) <= 1, 'back online, the TV shows the phone\'s time', 20000);
-    await press(coach, 'end');
+    await pressSure(coach, 'end');
     await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
   });
 
@@ -469,7 +544,7 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
       changeSettings({ lesson: { mod: 'bottom', dur: '60', items, game } });
     }, [every, made]);
     await coach.selectOption('#remoteShow', 'lesson');
-    await press(coach, 'show');
+    await pressSure(coach, 'show');
     await tvShows(tv, '.tvs-phase', 'Warm-up', 'the plan is on the TV');
     await press(coach, 'next');
     await press(coach, 'next');
@@ -542,16 +617,19 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     assert.deepEqual({ pages: resized.pages, columns: resized.columns, size: resized.size }, fresh, 'fitted again after the resize');
     assert.ok(resized.fits, 'nothing cut');
     await tv.setViewportSize(television.viewport);
-    await press(coach, 'end');
+    await pressSure(coach, 'end');
     await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
   });
 
   await step('the whole class runs on the TV: each block on the clock, and the game\'s own parts at the game', async () => {
     await coach.selectOption('#remoteShow', 'lesson');
-    await press(coach, 'show');
+    await pressSure(coach, 'show');
     await tvShows(tv, '.tvs-phase', 'Warm-up', 'the plan starts with the warm-up');
     assert.equal(await tvClock(tv), '10:00');
     assert.match(await tv.locator('.tvs-round').textContent(), /Part 1 of 6/);
+    assert.equal(await tv.locator('#tvsLeft').textContent(), '60:00 left', 'the whole class is the plan\'s 60 minutes');
+    // The game fills the plan's 15 minutes: its rounds again and again, then what is left of the block.
+    const inBlock = blockSteps((await stored('site/games')).games[made], 15 * 60, { label: {}, say: '', block: 3 });
     for (const block of ['Concept', 'Techniques']) {
       await press(coach, 'next');
       await tvShows(tv, '.tvs-phase', block, `then ${block}`);
@@ -559,10 +637,19 @@ export async function tvSteps({ visitor, step, until, stored, seed, touch, addre
     await press(coach, 'next');
     await tvShows(tv, '.tvs-phase', 'Get ready', 'the game takes over');
     assert.match(await tv.locator('.tvs-title').textContent(), /Mount marathon/);
-    for (let press_ = 0; press_ < 4; press_++) await press(coach, 'next');
-    await tvShows(tv, '.tvs-phase', 'BJJ chess or live', 'after the game, the plan carries on');
+    const rounds = inBlock[0].game.rounds;
+    assert.ok(rounds > 2, `more rounds than the game's own 2 (${rounds})`);
+    assert.match(await tv.locator('.tvs-round').textContent(), new RegExp(`Round 1 of ${rounds}`));
+    const nexts = async (count) => { for (let pressed = 0; pressed < count; pressed++) await press(coach, 'next'); };
+    if (inBlock.at(-1).kind === 'block') {
+      await nexts(inBlock.length - 1);
+      await until(async () => (await tv.locator('.tvs-say').textContent()).includes("The game's rounds are done"), 'what is left of the block says so', 20000);
+      assert.equal(await tvClock(tv), clock(inBlock.at(-1).seconds));
+      await nexts(1);
+    } else await nexts(inBlock.length);
+    await until(async () => (await tv.locator('.tvs-phase').textContent()).includes('BJJ chess or live'), 'after the game, the plan carries on', 20000);
     assert.match(await tv.locator('.tvs-round').textContent(), /Part 5 of 6/);
-    await press(coach, 'end');
+    await pressSure(coach, 'end');
     await tvShows(tv, '.tvs-how', 'Choose a game', 'ended');
     await coach.context().close();
     await tv.context().close();

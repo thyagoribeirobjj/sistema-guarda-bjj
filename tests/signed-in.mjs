@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { localDate, nextMonday } from '../js/week.js';
 import { tvSteps } from './signed-in-tv.mjs';
+import { coachSteps } from './signed-in-coach.mjs';
 import { routeAnalytics, hits } from './analytics-fake.mjs';
 
 const project = 'demo-sistema-guarda';
@@ -657,6 +658,7 @@ async function prepareFromPastWeek() {
   assert.deepEqual(await coach.locator('#picks input:checked').evaluateAll((boxes) => boxes.map((box) => box.value).sort()), [...pastWeek.techniques].sort());
   await coach.locator('#weekForm [type="submit"]').click();
   await coach.locator('#status', { hasText: 'Saved' }).waitFor();
+  assert.match(await coach.locator('#status').innerText(), /^Saved\. It shows from \w+day \d+ \w+\.$/, 'when it shows, not "on the site now"');
   await coach.locator('.next-ready').waitFor();
   const week = await stored('site/week');
   assert.equal(week.weekOf, today, 'this week is unchanged');
@@ -683,6 +685,8 @@ await step('editing this week keeps the prepared week, and this week cannot be d
   assert.deepEqual(week.next, prepared, 'next week is still prepared, unchanged');
   assert.deepEqual((await stored('site/weeks')).weeks.map((one) => one.weekOf), [oldWeek.weekOf, pastWeek.weekOf], 'the same week edited is not filed');
 });
+
+await coachSteps({ coach, step, stored, until, today });
 
 await step('cancelling next week removes it, and it can be prepared again', async () => {
   await coach.locator('[data-form="next"]').click();
@@ -718,6 +722,7 @@ await step('the Students list shows the student with the right counts, and never
   await coach.locator('[data-load-students]').click();
   const row = coach.locator(`[data-student="${uid.student}"]`);
   await row.waitFor();
+  assert.equal(await row.evaluate((fold) => fold.open), false, 'nothing waiting: folded until tapped');
   const facts = await row.locator('.student-facts > span').allInnerTexts();
   assert.match(await row.locator('.student-who').innerText(), /Ana Test\s+ana@example\.com/);
   assert.deepEqual(facts.slice(0, 4).map((fact) => fact.trim()), ['Blue belt', 'Drilling: 1', 'Got it: 2', 'My tree: 3']);
@@ -772,7 +777,9 @@ await step('the coach approves one challenge and sends the other back from the S
   const row = coach.locator(`[data-student="${uid.kid}"]`);
   await row.waitFor();
   assert.match(await row.locator('.student-facts').innerText(), /Kids class[\s\S]*Kids challenges: 0 done, 2 waiting/);
-  await row.locator('summary').click();
+  assert.equal(await row.evaluate((fold) => fold.open), true, 'a kid with challenges waiting opens by itself');
+  const arrow = await row.locator('summary').evaluate((summary) => { const after = getComputedStyle(summary, '::after'); return { content: after.content, width: parseFloat(after.width), turned: after.transform }; });
+  assert.ok(arrow.content !== 'none' && arrow.width >= 6 && arrow.turned !== 'none', `the fold has an arrow (${JSON.stringify(arrow)})`);
   await row.locator('[data-kid-challenge="rolamento"] button', { hasText: 'Approve' }).click();
   await until(async () => (await stored(`approvals/${uid.kid}`))?.challenges?.rolamento?.status === 'approved', 'the approval is saved');
   await row.locator('[data-kid-challenge="queda-costas"] button', { hasText: 'Try again' }).click();
@@ -787,6 +794,20 @@ await step('the coach approves one challenge and sends the other back from the S
   assert.equal(answers.updatedBy, people.coach.email);
   assert.match(await row.locator('.student-facts').innerText(), /Kids challenges: 1 done, 0 waiting/);
   assert.equal(await row.locator('[data-kid-challenge="rolamento"] .kid-status').innerText(), 'Done');
+});
+
+await step('the kid\'s page, back in view a few minutes later, shows the coach\'s answers without a reload; sooner, it reads nothing', async () => {
+  assert.equal(await kidStatus(kid, 'rolamento'), 'Waiting for coach', 'read before the coach answered');
+  const reads = kid.approvalReads;
+  const backInView = () => kid.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  // Back in view at once: nothing read (the one read below is the only one).
+  await backInView();
+  await kid.clock.install();
+  await kid.clock.fastForward('03:05');
+  await backInView();
+  await kid.locator('[data-challenge="rolamento"] .kid-status', { hasText: 'Done' }).waitFor();
+  assert.equal(await kidStatus(kid, 'queda-costas'), 'Try again');
+  assert.equal(kid.approvalReads, reads + 1, 'one read, for the return after 3 minutes only');
 });
 
 await step('on another device the kid sees Done, the XP and "Try again", and can say "I did it" again', async () => {
@@ -917,7 +938,7 @@ await step('a claim the account holds as something other than a whole number: th
   await coach.open('admin.html');
   await coach.locator('[data-load-students]').click();
   const row = coach.locator(`[data-student="${uid.kid}"]`);
-  await row.locator('summary').click();
+  assert.equal(await row.evaluate((fold) => fold.open), true, 'challenges waiting: the row is open');
   const answer = row.locator('[data-kid-challenge="camarao"]');
   const saved = (status) => until(async () => (await stored(`approvals/${uid.kid}`))?.challenges?.camarao?.status === status, `"${status}" is saved`);
   await answer.locator('button', { hasText: 'Try again' }).click();

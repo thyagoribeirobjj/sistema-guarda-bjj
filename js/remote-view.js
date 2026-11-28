@@ -50,13 +50,23 @@ export function toggleLabel(steps, position, fresh) {
   return t(fresh ? 'clockStart' : 'clockResume');
 }
 
-export function clockPart({ session, steps, position, fresh }) {
+// Restart, End or Show asking first while a game is under way (js/remote-ask.js).
+const questions = { restart: ['remoteRestartQuestion', 'clockRestart'], end: ['remoteEndQuestion', 'clockEnd'], show: ['remoteShowQuestion', 'showOnThisTv'] };
+
+function askedRow(asking) {
+  if (!questions[asking]) return '';
+  const [question, yes] = questions[asking];
+  return html`<div class="confirm" role="alert"><span>${t(question)}</span><button type="button" class="primary" data-remote-sure="yes">${t(yes)}</button><button type="button" class="chipbtn" data-remote-sure="no">${t('remoteKeepGoing')}</button></div>`;
+}
+
+export function clockPart({ session, steps, position, fresh, asking }) {
   if (!session?.show) return html`<p class="note">${t('nothingOnTv')}</p>`;
   const key = (name, label, extra = '') => html`<button type="button" class="chipbtn" data-remote="${name}" ${extra}>${label}</button>`;
-  return html`<div class="remote-now"><span id="remoteTime">${clockText(position.left)}</span><span id="remotePhase">${phaseLine(steps, position)}</span></div>
+  return html`${asking === 'show' ? askedRow(asking) : ''}<div class="remote-now"><span id="remoteTime">${clockText(position.left)}</span><span id="remotePhase">${phaseLine(steps, position)}</span></div>
     <button type="button" class="primary remote-go" data-remote="toggle" id="remoteToggle">${toggleLabel(steps, position, fresh)}</button>
     <div class="remote-keys">${key('back', t('clockBack'))}${key('next', t('clockNext'))}${key('more', t('clockMore'))}${key('restart', t('clockRestart'))}
       ${key('beeps', t('clockBeeps'), html`aria-pressed="${Boolean(session.beeps)}"`)}${key('end', t('clockEnd'))}</div>
+    ${asking === 'show' ? '' : askedRow(asking)}
     <p class="note" id="remotePaging">${pagingLine(steps, position)}</p>`;
 }
 

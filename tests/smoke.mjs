@@ -1,6 +1,6 @@
 // Opens the site in a real browser and uses it the way a visitor would: the sidebar and its fold, Curriculum home, a technique,
 // search, progress, the tree, sharing, the lesson builder and method from the account menu, past weeks and theme,
-// previous / next and swiping in a technique, notes, the "new" dot on This week, the belt filter, the cookie bar and
+// previous / next and swiping in a technique (tests/smoke-usability.mjs: what a technique's sheet and search show), notes, the "new" dot on This week, the belt filter, the cookie bar and
 // Google Analytics (answered here, never the real one), the kids' class (tests/smoke-kids.mjs), the TV screen of the games on the TV (tests/smoke-tv.mjs), the privacy page and "Clear this browser", a prepared next week taking over on its date, the site's data arriving late while someone types, uses a menu, has the focus somewhere or has started on the first page,
 // the back button, the phone's bottom bar and part switcher, both languages, the admin page, robots.txt and the "noai"
 // tags. A page that fails to load fails here.
@@ -15,6 +15,7 @@ import { chromium } from 'playwright-core';
 import { checkout } from './checkout.mjs';
 import { kidsSteps } from './smoke-kids.mjs';
 import { tvSteps } from './smoke-tv.mjs';
+import { usabilitySteps } from './smoke-usability.mjs';
 import { routeAnalytics, hits as analyticsHits } from './analytics-fake.mjs';
 
 const options = process.argv.slice(2);
@@ -937,6 +938,7 @@ await step('the admin page counts nothing, even in a browser that accepted', asy
   assert.deepEqual(admin.analytics.map((request) => request.url), []);
 });
 
+await usabilitySteps({ open, step });
 await kidsSteps({ open, openLate, step, hits, analyticsCookies, online, withAnalytics });
 await tvSteps({ open, step, routeAnalytics, measurementId });
 
@@ -961,6 +963,7 @@ await step('the privacy page opens from the sidebar and the account menu, and sa
   assert.match(words, /Coaches see and approve/);
   assert.match(words, /never asks for an age or a birth date/);
   assert.match(words, /parent or guardian should set up a child’s account/);
+  assert.match(words, /Each child signs in with a Google account of their own/);
   assert.match(words, /visits are not counted/);
   await visit.locator('#sidebar a[href="#curriculum"]').click();
   await visit.locator('main .part-card').first().waitFor();

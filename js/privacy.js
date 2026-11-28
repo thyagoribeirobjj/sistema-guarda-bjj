@@ -21,7 +21,7 @@ function deleteBlock() {
 }
 
 export function privacyView() {
-  return html`${intro(t('privacy'), t('privacyLead'))}<div class="privacy">${sections.map((name) => html`<section class="card privacy-part"><h3>${t(`privacy${name}Title`)}</h3><p>${t(`privacy${name}`)}</p></section>`)}${deleteBlock()}</div>`;
+  return html`${intro(t('privacy'), t('privacyLead'))}<div class="privacy">${sections.map((name) => html`<section class="card privacy-part"><h3>${t(`privacy${name}Title`)}</h3><p>${t(`privacy${name}`)}${name === 'Kids' ? ` ${t('kidsOwnAccount')}` : ''}</p></section>`)}${deleteBlock()}</div>`;
 }
 
 // Signed in: the notes, the account's settings and the sign-in record are deleted, which signs out and clears this browser.
@@ -66,6 +66,8 @@ export function privacyActions(render) {
     }
     state.deleting = answer === 'ask' ? 'ask' : '';
     render();
+    // Not under the phone's bottom bar.
+    if (answer === 'ask') document.querySelector('.privacy .confirm')?.scrollIntoView({ block: 'center' });
     document.querySelector(answer === 'ask' ? '[data-delete-data="no"]' : '[data-delete-data="ask"]')?.focus();
   }]];
 }

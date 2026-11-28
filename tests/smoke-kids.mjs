@@ -1,5 +1,5 @@
 // The kids' class in tests/smoke.mjs, signed out: "I train in", the Kids page, the navigation it hides, the kids' belts,
-// a challenge opening its technique, Google Analytics staying off, and an adult's visit costing nothing more.
+// a challenge opening its technique (with no notes, marks or TV for the kids class), a shared #kids link, Google Analytics staying off, and an adult's visit costing nothing more.
 // tools: what smoke.mjs uses itself (open, openLate, step, hits, analyticsCookies, online, withAnalytics).
 import assert from 'node:assert/strict';
 
@@ -37,6 +37,7 @@ export async function kidsSteps({ open, openLate, step, hits, analyticsCookies, 
     await technique.click();
     await visit.locator(`#panel [data-favorite="${id}"]`).waitFor();
     assert.equal(new URL(visit.url()).hash, `#t-${id}`, 'the site\'s own technique sheet');
+    for (const missing of ['#noteBox', '[data-progress]', '[data-tv]']) assert.equal(await visit.locator(`#panel ${missing}`).count(), 0, `no ${missing} for the kids class`);
     await visit.locator('#panelClose').click();
     await visit.reload();
     await visit.locator('main .world').first().waitFor();
@@ -54,6 +55,21 @@ export async function kidsSteps({ open, openLate, step, hits, analyticsCookies, 
     await visit.locator('[data-audience-choice="both"]').click();
     await visit.locator('#sidebar a[href="#kids"]').waitFor();
     assert.equal(await visit.locator('#sidebar a[href="#curriculum"]').count(), 1, 'both: the curriculum and Kids');
+    await visit.keyboard.press('Escape');
+    await visit.locator('#sidebar a[href="#kids"]').click();
+    await visit.locator(`main .world [data-technique="${id}"]`).first().click();
+    for (const there of ['#noteBox', '[data-progress]', '[data-tv]']) assert.equal(await visit.locator(`#panel ${there}`).count() > 0, true, `${there} for both classes`);
+    await visit.context().close();
+  });
+
+  await step('a parent who opens a shared link to #kids and then picks "Kids class" lands on the Kids page, and its link works', async () => {
+    const visit = await open('/#kids', 'en-US');
+    await visit.locator('main .part-card, main .week').first().waitFor();
+    await visit.locator('#account').click();
+    await visit.locator('[data-audience-choice="kids"]').click();
+    await visit.locator('main .world').first().waitFor({ timeout: 5000 });
+    assert.equal(new URL(visit.url()).hash, '#kids');
+    assert.equal(await visit.locator('#sidebar a[href="#kids"]').getAttribute('aria-current'), 'page');
     await visit.context().close();
   });
 
@@ -81,6 +97,7 @@ export async function kidsSteps({ open, openLate, step, hits, analyticsCookies, 
     assert.deepEqual(await analyticsCookies(visit), []);
     assert.equal(await visit.evaluate(() => localStorage.getItem('sg-cookies')), 'accepted', 'the cookie choice itself is kept');
     assert.match(await visit.locator('main').textContent(), /sign in with Google \(ask a grown-up\)/, 'signed out: how to tell the coach');
+    assert.match(await visit.locator('main').textContent(), /a Google account of their own[\s\S]*one account per child/, 'and which account to use');
     assert.equal(await visit.locator('main [data-claim]').count(), 0, 'and no "I did it"');
     assert.ok(!visit.reads.some((path) => path.startsWith('approvals/')), 'nothing to read signed out');
   });

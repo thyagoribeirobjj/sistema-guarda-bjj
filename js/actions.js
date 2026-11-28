@@ -29,8 +29,13 @@ async function chooseAudience(audience) {
   followAudience();
   await followKids();
   const leave = audience === 'kids' ? adultPage(state.view) : !isPage(state.view);
-  if (leave && !state.search && location.hash !== `#${firstPage()}`) location.hash = firstPage();
-  else render();
+  const addressed = location.hash.slice(1);
+  if (leave && !state.search && addressed !== firstPage()) location.hash = firstPage();
+  else {
+    // The address already names the page to show (a shared link to #kids, say): no hashchange comes, so it shows now.
+    if (!state.search && isPage(addressed)) state.view = addressed;
+    render();
+  }
   $('accountMenu').querySelector(`[data-audience-choice="${audience}"]`)?.focus();
 }
 
@@ -44,7 +49,8 @@ export async function changeMedia(id, field, save) {
     if (!value) delete state.media[id][field];
     forgetDiagram(id);
     render();
-    redrawPanel();
+    // The sheet stays where the admin was, at the line that says it is saved.
+    redrawPanel('#mediaStatus');
     $('mediaStatus').textContent = t('saved');
   } catch (error) {
     console.error(error);
